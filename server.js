@@ -6,6 +6,10 @@ const http = require("http").createServer(app);
 const WebSocket = require("ws");
 const wss = new WebSocket.Server({ server: http });
 
+wss.on("connection", (ws) => {
+    console.log("Unity connected via WebSocket");
+});
+
 // SOCKET.IO
 //const io = require("socket.io")(http);
 const io = require("socket.io")(http, {
