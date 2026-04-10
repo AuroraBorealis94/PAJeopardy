@@ -23,14 +23,12 @@
 
 <input id="name" placeholder="Enter group name">
 
-<br>
-
-<!-- ENTER = SET NAME ONLY -->
+<!-- ENTER NAME -->
 <button onclick="setName()">Enter</button>
 
 <br><br>
 
-<!-- PREVIEW SECTION -->
+<!-- PREVIEW -->
 <h2>Preview</h2>
 
 <div id="preview">
@@ -40,7 +38,7 @@
 
 <br><br>
 
-<!-- JOIN = LOCK IN PLAYER -->
+<!-- JOIN - LOCK IN PLAYER -->
 <button onclick="joinGame()" style="text-align:center;">Join Game</button>
 
 <hr>
@@ -50,18 +48,13 @@
 const socket = io();
 
 let selectedCharacter = null;
-//let playerName = "";
 
-// --------------------
 // ROOM CODE
-// --------------------
 socket.on("roomCode", (code) => {
     document.getElementById("roomCode").textContent = code;
 });
 
-// --------------------
 // CHARACTER LIST
-// --------------------
 socket.on("characterList", (chars) => {
     const container = document.getElementById("characters");
     container.innerHTML = "";
@@ -85,9 +78,7 @@ socket.on("characterList", (chars) => {
     });
 });
 
-// --------------------
-// ENTER = SET NAME ONLY
-// --------------------
+// SET NAME
 function setName() {
     const nameInput = document.getElementById("name");
 
@@ -98,9 +89,7 @@ function setName() {
     nameInput.value = "";
 }
 
-// --------------------
-// JOIN GAME = LOCK IN PLAYER
-// --------------------
+// JOIN GAME - LOCK IN PLAYER
 function joinGame() {
     if (!playerName) {
         alert("Press Enter to set your team name first");
@@ -117,7 +106,7 @@ function joinGame() {
         character: selectedCharacter
     });
 
-    // lock UI after joining
+    // LOCK UI AFTER JOINING
     document.getElementById("name").disabled = true;
 
     document.querySelectorAll("#characters button")
@@ -130,16 +119,13 @@ function joinGame() {
         });
 }
 
-// --------------------
 // PREVIEW UPDATE
-// --------------------
 function updatePreview() {
     document.getElementById("previewName").textContent =
-        playerName || "---";
+        playerName && playerName.length > 0 ? playerName : "---";
 
     document.getElementById("previewCharacter").textContent =
-        selectedCharacter || "---";
-}
+        selectedCharacter ? selectedCharacter : "---";
 </script>
 
 </body>
