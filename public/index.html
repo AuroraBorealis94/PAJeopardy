@@ -5,19 +5,31 @@
 </head>
 <body>
 
-<br><br><br><h1 style="text-align: center; font-weight: bold;">PA Jeopardy 2026<h1>
+<br><br><br>
+
+<h1 style="text-align: center; font-weight: bold;">PA Jeopardy 2026<h1>
 
 <h2 style="text-align: center;">Room Code: <span id="roomCode">---</span></h2>
 
-<br><h2>Choose Your Team Name</h2>
+<br>
 
+<h2>Choose Your Team Representative</h2>
+<div id="characters"></div>
+
+<br>
+
+<h2>Choose Your Team Name</h2>
 <input id="name" placeholder="Enter group name">
-<button onclick="joinGame()">Join Game</button><br>
+<button onclick="joinGame()">Join Game</button>
 
-<br><h2>Players:</h2>
+<br><br>
+
+<h2>Teams:</h2>
 <ul id="players"></ul><br>
 
-<br><button id="startBtn" onclick="startGame()" disabled>
+<br>
+
+<button id="startBtn" onclick="startGame()" disabled>
     Start Game
 </button>
 
@@ -25,6 +37,8 @@
 <script>
 const socket = io();
 
+let selectedCharacter = null;
+// TO BE REMOVED
 let playerCount = 0;
 
 // ROOM CODE
@@ -32,13 +46,61 @@ socket.on("roomCode", (code) => {
     document.getElementById("roomCode").textContent = code;
 });
 
+// CHARACTERS
+socket.on("characterList", (chars) => {
+    const container = document.getElementById("characters");
+    container.innerHTML = "";
+
+    chars.forEach(char => {
+        const btn = document.createElement("button");
+        btn.textContent = char;
+
+        btn.onclick = () => {
+            selectedCharacter = char;
+
+            // simple visual feedback
+            document.querySelectorAll("#characters button")
+                .forEach(b => b.style.background = "");
+
+            btn.style.background = "lightgreen";
+        };
+
+        container.appendChild(btn);
+    });
+});
+
 // JOIN
 function joinGame() {
-    const name = document.getElementById("name").value;
-    socket.emit("join", name);
+    const nameInput = document.getElementById("name");
+
+    const name = nameInput.value.trim();
+
+    if (!name) {
+        alert("Please enter a team name");
+        return;
+    }
+
+    if (!selectedCharacter) {
+        alert("Please choose a character");
+        return;
+    }
+
+    socket.emit("join", {
+        name: name,
+        character: selectedCharacter
+    });
+
+    // CLEAR INPUT AFTER JOIN (your request)
+    nameInput.value = "";
+
+    // OPTIONAL: lock UI after joining
+    nameInput.disabled = true;
+
+    document.querySelectorAll("#characters button")
+        .forEach(b => b.disabled = true);
 }
 
-// PLAYER LIST UPDATE
+// PLAYER LIST UPDATE - TO BE REMOVED
 socket.on("playerList", (players) => {
     const list = document.getElementById("players");
     list.innerHTML = "";

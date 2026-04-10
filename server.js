@@ -28,7 +28,17 @@ const game = {
     board: {}
 };
 
-// JEPORADY CLUE STORAGE (filled when game starts)
+// CHARACTER STORAGE
+const characters = [
+    "Red",
+    "Blue",
+    "Green",
+    "Yellow",
+    "Pink",
+    "Black"
+];
+
+// CLUE STORAGE (filled when game starts)
 const cluePool = {
     "Category A": {
         200: [
@@ -99,15 +109,23 @@ app.get("/", (req, res) => {
 
 // NEW CONNECTION
 io.on("connection", (socket) => {
+    // SEND INFO TO WEB
     socket.emit("roomCode", ROOM_CODE);
+    socket.emit("characterList", characters);
+
     console.log("A player connected:", socket.id);
 
     // JOIN LOBBY
-    socket.on("join", (name) => {
+    socket.on("join", (name, character) => {
+
+        // ONE JOIN PER DEVICE
+        const alreadyJoined = game.players.find(p => p.id === socket.id);
+        if (alreadyJoined) return;
 
         game.players.push({
             id: socket.id,
-            name: name
+            name: name,
+            character: character
         });
 
         console.log(name + " joined the lobby");
