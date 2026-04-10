@@ -122,10 +122,11 @@ function joinGame() {
 // PREVIEW UPDATE
 function updatePreview() {
     document.getElementById("previewName").textContent =
-        playerName && playerName.length > 0 ? playerName : "---";
+        playerName || "---";
 
     document.getElementById("previewCharacter").textContent =
-        selectedCharacter ? selectedCharacter : "---";
+        selectedCharacter || "---";
+}
 </script>
 
 </body>
