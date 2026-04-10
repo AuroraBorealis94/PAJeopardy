@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Jeopardy Lobby</title>
+</head>
+<body>
+
+<h1>Join Game</h1>
+
+<input id="name" placeholder="Enter name">
+<button onclick="joinGame()">Join</button>
+
+<h2>Players:</h2>
+<ul id="players"></ul>
+
+<button onclick="startGame()">Start Game</button>
+
+<script src="/socket.io/socket.io.js"></script>
+<script>
+const socket = io();
+
+function joinGame() {
+    const name = document.getElementById("name").value;
+    socket.emit("join", name);
+}
+
+socket.on("playerList", (players) => {
+    const list = document.getElementById("players");
+    list.innerHTML = "";
+
+    players.forEach(p => {
+        const li = document.createElement("li");
+        li.textContent = p.name;
+        list.appendChild(li);
+    });
+});
+
+function startGame() {
+    socket.emit("startGame");
+}
+</script>
+
+</body>
+</html>

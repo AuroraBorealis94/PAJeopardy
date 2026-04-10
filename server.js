@@ -1,6 +1,8 @@
 const express = require("express");
 const app = express();
 const http = require("http").createServer(app);
+
+// SOCKET.IO
 //const io = require("socket.io")(http);
 const io = require("socket.io")(http, {
     cors: {
@@ -8,61 +10,121 @@ const io = require("socket.io")(http, {
     }
 });
 
-// Cloud server
+// CLOUD SERVER
 const PORT = process.env.PORT || 3000;
 
-// Simple 4-letter random room code
+// MAIN GAME STATE
+const game = {
+    players: [],
+    state: "lobby",
+    board: {}
+};
+
+// JEPORADY CLUE STORAGE (filled when game starts)
+const cluePool = {
+    "Category A": {
+        200: [
+            { clue: "A small land animal known for burrowing", answer: "rabbit" },
+            { clue: "A fast desert mammal", answer: "hare" }
+        ],
+        400: [
+            { clue: "This planet is closest to the sun", answer: "mercury" }
+        ]
+    },
+    "Category B": {
+        200: [
+            { clue: "Water freezes at this temperature in Celsius", answer: "0" }
+        ]
+    }
+};
+
+// GENERATE BOARD
+function generateBoard() {
+    game.board = {};
+
+    for (let category in cluePool) {
+        game.board[category] = {};
+
+        for (let value in cluePool[category]) {
+            const options = cluePool[category][value];
+
+            const random = options[Math.floor(Math.random() * options.length)];
+
+            game.board[category][value] = {
+                clue: random.clue,
+                answer: random.answer,
+                used: false
+            };
+        }
+    }
+}
+
+// ROOM CODE
 //const ROOM_CODE = Math.random().toString(36).substring(2,6).toUpperCase();
-// Constant Room code
 const ROOM_CODE = "PA26"; // fixed code
 console.log("Room code for players to join:", ROOM_CODE);
 
-// This lets players open a webpage
+// WEBPAGE
 app.get("/", (req, res) => {
-    res.send("Server is running!");
+    res.sendFile(__dirname + "/public/index.html");
 });
 
-// Store players
-let players = [];
+// STORE PLAYERS
+//let players = [];
+//game.players.push({
+//    id: socket.id,
+//    name: name
+//});
 
-// When someone connects
+//io.emit("playerList", game.players);
+
+// NEW CONNECTION
 io.on("connection", (socket) => {
     console.log("A player connected:", socket.id);
 
-    // Player joins
+    // JOIN LOBBY
     socket.on("join", (name) => {
-        players.push({ id: socket.id, name });
-        console.log(name + " joined the game");
 
-        // Send updated player list to everyone
-        io.emit("playerList", players);
+        game.players.push({
+            id: socket.id,
+            name: name
+        });
+
+        console.log(name + " joined the lobby");
+
+        io.emit("playerList", game.players);
     });
 
-    // Player selects a question
-    socket.on("selectQuestion", (data) => {
-        console.log("Question selected:", data);
-        io.emit("questionSelected", data);
+    // START GAME
+    socket.on("startGame", () => {
+        game.state = "playing";
+
+        generateBoard();
+
+        io.emit("gameStarted", game.board);
     });
 
-    // Player submits answer
+    // SELECT CLUE
+    socket.on("selectClue", (data) => {
+        io.emit("clueSelected", data);
+    });
+
+    // SUBMIT ANSWER
     socket.on("submitAnswer", (data) => {
-        console.log("Answer submitted:", data);
         io.emit("answerSubmitted", data);
     });
 
-    // Player disconnects
+    // DISCONNECT
     socket.on("disconnect", () => {
-        console.log("Player disconnected");
-
-        players = players.filter(p => p.id !== socket.id);
-        io.emit("playerList", players);
+        game.players = game.players.filter(p => p.id !== socket.id);
+        io.emit("playerList", game.players);
     });
 });
 
-// Start server
+// START SERVER
 //http.listen(3000, "0.0.0.0", () => {
 //    console.log("Server running on port 3000");
 //});
-http.listen(PORT, () => {
+http.listen(PORT, "0.0.0.0", () => {
     console.log("Server running on port " + PORT);
 });
