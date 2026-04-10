@@ -23,17 +23,12 @@
 
 <input id="name" placeholder="Enter group name">
 
-<br><br>
+<br>
 
 <!-- ENTER = SET NAME ONLY -->
 <button onclick="setName()">Enter</button>
 
 <br><br>
-
-<!-- JOIN = LOCK IN PLAYER -->
-<button onclick="joinGame()">Join Game</button>
-
-<hr>
 
 <!-- PREVIEW SECTION -->
 <h2>Preview</h2>
@@ -42,6 +37,13 @@
     <p><b>Name:</b> <span id="previewName">---</span></p>
     <p><b>Character:</b> <span id="previewCharacter">---</span></p>
 </div>
+
+<br><br>
+
+<!-- JOIN = LOCK IN PLAYER -->
+<button onclick="joinGame()" style="text-align:center;">Join Game</button>
+
+<hr>
 
 <script src="/socket.io/socket.io.js"></script>
 <script>
