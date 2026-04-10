@@ -1,15 +1,15 @@
 const express = require("express");
 const app = express();
 const http = require("http").createServer(app);
-const io = require("socket.io")(http);
+//const io = require("socket.io")(http);
+const io = require("socket.io")(http, {
+    cors: {
+        origin: "*"
+    }
+});
 
 // Cloud server
 const PORT = process.env.PORT || 3000;
-const io = require("socket.io")(http, {
-  cors: {
-    origin: "*"
-  }
-});
 
 // Simple 4-letter random room code
 //const ROOM_CODE = Math.random().toString(36).substring(2,6).toUpperCase();
