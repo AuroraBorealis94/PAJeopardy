@@ -6,10 +6,11 @@
 <body>
 
 <br><br><br>
+<h1 style="text-align:center;">PA Jeopardy 2026</h1>
 
-<h1 style="text-align: center; font-weight: bold;">PA Jeopardy 2026<h1>
-
-<h2 style="text-align: center;">Room Code: <span id="roomCode">---</span></h2>
+<h2 style="text-align:center;">
+    Room Code: <span id="roomCode">---</span>
+</h2>
 
 <br>
 
@@ -19,34 +20,46 @@
 <br>
 
 <h2>Choose Your Team Name</h2>
+
 <input id="name" placeholder="Enter group name">
-<button onclick="joinGame()">Join Game</button>
 
 <br><br>
 
-<h2>Teams:</h2>
-<ul id="players"></ul><br>
+<!-- ENTER = SET NAME ONLY -->
+<button onclick="setName()">Enter</button>
 
-<br>
+<br><br>
 
-<button id="startBtn" onclick="startGame()" disabled>
-    Start Game
-</button>
+<!-- JOIN = LOCK IN PLAYER -->
+<button onclick="joinGame()">Join Game</button>
+
+<hr>
+
+<!-- PREVIEW SECTION -->
+<h2>Preview</h2>
+
+<div id="preview">
+    <p><b>Name:</b> <span id="previewName">---</span></p>
+    <p><b>Character:</b> <span id="previewCharacter">---</span></p>
+</div>
 
 <script src="/socket.io/socket.io.js"></script>
 <script>
 const socket = io();
 
 let selectedCharacter = null;
-// TO BE REMOVED
-let playerCount = 0;
+let playerName = "";
 
+// --------------------
 // ROOM CODE
+// --------------------
 socket.on("roomCode", (code) => {
     document.getElementById("roomCode").textContent = code;
 });
 
-// CHARACTERS
+// --------------------
+// CHARACTER LIST
+// --------------------
 socket.on("characterList", (chars) => {
     const container = document.getElementById("characters");
     container.innerHTML = "";
@@ -58,25 +71,35 @@ socket.on("characterList", (chars) => {
         btn.onclick = () => {
             selectedCharacter = char;
 
-            // simple visual feedback
             document.querySelectorAll("#characters button")
                 .forEach(b => b.style.background = "");
 
             btn.style.background = "lightgreen";
+
+            updatePreview();
         };
 
         container.appendChild(btn);
     });
 });
 
-// JOIN
-function joinGame() {
+// --------------------
+// ENTER = SET NAME ONLY
+// --------------------
+function setName() {
     const nameInput = document.getElementById("name");
 
-    const name = nameInput.value.trim();
+    playerName = nameInput.value.trim();
 
-    if (!name) {
-        alert("Please enter a team name");
+    updatePreview();
+}
+
+// --------------------
+// JOIN GAME = LOCK IN PLAYER
+// --------------------
+function joinGame() {
+    if (!playerName) {
+        alert("Press Enter to set your team name first");
         return;
     }
 
@@ -86,42 +109,32 @@ function joinGame() {
     }
 
     socket.emit("join", {
-        name: name,
+        name: playerName,
         character: selectedCharacter
     });
 
-    // CLEAR INPUT AFTER JOIN (your request)
-    nameInput.value = "";
-
-    // OPTIONAL: lock UI after joining
-    nameInput.disabled = true;
+    // lock UI after joining
+    document.getElementById("name").disabled = true;
 
     document.querySelectorAll("#characters button")
         .forEach(b => b.disabled = true);
+
+    document.querySelectorAll("button")
+        .forEach(b => {
+            if (b.textContent === "Enter") b.disabled = true;
+            if (b.textContent === "Join Game") b.disabled = true;
+        });
 }
 
-// PLAYER LIST UPDATE - TO BE REMOVED
-socket.on("playerList", (players) => {
-    const list = document.getElementById("players");
-    list.innerHTML = "";
+// --------------------
+// PREVIEW UPDATE
+// --------------------
+function updatePreview() {
+    document.getElementById("previewName").textContent =
+        playerName || "---";
 
-    playerCount = players.length;
-
-    players.forEach(p => {
-        const li = document.createElement("li");
-        li.textContent = p.name;
-        list.appendChild(li);
-    });
-
-    // ENABLE START BUTTON ONLY IF PLAYERS EXIST
-    if (playerCount > 0) {
-        document.getElementById("startBtn").disabled = false;
-    }
-});
-
-// START GAME
-function startGame() {
-    socket.emit("startGame");
+    document.getElementById("previewCharacter").textContent =
+        selectedCharacter || "---";
 }
 </script>
 
