@@ -2,6 +2,10 @@ const express = require("express");
 const app = express();
 const http = require("http").createServer(app);
 
+// BRIDGE FROM SOCKET.IO TO WEBSOCKET
+const WebSocket = require("ws");
+const wss = new WebSocket.Server({ server: http });
+
 // SOCKET.IO
 //const io = require("socket.io")(http);
 const io = require("socket.io")(http, {
@@ -37,6 +41,17 @@ const cluePool = {
         ]
     }
 };
+
+// WEBSOCKET TO UNITY
+function broadcastToUnity(data) {
+    const message = JSON.stringify(data);
+
+    wss.clients.forEach(client => {
+        if (client.readyState === WebSocket.OPEN) {
+            client.send(message);
+        }
+    });
+}
 
 // GENERATE BOARD
 function generateBoard() {
@@ -94,6 +109,10 @@ io.on("connection", (socket) => {
         console.log(name + " joined the lobby");
 
         io.emit("playerList", game.players);
+        broadcastToUnity({
+            type: "playerList",
+            players: game.players
+        });
     });
 
     // START GAME
