@@ -80,6 +80,7 @@ app.get("/", (req, res) => {
 
 // NEW CONNECTION
 io.on("connection", (socket) => {
+    socket.emit("roomCode", ROOM_CODE);
     console.log("A player connected:", socket.id);
 
     // JOIN LOBBY

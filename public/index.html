@@ -5,36 +5,59 @@
 </head>
 <body>
 
-<h1>Join Game</h1>
+<br><br><br><h1 style="text-align: center; font-weight: bold;">PA Jeopardy 2026<h1>
+
+<h2 style="text-align: center;">Room Code: <span id="roomCode">---</span></h2>
+
+<br><h2>Join Game</h2>
 
 <input id="name" placeholder="Enter name">
-<button onclick="joinGame()">Join</button>
+<button onclick="joinGame()">Join</button><br>
 
-<h2>Players:</h2>
-<ul id="players"></ul>
+<br><h2>Players:</h2>
+<ul id="players"></ul><br>
 
-<button onclick="startGame()">Start Game</button>
+<br><button id="startBtn" onclick="startGame()" disabled>
+    Start Game
+</button>
 
 <script src="/socket.io/socket.io.js"></script>
 <script>
 const socket = io();
 
+let playerCount = 0;
+
+// ROOM CODE
+socket.on("roomCode", (code) => {
+    document.getElementById("roomCode").textContent = code;
+});
+
+// JOIN
 function joinGame() {
     const name = document.getElementById("name").value;
     socket.emit("join", name);
 }
 
+// PLAYER LIST UPDATE
 socket.on("playerList", (players) => {
     const list = document.getElementById("players");
     list.innerHTML = "";
+
+    playerCount = players.length;
 
     players.forEach(p => {
         const li = document.createElement("li");
         li.textContent = p.name;
         list.appendChild(li);
     });
+
+    // ENABLE START BUTTON ONLY IF PLAYERS EXIST
+    if (playerCount > 0) {
+        document.getElementById("startBtn").disabled = false;
+    }
 });
 
+// START GAME
 function startGame() {
     socket.emit("startGame");
 }
