@@ -48,7 +48,7 @@
 const socket = io();
 
 let selectedCharacter = null;
-let playerName = "";
+//let playerName = "";
 
 // --------------------
 // ROOM CODE
@@ -92,6 +92,8 @@ function setName() {
     playerName = nameInput.value.trim();
 
     updatePreview();
+
+    nameInput.value = "";
 }
 
 // --------------------

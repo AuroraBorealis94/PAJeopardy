@@ -116,7 +116,7 @@ io.on("connection", (socket) => {
     console.log("A player connected:", socket.id);
 
     // JOIN LOBBY
-    socket.on("join", (name, character) => {
+    socket.on("join", ({name, character}) => {
 
         // ONE JOIN PER DEVICE
         const alreadyJoined = game.players.find(p => p.id === socket.id);
