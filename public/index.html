@@ -14,16 +14,17 @@
 
     h1 {
         font-family: 'Gyparody';
-        font-size: 48px;
+        font-size: 96px;
 }
 
     h2 {
         font-family: 'Korinna';
-        font-size: 24px;
+        font-size: 36px;
     }
 
     body {
         font-family: 'Korinna';
+        font-size: 24px;
         margin: 0;
         padding-top: 120px;
         padding-bottom: 0;
@@ -53,7 +54,7 @@
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
         gap: 10px;
-        max-width: 800px;
+        max-width: 900px;
         margin: auto;
     }
 
@@ -79,13 +80,19 @@
         transition: 0.15s;
     }
 
-    /*#characters button:active {
+    #characters button:active {
         transform: scale(0.95);
-    }*/
+    }
 
     #characters button.selected {
         background: lightgreen;
         border: 2px solid limegreen;
+    }
+
+    #previewImage {
+        text-align: center;
+        width: 100px;
+        height: 100px
     }
 
 </style>
@@ -126,7 +133,6 @@
 
     <img id="previewImage" 
          src="" 
-         style="width:100px; height:100px; display:none;" />
 
     <div id="previewCharacterText">---</div>
 </div>
