@@ -15,6 +15,8 @@
     h1 {
         font-family: 'Gyparody';
         font-size: 96px;
+        padding-top: 120px;
+        padding-bottom: 120px;
 }
 
     h2 {
@@ -54,7 +56,7 @@
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
         gap: 10px;
-        max-width: 900px;
+        max-width: 1000px;
         margin: auto;
     }
 
@@ -95,13 +97,18 @@
         height: 100px
     }
 
+    #joinBtn {
+        text-align: center;
+        padding-bottom: 120px;
+    }
+
 </style>
 
     <title>Jeopardy Lobby</title>
 </head>
 <body>
 
-<br><br><br>
+<!--<br><br><br>-->
 <h1 style="text-align:center;">PA Jeopardy 2026</h1>
 
 <!-- <h2 style="text-align:center;">
@@ -140,7 +147,7 @@
 <br><br>
 
 <!-- JOIN - LOCK IN PLAYER -->
-<button id="joinBtn" onclick="joinGame()" style="text-align:center;">Join Game</button>
+<button id="joinBtn" onclick="joinGame()">Join Game</button>
 
 <hr>
 
