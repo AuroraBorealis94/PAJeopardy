@@ -140,6 +140,12 @@
         transform: scale(0.98);
     }
 
+    #joinBtn:disabled {
+        background: gray;
+        transform: none;
+        box-shadow: none;
+    }
+
 </style>
 
     <title>Jeopardy Lobby</title>
@@ -270,6 +276,14 @@ function joinGame() {
         return;
     }
 
+    const joinBtn = document.getElementById("joinBtn");
+    joinBtn.disabled = true;
+    joinBtn.innerText = "Joined!";
+    joinBtn.style.opacity = "0.6";
+    joinBtn.style.cursor = "not-allowed";
+
+    confettiBurst();
+
     socket.emit("join", {
         name: state.name,
         character: state.character.name
@@ -286,7 +300,7 @@ function joinGame() {
 
     // DISABLE BUTTONS AFTER JOINING
     document.getElementById("enterBtn").disabled = true;
-    document.getElementById("joinBtn").disabled = true;
+    //document.getElementById("joinBtn").disabled = true;
 }
 
 // PREVIEW UPDATE
@@ -305,6 +319,56 @@ function updatePreview() {
     } else {
         img.style.display = "none";
         text.textContent = "---";
+    }
+}
+
+function confettiBurst() {
+    const images = [
+        "/confetti/confetti1.png",
+        "/confetti/confetti2.png"
+    ];
+
+    for (let i = 0; i < 50; i++) {
+        const confetti = document.createElement("img");
+
+        confetti.src = images[Math.floor(Math.random() * images.length)];
+
+        confetti.style.position = "fixed";
+        confetti.style.left = "50%";
+        confetti.style.top = "40%";
+
+        confetti.style.width = "18px";
+        confetti.style.height = "18px";
+
+        confetti.style.zIndex = "9999";
+        confetti.style.pointerEvents = "none";
+
+        // rainbow tint
+        const hue = Math.floor(Math.random() * 360);
+        confetti.style.filter = `hue-rotate(${hue}deg)`;
+
+        document.body.appendChild(confetti);
+
+        const angle = Math.random() * Math.PI * 2;
+        const velocity = 2 + Math.random() * 5;
+
+        let x = 0;
+        let y = 0;
+        let gravity = 0;
+
+        const interval = setInterval(() => {
+            gravity += 0.15;
+
+            x += Math.cos(angle) * velocity;
+            y += Math.sin(angle) * velocity + gravity;
+
+            confetti.style.transform = `translate(${x}px, ${y}px) rotate(${x * 2}deg)`;
+
+            if (y > window.innerHeight) {
+                clearInterval(interval);
+                confetti.remove();
+            }
+        }, 16);
     }
 }
 
