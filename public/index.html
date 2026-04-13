@@ -106,10 +106,19 @@
         border: 2px solid limegreen;
     }
 
+    #previewCharacterBox {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto;
+    }
+
     #previewImage {
-        text-align: center;
-        width: 100px;
-        height: 100px
+        width: 120px;
+        height: 120px;
+        object-fit: contain;
+        display: none;
     }
 
     #joinBtn {
@@ -153,8 +162,8 @@
 <body>
 
 <!--<br><br><br>-->
-<h1 style="font-size: 100px; padding-top: 120px;">PA Jeopardy</h1>
-<h1 style="font-size: 90px; padding-bottom: 125px;">2026 Edition</h1>
+<h1 style="font-size: 60px; padding-top: 80px;">PA Jeopardy</h1>
+<h1 style="font-size: 50px; padding-bottom: 80px;">2026 Edition</h1>
 
 <!-- <h2 style="text-align:center;">
     C
@@ -185,9 +194,13 @@
     <p><b>Name:</b> <span id="previewName">---</span></p>
     <p><b>Character:</b></p>
 
-    <img id="previewImage" 
-         src="" 
+    <!--<img id="previewImage" 
+         src="" -->
 
+    <div id="previewCharacterBox">
+        <img id="previewImage" src="" />
+        <div id="previewCharacterText">---</div>
+    </div>
     <div id="previewCharacterText">---</div>
 </div>
 
@@ -337,8 +350,8 @@ function confettiBurst() {
         confetti.style.left = "50%";
         confetti.style.top = "40%";
 
-        confetti.style.width = "18px";
-        confetti.style.height = "18px";
+        confetti.style.width = "24px";
+        confetti.style.height = "24px";
 
         confetti.style.zIndex = "9999";
         confetti.style.pointerEvents = "none";
