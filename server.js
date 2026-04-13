@@ -44,7 +44,8 @@ const characters = [
     { name: "Jesus", image: "/characters/jesus.png" },
     { name: "Fancydancer", image: "/characters/fancydancerpink.png" },
     { name: "Donna", image: "/characters/donna.png" },
-    { name: "Lorenzo", image: "/characters/lorenzo.png" }
+    { name: "Lorenzo", image: "/characters/lorenzo.png" },
+    { name: "The Boss", image: "/characters/The Boss.png" }
 ];
 
 // CLUE STORAGE (filled when game starts)
