@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
     @font-face {
         font-family: 'Gyparody';
@@ -11,32 +12,41 @@
         src: url('/fonts/ITC Korinna Regular.otf') format('opentype');
     }
 
-    #h1 {
+    h1 {
         font-family: 'Gyparody';
         font-size: 48px;
-    }
+}
 
-    #h2 {
+    h2 {
         font-family: 'Korinna';
         font-size: 24px;
     }
 
-    #body {
-        font-family: 'Korinna';
-        font-size: 16px
-    }
-
     body {
+        font-family: 'Korinna';
         margin: 0;
-        padding: 0;
-
-        background-image: url('/backgrounds/bg.jpg');
-        background-size: cover;
-        background-position: center;
-        background-repeat: no-repeat;
-
+        padding-top: 120px;
+        padding-bottom: 0;
         color: white;
         text-align: center;
+
+        background-color: #000000;
+
+        background-image: 
+            url('/backgrounds/BgTop.png'),
+            url('/backgrounds/BgBottom.png');
+
+        background-repeat: 
+            no-repeat,
+            no-repeat;
+
+        background-position: 
+            top center,
+            bottom center;
+
+        background-size: 
+            100% auto,
+            100% auto;
     }
 
     #characters {
@@ -53,12 +63,31 @@
         border-radius: 8px;
         padding: 10px;
         cursor: pointer;
+        /*display: flex;
+        flex-direction: column;
+        align-items: center*/
     }
 
     #characters button img {
         width: 60px;
         height: 70px;
+        /*object-fit: contain;*/
     }
+
+    #characters button:hover {
+        transform: scale(1.05);
+        transition: 0.15s;
+    }
+
+    /*#characters button:active {
+        transform: scale(0.95);
+    }*/
+
+    #characters button.selected {
+        background: lightgreen;
+        border: 2px solid limegreen;
+    }
+
 </style>
 
     <title>Jeopardy Lobby</title>
@@ -66,7 +95,7 @@
 <body>
 
 <br><br><br>
-<h1 style="text-align:center; font-family: 'Gyparody'; font-size: 48px;">PA Jeopardy 2026</h1>
+<h1 style="text-align:center;">PA Jeopardy 2026</h1>
 
 <!-- <h2 style="text-align:center;">
     C
@@ -150,10 +179,12 @@ socket.on("characterList", (chars) => {
         btn.onclick = () => {
             state.character = char;
 
+            // CLEAR BUTTON SELECTION
             document.querySelectorAll("#characters button")
-                .forEach(b => b.style.background = "");
+                .forEach(b => b.classList.remove("selected"));
 
-            btn.style.background = "lightgreen";
+            // ADD SELECTION TO CLICKED BTN
+            btn.classList.add("selected");
 
             updatePreview();
         };
