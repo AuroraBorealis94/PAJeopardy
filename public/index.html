@@ -24,7 +24,7 @@
 <input id="name" placeholder="Enter group name">
 
 <!-- ENTER NAME -->
-<button onclick="setName()">Enter</button>
+<button id="enterBtn" onclick="setName()">Enter</button>
 
 <br><br>
 
@@ -39,7 +39,7 @@
 <br><br>
 
 <!-- JOIN - LOCK IN PLAYER -->
-<button onclick="joinGame()" style="text-align:center;">Join Game</button>
+<button id="joinBtn" onclick="joinGame()" style="text-align:center;">Join Game</button>
 
 <hr>
 
@@ -47,7 +47,10 @@
 <script>
 const socket = io();
 
-let selectedCharacter = null;
+const state = {
+    name: "",
+    character: null
+};
 
 // ROOM CODE
 socket.on("roomCode", (code) => {
@@ -64,7 +67,7 @@ socket.on("characterList", (chars) => {
         btn.textContent = char;
 
         btn.onclick = () => {
-            selectedCharacter = char;
+            state.character = char;
 
             document.querySelectorAll("#characters button")
                 .forEach(b => b.style.background = "");
@@ -82,7 +85,7 @@ socket.on("characterList", (chars) => {
 function setName() {
     const nameInput = document.getElementById("name");
 
-    playerName = nameInput.value.trim();
+    state.name = nameInput.value.trim();
 
     updatePreview();
 
@@ -91,41 +94,41 @@ function setName() {
 
 // JOIN GAME - LOCK IN PLAYER
 function joinGame() {
-    if (!playerName) {
-        alert("Press Enter to set your team name first");
+    if (!state.name) {
+        alert("Please enter your team name first");
         return;
     }
 
-    if (!selectedCharacter) {
+    if (!state.character) {
         alert("Please choose a character");
         return;
     }
 
     socket.emit("join", {
-        name: playerName,
-        character: selectedCharacter
+        name: state.name,
+        character: state.character
     });
 
     // LOCK UI AFTER JOINING
     document.getElementById("name").disabled = true;
 
     document.querySelectorAll("#characters button")
-        .forEach(b => b.disabled = true);
+    .forEach(b => {
+        b.disabled = true;
+        b.style.pointerEvents = "none";
+    });
 
-    document.querySelectorAll("button")
-        .forEach(b => {
-            if (b.textContent === "Enter") b.disabled = true;
-            if (b.textContent === "Join Game") b.disabled = true;
-        });
+    document.getElementById("enterBtn").disabled = true;
+    document.getElementById("joinBtn").disabled = true;
 }
 
 // PREVIEW UPDATE
 function updatePreview() {
     document.getElementById("previewName").textContent =
-        playerName || "---";
+        state.name || "---";
 
     document.getElementById("previewCharacter").textContent =
-        selectedCharacter || "---";
+        state.character || "---";
 }
 
 updatePreview();

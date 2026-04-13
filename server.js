@@ -30,12 +30,15 @@ const game = {
 
 // CHARACTER STORAGE
 const characters = [
-    "Red",
-    "Blue",
-    "Green",
-    "Yellow",
-    "Pink",
-    "Black"
+    "Joetheelf",
+    "Tricerex",
+    "Deerhead",
+    "Janicemowes",
+    "Oldsawyer",
+    "Jesus",
+    "Fancydancer",
+    "Donna",
+    "Lorenzo"
 ];
 
 // CLUE STORAGE (filled when game starts)
