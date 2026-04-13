@@ -2,6 +2,8 @@ const express = require("express");
 const app = express();
 const http = require("http").createServer(app);
 
+app.use("/characters", express.static("characters"));
+
 // BRIDGE FROM SOCKET.IO TO WEBSOCKET
 const WebSocket = require("ws");
 const wss = new WebSocket.Server({ server: http });
@@ -30,15 +32,15 @@ const game = {
 
 // CHARACTER STORAGE
 const characters = [
-    { name: "Joetheelf", image: "C:\Users\roraj\OneDrive\Desktop\PAJeopardyServer\characters\joetheelf.png" },
-    { name: "Tricerex", image: "C:\Users\roraj\OneDrive\Desktop\PAJeopardyServer\characters\tricerex.png" },
-    { name: "Deerhead", image: "C:\Users\roraj\OneDrive\Desktop\PAJeopardyServer\characters\deerhead.png" },
-    { name: "Janicemowes", image: "C:\Users\roraj\OneDrive\Desktop\PAJeopardyServer\characters\janicemowes.png" },
-    { name: "Oldsawyer", image: "C:\Users\roraj\OneDrive\Desktop\PAJeopardyServer\characters\oldsawyer.png" },
-    { name: "Jesus", image: "C:\Users\roraj\OneDrive\Desktop\PAJeopardyServer\characters\jesus.png" },
-    { name: "Fancydancer", image: "C:\Users\roraj\OneDrive\Desktop\PAJeopardyServer\characters\fancydancerpink.png" },
-    { name: "Donna", image: "C:\Users\roraj\OneDrive\Desktop\PAJeopardyServer\characters\donna.png" },
-    { name: "Lorenzo", image: "C:\Users\roraj\OneDrive\Desktop\PAJeopardyServer\characters\lorenzo.png" }
+    { name: "Joetheelf", image: "/characters/joetheelf.png" },
+    { name: "Tricerex", image: "/characters/tricerex.png" },
+    { name: "Deerhead", image: "/characters/deerhead.png" },
+    { name: "Janicemowes", image: "/characters/janicemowes.png" },
+    { name: "Oldsawyer", image: "/characters/oldsawyer.png" },
+    { name: "Jesus", image: "/characters/jesus.png" },
+    { name: "Fancydancer", image: "/characters/fancydancerpink.png" },
+    { name: "Donna", image: "/characters/donna.png" },
+    { name: "Lorenzo", image: "/characters/lorenzo.png" }
 ];
 
 // CLUE STORAGE (filled when game starts)

@@ -59,26 +59,27 @@ socket.on("roomCode", (code) => {
 
 // CHARACTER LIST
 socket.on("characterList", (chars) => {
-    const btn = document.createElement("button");
-
-    btn.style.display = "flex";
-    btn.style.flexDirection = "column";
-    btn.style.alignItems = "center";
-
-    const img = document.createElement("img");
-    img.src = char.image;
-    img.style.width = "60px";
-    img.style.height = "60px";
-
-    const label = document.createElement("div");
-    label.textContent = char.name;
-
-    btn.appendChild(img);
-    btn.appendChild(label);
+    const container = document.getElementById("characters");
+    container.innerHTML = "";
 
     chars.forEach(char => {
         const btn = document.createElement("button");
-        btn.textContent = char;
+
+        btn.style.display = "flex";
+        btn.style.flexDirection = "column";
+        btn.style.alignItems = "center";
+        btn.style.margin = "5px";
+
+        const img = document.createElement("img");
+        img.src = char.image;
+        img.style.width = "60px";
+        img.style.height = "60px";
+
+        const label = document.createElement("div");
+        label.textContent = char.name;
+
+        btn.appendChild(img);
+        btn.appendChild(label);
 
         btn.onclick = () => {
             state.character = char;
@@ -121,7 +122,6 @@ function joinGame() {
     socket.emit("join", {
         name: state.name,
         character: state.character.name
-        state.character = char;
     });
 
     // LOCK UI AFTER JOINING
