@@ -41,6 +41,11 @@
         );
 
         text-shadow: 0 0 10px rgba(255,255,255,0.2);
+
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+
+        background-clip: text;
     }
 
     #h12 {
@@ -53,6 +58,11 @@
         );
 
         text-shadow: 0 0 10px rgba(255,255,255,0.2);
+
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+
+        background-clip: text;
     }
 
     h2 {
@@ -257,15 +267,8 @@ socket.on("characterList", (chars) => {
     chars.forEach(char => {
         const btn = document.createElement("button");
 
-        // btn.style.display = "flex";
-        // btn.style.flexDirection = "column";
-        // btn.style.alignItems = "left";
-        // btn.style.margin = "5px";
-
         const img = document.createElement("img");
         img.src = char.image;
-        //img.style.width = "60px";
-        //img.style.height = "60px";
 
         const label = document.createElement("div");
         label.textContent = char.name;
