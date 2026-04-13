@@ -15,11 +15,11 @@
     h1 {
         font-family: 'Gyparody';
         /*text-align:center;*/
-        background: linear-gradient(
+        /*background: linear-gradient(
             45deg,
-            #ff0000,
-            #ffcc00,
-            #00ccff,
+            #a8a8a8,
+            #ffffff,
+            #a8a8a8,
             #ffffff
         );
 
@@ -28,7 +28,31 @@
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
 
-        background-clip: text;
+        background-clip: text;*/
+    }
+
+    #h11 {
+        background: linear-gradient(
+            45deg,
+            #a8a8a8,
+            #ffffff,
+            #a8a8a8,
+            #ffffff
+        );
+
+        text-shadow: 0 0 10px rgba(255,255,255,0.2);
+    }
+
+    #h12 {
+        background: linear-gradient(
+            45deg,
+            #ff9139,
+            #ffe739,
+            #ff9139,
+            #ffcb39
+        );
+
+        text-shadow: 0 0 10px rgba(255,255,255,0.2);
     }
 
     h2 {
@@ -162,8 +186,8 @@
 <body>
 
 <!--<br><br><br>-->
-<h1 style="font-size: 60px; padding-top: 80px;">PA Jeopardy</h1>
-<h1 style="font-size: 50px; padding-bottom: 80px;">2026 Edition</h1>
+<h1 id="h11" style="font-size: 30px; padding-top: 80px;">PA Jeopardy</h1>
+<h1 id="h12" style="font-size: 20px; padding-bottom: 80px;">2026 Edition</h1>
 
 <!-- <h2 style="text-align:center;">
     C
@@ -350,8 +374,8 @@ function confettiBurst() {
         confetti.style.left = "50%";
         confetti.style.top = "40%";
 
-        confetti.style.width = "24px";
-        confetti.style.height = "24px";
+        confetti.style.width = "36px";
+        confetti.style.height = "36px";
 
         confetti.style.zIndex = "9999";
         confetti.style.pointerEvents = "none";
