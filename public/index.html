@@ -120,7 +120,8 @@ function joinGame() {
 
     socket.emit("join", {
         name: state.name,
-        character: state.character
+        character: state.character.name
+        state.character = char;
     });
 
     // LOCK UI AFTER JOINING
