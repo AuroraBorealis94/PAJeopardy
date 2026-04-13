@@ -14,11 +14,22 @@
 
     h1 {
         font-family: 'Gyparody';
-        text-align:center;
-        /*font-size: 100px;
-        padding-top: 120px;
-        padding-bottom: 125px;*/
-}
+        /*text-align:center;*/
+        background: linear-gradient(
+            45deg,
+            #ff0000,
+            #ffcc00,
+            #00ccff,
+            #ffffff
+        );
+
+        text-shadow: 0 0 10px rgba(255,255,255,0.2);
+
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+
+        background-clip: text;
+    }
 
     h2 {
         font-family: 'Korinna';
@@ -32,7 +43,7 @@
         font-size: 24px;
         margin: 0;
         padding-top: 120px;
-        padding-bottom: 0;
+        padding-bottom: 120px;
         color: white;
         text-align: center;
 
@@ -64,6 +75,7 @@
     }
 
     #characters button {
+        font-family: 'Korinna', serif;
         background: white;
         border: 1px solid #ccc;
         border-radius: 8px;
@@ -101,8 +113,31 @@
     }
 
     #joinBtn {
-        /*text-align: center;
-        padding-bottom: 120px;*/
+        font-family: 'Korinna', serif;
+
+        font-size: 24px;
+        padding: 15px 40px;
+
+        background: linear-gradient(135deg, #ffcc00, #ff6600);
+        color: black;
+
+        border: none;
+        border-radius: 12px;
+
+        cursor: pointer;
+
+        box-shadow: 0 0 15px rgba(255, 140, 0, 0.6);
+
+        transition: all 0.2s ease;
+    }
+
+    #joinBtn:hover {
+        transform: scale(1.05);
+        box-shadow: 0 0 25px rgba(255, 140, 0, 0.9);
+    }
+
+    #joinBtn:active {
+        transform: scale(0.98);
     }
 
 </style>
@@ -121,17 +156,19 @@
 
 <br>
 
-<h2>Choose Your Team Representative</h2>
-<div id="characters"></div>
+<!-- ENTER NAME -->
+<h2 style="padding-top: 120px;">Choose Your Team Name</h2>
+<input id="name" placeholder="Enter group name">
+
+
+<button id="enterBtn" onclick="setName()">Enter</button>
 
 <br>
 
-<h2 style="padding-top: 120px;">Choose Your Team Name</h2>
+<!-- ENTER CHARACTER -->
+<h2>Choose Your Team Representative</h2>
+<div id="characters"></div>
 
-<input id="name" placeholder="Enter group name">
-
-<!-- ENTER NAME -->
-<button id="enterBtn" onclick="setName()">Enter</button>
 
 <br><br>
 
@@ -151,8 +188,7 @@
 <br><br>
 
 <!-- JOIN - LOCK IN PLAYER -->
-<button id="joinBtn" onclick="joinGame()" style="padding-bottom: 120px;">Join Game</button>
-<br>
+<button id="joinBtn" onclick="joinGame()">Join Game</button>
 
 <hr>
 
