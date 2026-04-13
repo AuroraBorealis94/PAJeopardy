@@ -36,13 +36,13 @@ const game = {
 
 // CHARACTER STORAGE
 const characters = [
-    { name: "Joetheelf", image: "/characters/joetheelf.png" },
+    { name: "Joe the Elf", image: "/characters/joetheelf.png" },
     { name: "Tricerex", image: "/characters/tricerex.png" },
     { name: "Deerhead", image: "/characters/deerhead.png" },
-    { name: "Janicemowes", image: "/characters/janicemowes.png" },
-    { name: "Oldsawyer", image: "/characters/oldsawyer.png" },
+    { name: "Janice Mowes", image: "/characters/janicemowes.png" },
+    { name: "Old Sawyer", image: "/characters/oldsawyer.png" },
     { name: "Jesus", image: "/characters/jesus.png" },
-    { name: "Fancydancer", image: "/characters/fancydancerpink.png" },
+    { name: "Fancy Dancer", image: "/characters/fancydancerpink.png" },
     { name: "Donna", image: "/characters/donna.png" },
     { name: "Lorenzo", image: "/characters/lorenzo.png" },
     { name: "The Boss", image: "/characters/The Boss.png" }
@@ -108,15 +108,6 @@ app.get("/", (req, res) => {
     res.sendFile(__dirname + "/public/index.html");
 });
 
-// STORE PLAYERS
-//let players = [];
-//game.players.push({
-//    id: socket.id,
-//    name: name
-//});
-
-//io.emit("playerList", game.players);
-
 // NEW CONNECTION
 io.on("connection", (socket) => {
     // SEND INFO TO WEB
@@ -174,9 +165,6 @@ io.on("connection", (socket) => {
 });
 
 // START SERVER
-//http.listen(3000, "0.0.0.0", () => {
-//    console.log("Server running on port 3000");
-//});
 http.listen(PORT, "0.0.0.0", () => {
     console.log("Server running on port " + PORT);
 });
