@@ -3,6 +3,9 @@ const app = express();
 const http = require("http").createServer(app);
 
 app.use("/characters", express.static("characters"));
+app.use("/fonts", express.static("fonts"));
+app.use("/backgrounds", express.static("backgrounds"));
+app.use("/sprites", express.static("sprites"));
 
 // BRIDGE FROM SOCKET.IO TO WEBSOCKET
 const WebSocket = require("ws");

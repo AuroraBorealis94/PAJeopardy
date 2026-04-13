@@ -2,11 +2,35 @@
 <html>
 <head>
 <style>
+    @font-face {
+        font-family: 'Gyparody';
+        src: url('/fonts/gyparody hv.ttf') format('truetype');
+    }
+    @font-face {
+        font-family: 'Korinna';
+        src: url('/fonts/ITC Korinna Regular.otf') format('opentype');
+    }
+
+    #h1 {
+        font-family: 'Gyparody';
+        font-size: 48px;
+    }
+
+    #h2 {
+        font-family: 'Korinna';
+        font-size: 24px;
+    }
+
+    #body {
+        font-family: 'Korinna';
+        font-size: 16px
+    }
+
     #characters {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
         gap: 10px;
-        max-width: 600px;
+        max-width: 800px;
         margin: auto;
     }
 
@@ -20,7 +44,7 @@
 
     #characters button img {
         width: 60px;
-        height: 60px;
+        height: 70px;
     }
 </style>
 
@@ -31,9 +55,9 @@
 <br><br><br>
 <h1 style="text-align:center;">PA Jeopardy 2026</h1>
 
-<h2 style="text-align:center;">
-    Room Code: <span id="roomCode">---</span>
-</h2>
+<!-- <h2 style="text-align:center;">
+    C
+</h2> -->
 
 <br>
 
