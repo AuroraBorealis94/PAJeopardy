@@ -30,15 +30,15 @@ const game = {
 
 // CHARACTER STORAGE
 const characters = [
-    "Joetheelf",
-    "Tricerex",
-    "Deerhead",
-    "Janicemowes",
-    "Oldsawyer",
-    "Jesus",
-    "Fancydancer",
-    "Donna",
-    "Lorenzo"
+    { name: "Joetheelf", image: "C:\Users\roraj\OneDrive\Desktop\PAJeopardyServer\characters\joetheelf.png" },
+    { name: "Tricerex", image: "C:\Users\roraj\OneDrive\Desktop\PAJeopardyServer\characters\tricerex.png" },
+    { name: "Deerhead", image: "C:\Users\roraj\OneDrive\Desktop\PAJeopardyServer\characters\deerhead.png" },
+    { name: "Janicemowes", image: "C:\Users\roraj\OneDrive\Desktop\PAJeopardyServer\characters\janicemowes.png" },
+    { name: "Oldsawyer", image: "C:\Users\roraj\OneDrive\Desktop\PAJeopardyServer\characters\oldsawyer.png" },
+    { name: "Jesus", image: "C:\Users\roraj\OneDrive\Desktop\PAJeopardyServer\characters\jesus.png" },
+    { name: "Fancydancer", image: "C:\Users\roraj\OneDrive\Desktop\PAJeopardyServer\characters\fancydancerpink.png" },
+    { name: "Donna", image: "C:\Users\roraj\OneDrive\Desktop\PAJeopardyServer\characters\donna.png" },
+    { name: "Lorenzo", image: "C:\Users\roraj\OneDrive\Desktop\PAJeopardyServer\characters\lorenzo.png" }
 ];
 
 // CLUE STORAGE (filled when game starts)

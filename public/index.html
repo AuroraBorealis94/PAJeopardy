@@ -59,8 +59,22 @@ socket.on("roomCode", (code) => {
 
 // CHARACTER LIST
 socket.on("characterList", (chars) => {
-    const container = document.getElementById("characters");
-    container.innerHTML = "";
+    const btn = document.createElement("button");
+
+    btn.style.display = "flex";
+    btn.style.flexDirection = "column";
+    btn.style.alignItems = "center";
+
+    const img = document.createElement("img");
+    img.src = char.image;
+    img.style.width = "60px";
+    img.style.height = "60px";
+
+    const label = document.createElement("div");
+    label.textContent = char.name;
+
+    btn.appendChild(img);
+    btn.appendChild(label);
 
     chars.forEach(char => {
         const btn = document.createElement("button");
