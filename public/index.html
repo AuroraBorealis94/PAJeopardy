@@ -1,6 +1,29 @@
 <!DOCTYPE html>
 <html>
 <head>
+<style>
+    #characters {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+        gap: 10px;
+        max-width: 600px;
+        margin: auto;
+    }
+
+    #characters button {
+        background: white;
+        border: 1px solid #ccc;
+        border-radius: 8px;
+        padding: 10px;
+        cursor: pointer;
+    }
+
+    #characters button img {
+        width: 60px;
+        height: 60px;
+    }
+</style>
+
     <title>Jeopardy Lobby</title>
 </head>
 <body>
@@ -33,7 +56,13 @@
 
 <div id="preview">
     <p><b>Name:</b> <span id="previewName">---</span></p>
-    <p><b>Character:</b> <span id="previewCharacter">---</span></p>
+    <p><b>Character:</b></p>
+
+    <img id="previewImage" 
+         src="" 
+         style="width:100px; height:100px; display:none;" />
+
+    <div id="previewCharacterText">---</div>
 </div>
 
 <br><br>
@@ -65,15 +94,15 @@ socket.on("characterList", (chars) => {
     chars.forEach(char => {
         const btn = document.createElement("button");
 
-        btn.style.display = "flex";
-        btn.style.flexDirection = "column";
-        btn.style.alignItems = "center";
-        btn.style.margin = "5px";
+        // btn.style.display = "flex";
+        // btn.style.flexDirection = "column";
+        // btn.style.alignItems = "left";
+        // btn.style.margin = "5px";
 
         const img = document.createElement("img");
         img.src = char.image;
-        img.style.width = "60px";
-        img.style.height = "60px";
+        //img.style.width = "60px";
+        //img.style.height = "60px";
 
         const label = document.createElement("div");
         label.textContent = char.name;
@@ -133,6 +162,7 @@ function joinGame() {
         b.style.pointerEvents = "none";
     });
 
+    // DISABLE BUTTONS AFTER JOINING
     document.getElementById("enterBtn").disabled = true;
     document.getElementById("joinBtn").disabled = true;
 }
@@ -142,8 +172,18 @@ function updatePreview() {
     document.getElementById("previewName").textContent =
         state.name || "---";
 
-    document.getElementById("previewCharacter").textContent =
-        state.character || "---";
+    const img = document.getElementById("previewImage");
+    const text = document.getElementById("previewCharacterText");
+
+    if (state.character) {
+        img.src = state.character.image;
+        img.style.display = "block";
+
+        text.textContent = state.character.name;
+    } else {
+        img.style.display = "none";
+        text.textContent = "---";
+    }
 }
 
 updatePreview();
