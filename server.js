@@ -36,16 +36,16 @@ const game = {
 
 // CHARACTER STORAGE
 const characters = [
-    { name: "Joe the Elf", image: "/characters/joetheelf.png" },
-    { name: "Tricerex", image: "/characters/tricerex.png" },
-    { name: "Deerhead", image: "/characters/deerhead.png" },
-    { name: "Janice Mowes", image: "/characters/janicemowes.png" },
-    { name: "Old Sawyer", image: "/characters/oldsawyer.png" },
-    { name: "Jesus", image: "/characters/jesus.png" },
-    { name: "Fancy Dancer", image: "/characters/fancydancerpink.png" },
-    { name: "Donna", image: "/characters/donna.png" },
-    { name: "Lorenzo", image: "/characters/lorenzo.png" },
-    { name: "The Boss", image: "/characters/The Boss.png" }
+    { name: "Joe the Elf", front: "/characters/fancydancerblack.png", back: "/characters/joetheelf.png" },
+    { name: "Tricerex", front: "/characters/fancydancerblack.png", back: "/characters/tricerex.png" },
+    { name: "Deerhead", front: "/characters/fancydancerblack.png", back: "/characters/deerhead.png" },
+    { name: "Janice Mowes", front: "/characters/fancydancerblack.png", back: "/characters/janicemowes.png" },
+    { name: "Old Sawyer", front: "/characters/fancydancerblack.png", back: "/characters/oldsawyer.png" },
+    { name: "Jesus", front: "/characters/fancydancerblack.png", back: "/characters/jesus.png" },
+    { name: "Fancy Dancer", front: "/characters/fancydancerblack.png", back: "/characters/fancydancerpink.png" },
+    { name: "Donna", front: "/characters/fancydancerblack.png", back: "/characters/donna.png" },
+    { name: "Lorenzo", front: "/characters/fancydancerblack.png", back: "/characters/lorenzo.png" },
+    { name: "The Boss", front: "/characters/fancydancerblack.png", back: "/characters/The Boss.png" }
 ];
 
 // CLUE STORAGE (filled when game starts)

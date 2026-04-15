@@ -12,7 +12,7 @@
         src: url('/fonts/ITC Korinna Regular.otf') format('opentype');
     }
 
-    @keyframes cardFlipIn {
+    @keyframes cardPopIn {
         0% {
             transform: rotateY(90deg) scale(0.8);
             opacity: 0;
@@ -131,14 +131,87 @@
         align-items: center*/
     }
 
-    #characters button img {
-        /*width: 60px;
-        height: 70px;*/
+    .charCard {
+        perspective: 800px;
+        border: none;
+        background: transparent;
+        padding: 0;
+        /*transition: transform 0.15s ease;*/
+    }
+
+    .cardInner {
+        position: relative;
+        width: 100%;
+        height: 120px;
+        transition: transform 0.5s;
+        /*transition: transform 0.2s ease;*/
+        transform-style: preserve-3d;
+    }
+
+    .charCard.selected .cardInner {
+        transform: rotateY(180deg);
+    }
+
+    .cardFront, .cardBack {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        backface-visibility: hidden;
+
+        border-radius: 10px;
+        overflow: hidden;
+    }
+
+    .cardFront img,
+    .cardBack img {
         width: 100%;
         height: 100%;
         object-fit: cover;
     }
 
+    .cardBack {
+        transform: rotateY(180deg);
+    }
+
+    /* Name overlay (front side) */
+    .charName {
+        position: absolute;
+        bottom: 0;
+        width: 100%;
+
+        font-family: 'Korinna', serif;
+        color: white;
+        font-size: 14px;
+
+        background: rgba(0,0,0,0.6);
+    }
+    
+    .charCard:hover {
+        transform: scale(1.05);
+        transition: transform 0.15s;
+    }
+
+    .charCard:hover .cardFront img {
+        transform: scale(1.1);
+        transition: transform 0.2s;
+    }
+
+    .charCard:active {
+        transform: scale(0.95);
+    }
+
+    .charCard.selected {
+        animation: bounceSelect 0.3s ease;
+        box-shadow: 0 0 15px limegreen;
+    }
+
+    /*
+    #characters button img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+   
     #characters button:hover {
         transform: scale(1.05);
         transition: 0.15s;
@@ -158,6 +231,7 @@
         border: 2px solid limegreen;
         animation: bounceSelect 0.3s ease;
     }
+    */
 
     #previewCharacterBox {
         display: flex;
@@ -281,23 +355,60 @@ socket.on("characterList", (chars) => {
 
     chars.forEach(char => {
         const btn = document.createElement("button");
-        // CARD FLIP ENTER
-        btn.style.animation = "cardFlipIn 0.4s ease";
+        // FOR CARD FLIP
+        btn.classList.add("charCard");
+        // CARD POP ENTER
+        btn.style.animation = "cardPopIn 0.4s ease";
 
-        const img = document.createElement("img");
-        img.src = char.image;
+        //const img = document.createElement("img");
+        //img.src = char.image;
 
+        //const label = document.createElement("div");
+        //label.textContent = char.name;
+
+        // FOR CARD FLIP
+        const inner = document.createElement("div");
+        inner.classList.add("cardInner");
+
+        const front = document.createElement("div");
+        front.classList.add("cardFront");
+
+        const back = document.createElement("div");
+        back.classList.add("cardBack");
+
+        // FRONT IMAGE
+        const imgFront = document.createElement("img");
+        imgFront.src = char.front;
+
+        // BACK IMAGE (you can customize this later)
+        const imgBack = document.createElement("img");
+        imgBack.src = char.back; // or different image later
+
+        // NAME LABEL (on both sides optional)
         const label = document.createElement("div");
+        label.classList.add("charName");
         label.textContent = char.name;
 
-        btn.appendChild(img);
-        btn.appendChild(label);
+        front.appendChild(imgFront);
+        front.appendChild(label);
+
+        back.appendChild(imgBack);
+
+        inner.appendChild(front);
+        inner.appendChild(back);
+        btn.appendChild(inner);
+
+        //btn.appendChild(img);
+        //btn.appendChild(label);
 
         btn.onclick = () => {
             state.character = char;
 
             // CLEAR BUTTON SELECTION
-            document.querySelectorAll("#characters button")
+            //document.querySelectorAll("#characters button")
+            //    .forEach(b => b.classList.remove("selected"));
+
+            document.querySelectorAll(".charCard")
                 .forEach(b => b.classList.remove("selected"));
 
             // ADD SELECTION TO CLICKED BTN
