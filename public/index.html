@@ -136,15 +136,14 @@
         border: none;
         background: transparent;
         padding: 0;
-        /*transition: transform 0.15s ease;*/
+        transition: transform 0.15s ease;
     }
 
     .cardInner {
         position: relative;
         width: 100%;
         height: 120px;
-        transition: transform 0.5s;
-        /*transition: transform 0.2s ease;*/
+        transition: transform 0.5s ease;
         transform-style: preserve-3d;
     }
 
@@ -202,38 +201,10 @@
 
     .charCard.selected {
         animation: bounceSelect 0.3s ease;
-        background: lightgreen;
+        /*background: lightgreen;
         border: 2px solid limegreen;
-        /*box-shadow: 0 0 15px limegreen;*/
+        box-shadow: 0 0 15px limegreen;*/
     }
-
-    /*
-    #characters button img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-    }
-   
-    #characters button:hover {
-        transform: scale(1.05);
-        transition: 0.15s;
-    }
-
-    #characters button:hover img {
-        transform: scale(1.1);
-        transition: 0.2s;
-    }
-
-    #characters button:active {
-        transform: scale(0.95);
-    }
-
-    #characters button.selected {
-        background: lightgreen;
-        border: 2px solid limegreen;
-        animation: bounceSelect 0.3s ease;
-    }
-    */
 
     #preview {
         font-family: 'Korinna';
@@ -250,10 +221,10 @@
     }
 
     #previewImage {
-        width: 60PX;
+        width: 80PX;
         height: 70PX;
-        object-fit: cover;
-        /*display: none;*/
+        object-fit: fill;
+        display: none;
     }
 
     #joinBtn {
@@ -315,14 +286,11 @@
 <h2>Choose Your Team Representative</h2>
 <div id="characters"></div>
 
-
 <br><br>
 
 <!-- PREVIEW -->
-<!--<h2>Preview</h2>-->
-
 <div id="preview">
-    <p><b>Team </b> <span id="previewName">---</span></p>
+    <p id="teamLabel" style="display:none;"><b>Team </b></p>
     <p><span id="previewName">---</span></p>
 
     <!--<p><b>Character:</b></p>-->
@@ -432,6 +400,8 @@ function setName() {
     const nameInput = document.getElementById("name");
 
     state.name = nameInput.value.trim();
+
+    document.getElementById("teamLabel").style.display = "block";
 
     updatePreview();
 
