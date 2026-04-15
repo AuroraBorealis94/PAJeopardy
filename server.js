@@ -138,7 +138,7 @@ io.on("connection", (socket) => {
             players: game.players.map(p => ({
                 id: p.id,
                 name: p.name,
-                characterId: character.name.toLowerCase()
+                characterId: p.character.toLowerCase()
             }))
         });
     });
