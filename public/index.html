@@ -12,6 +12,17 @@
         src: url('/fonts/ITC Korinna Regular.otf') format('opentype');
     }
 
+    @keyframes cardFlipIn {
+        0% {
+            transform: rotateY(90deg) scale(0.8);
+            opacity: 0;
+        }
+        100% {
+            transform: rotateY(0deg) scale(1);
+            opacity: 1;
+        }
+    }
+
     h1 {
         font-family: 'Gyparody';
     }
@@ -261,6 +272,8 @@ socket.on("characterList", (chars) => {
 
     chars.forEach(char => {
         const btn = document.createElement("button");
+        // CARD FLIP ENTER
+        btn.style.animation = "cardFlipIn 0.4s ease";
 
         const img = document.createElement("img");
         img.src = char.image;
