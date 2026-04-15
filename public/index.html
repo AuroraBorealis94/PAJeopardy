@@ -202,7 +202,9 @@
 
     .charCard.selected {
         animation: bounceSelect 0.3s ease;
-        box-shadow: 0 0 15px limegreen;
+        background: lightgreen;
+        border: 2px solid limegreen;
+        /*box-shadow: 0 0 15px limegreen;*/
     }
 
     /*
@@ -233,6 +235,10 @@
     }
     */
 
+    #previewCharacterText {
+
+    }
+
     #previewCharacterBox {
         display: flex;
         flex-direction: column;
@@ -242,10 +248,10 @@
     }
 
     #previewImage {
-        width: 120px;
-        height: 120px;
-        object-fit: contain;
-        display: none;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        /*display: none;*/
     }
 
     #joinBtn {
@@ -311,15 +317,13 @@
 <br><br>
 
 <!-- PREVIEW -->
-<h2>Preview</h2>
+<!--<h2>Preview</h2>-->
 
 <div id="preview">
-    <p><b>Name:</b> <span id="previewName">---</span></p>
-    <p><b>Character:</b></p>
+    <!--<p><b>Name:</b> <span id="previewName">---</span></p>-->
+    <p><span id="previewName">---</span></p>
 
-    <!--<img id="previewImage" 
-         src="" -->
-
+    <!--<p><b>Character:</b></p>-->
     <div id="previewCharacterBox">
         <img id="previewImage" src="" />
         <div id="previewCharacterText">---</div>
@@ -480,13 +484,13 @@ function updatePreview() {
     const text = document.getElementById("previewCharacterText");
 
     if (state.character) {
-        img.src = state.character.image;
+        img.src = state.character.front;
         img.style.display = "block";
 
         text.textContent = state.character.name;
     } else {
         img.style.display = "none";
-        text.textContent = "---";
+        //text.textContent = "---";
     }
 }
 
