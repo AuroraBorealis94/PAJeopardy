@@ -30,7 +30,6 @@
         100% { transform: scale(1); }
     }
 
-
     h1 {
         font-family: 'Gyparody';
     }
@@ -213,17 +212,17 @@
     }
 
     #previewCharacterBox {
-        display: flex;
-        flex-direction: column;
+        /*display: flex;
+        flex-direction: column;*/
         align-items: center;
         justify-content: center;
         margin: 0 auto;
     }
 
     #previewImage {
-        width: 80PX;
+        width: 90PX;
         height: 70PX;
-        object-fit: fill;
+        /*object-fit: fill;*/
         display: none;
     }
 
@@ -290,15 +289,13 @@
 
 <!-- PREVIEW -->
 <div id="preview">
-    <p id="teamLabel" style="display:none;"><b>Team </b></p>
-    <p><span id="previewName">---</span></p>
+    <p id="teamLabel" style="display:none;"><b>Team </b><span id="previewName">---</span></p>
 
     <!--<p><b>Character:</b></p>-->
     <div id="previewCharacterBox">
         <img id="previewImage" src="" />
         <div id="previewCharacterText">---</div>
     </div>
-    <div id="previewCharacterText">---</div>
 </div>
 
 <br><br>
@@ -332,13 +329,7 @@ socket.on("characterList", (chars) => {
         // FOR CARD FLIP
         btn.classList.add("charCard");
         // CARD POP ENTER
-        btn.style.animation = "cardPopIn 0.4s ease";
-
-        //const img = document.createElement("img");
-        //img.src = char.image;
-
-        //const label = document.createElement("div");
-        //label.textContent = char.name;
+        btn.style.animation = "cardPopIn 0.5s ease";
 
         // FOR CARD FLIP
         const inner = document.createElement("div");
@@ -371,9 +362,6 @@ socket.on("characterList", (chars) => {
         inner.appendChild(front);
         inner.appendChild(back);
         btn.appendChild(inner);
-
-        //btn.appendChild(img);
-        //btn.appendChild(label);
 
         btn.onclick = () => {
             state.character = char;

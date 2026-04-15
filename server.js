@@ -45,7 +45,8 @@ const characters = [
     { name: "Fancy Dancer", front: "/characters/fancydancerblack.png", back: "/characters/fancydancerpink.png" },
     { name: "Donna", front: "/characters/fancydancerblack.png", back: "/characters/donna.png" },
     { name: "Lorenzo", front: "/characters/fancydancerblack.png", back: "/characters/lorenzo.png" },
-    { name: "The Boss", front: "/characters/fancydancerblack.png", back: "/characters/The Boss.png" }
+    { name: "Caity Satyr", front: "/characters/fancydancerblack.png", back: "/characters/caitysatyr.png" },
+    { name: "The Boss", front: "/characters/fancydancerblack.png", back: "/characters/theboss.png" }
 ];
 
 // CLUE STORAGE (filled when game starts)
@@ -126,7 +127,7 @@ io.on("connection", (socket) => {
         game.players.push({
             id: socket.id,
             name: name,
-            character: character
+            character: character.name
         });
 
         console.log(name + " joined the lobby");
@@ -134,7 +135,11 @@ io.on("connection", (socket) => {
         io.emit("playerList", game.players);
         broadcastToUnity({
             type: "playerList",
-            players: game.players
+            players: game.players.map(p => ({
+                id: p.id,
+                name: p.name,
+                characterId: character.name.toLowerCase()
+            }))
         });
     });
 
