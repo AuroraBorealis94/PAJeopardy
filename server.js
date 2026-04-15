@@ -127,8 +127,7 @@ io.on("connection", (socket) => {
         game.players.push({
             id: socket.id,
             name: name,
-            character: p.character,
-            character: character.name
+            character: character
         });
 
         console.log(name + " joined the lobby");
@@ -139,7 +138,6 @@ io.on("connection", (socket) => {
             players: game.players.map(p => ({
                 id: p.id,
                 name: p.name,
-                character: p.character,
                 characterId: p.character.toLowerCase()
             }))
         });
