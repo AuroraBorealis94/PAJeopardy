@@ -105,7 +105,7 @@
 
     #characters {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+        grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
         gap: 10px;
         max-width: 1000px;
         margin: auto;
@@ -139,9 +139,10 @@
     }
 
     .cardInner {
+        /*height: 120px;*/
         position: relative;
         width: 100%;
-        height: 120px;
+        aspect-ratio: 3 / 4;
         transition: transform 0.5s ease;
         transform-style: preserve-3d;
     }
@@ -151,11 +152,11 @@
     }
 
     .cardFront, .cardBack {
-        position: absolute;
+        /*position: absolute;*/
         width: 100%;
         height: 100%;
         backface-visibility: hidden;
-
+        object-fit: cover;
         border-radius: 10px;
         overflow: hidden;
     }
@@ -220,9 +221,10 @@
     }
 
     #previewImage {
-        width: 90PX;
-        height: 70PX;
-        /*object-fit: fill;*/
+        /*height: 70PX;*/
+        width: 120px;
+        aspect-ratio: 3 / 4;
+        object-fit: cover;
         display: none;
     }
 
