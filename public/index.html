@@ -405,16 +405,12 @@ socket.on("characterList", (chars) => {
         inner.appendChild(back);
         btn.appendChild(inner);
 
+        btn.__charData = char;
+
         btn.onclick = () => {
-            state.character = char;
+            setSelectedCard(btn);
 
-            document.querySelectorAll(".charCard")
-                .forEach(b => b.classList.remove("selected"));
-
-            // ADD SELECTION TO CLICKED BTN
-            btn.classList.add("selected");
-
-            updatePreview();
+            centerOnCard(btn);
         };
 
         container.appendChild(btn);
@@ -457,32 +453,36 @@ window.onload = () => {
 
     // SCROLL LISTENER
     container.addEventListener("scroll", () => {
-    const cards = container.children;
-    const card = container.querySelector(".charCard");
+        const cards = container.children;
+        const card = container.querySelector(".charCard");
 
-    if (!card) return;
+        if (!card) return;
 
-    const gap = 20;
-    const cardWidth = card.offsetWidth + gap;
-    const totalCards = cards.length;
-    const cloneCount = 3;
+        const gap = 20;
+        const cardWidth = card.offsetWidth + gap;
+        const totalCards = cards.length;
+        const cloneCount = 3;
 
-    // LOOP LOGIC
-    if (container.scrollLeft <= 0) {
-        container.scrollLeft = cardWidth * (totalCards - cloneCount * 2);
-    }
+        // LOOP LOGIC
+        if (container.scrollLeft <= 0) {
+            container.scrollLeft = cardWidth * (totalCards - cloneCount * 2);
+        }
 
-    if (container.scrollLeft >= cardWidth * (totalCards - cloneCount)) {
-        container.scrollLeft = cardWidth * cloneCount;
-    }
+        if (container.scrollLeft >= cardWidth * (totalCards - cloneCount)) {
+            container.scrollLeft = cardWidth * cloneCount;
+        }
 
-    updateCenterCard();
+        updateCenterCard();
 
-    clearTimeout(scrollTimeout);
-    scrollTimeout = setTimeout(() => {
-        const center = document.querySelector(".charCard.center");
-        if (center) center.click();
-        }, 150);
+        clearTimeout(scrollTimeout);
+
+        scrollTimeout = setTimeout(() => {
+            const center = document.querySelector(".charCard.center");
+
+            if (center) {
+                setSelectedCard(center);
+            }
+        }, 350); // slower = smoother, less jitter
     });
 };
 
@@ -499,11 +499,26 @@ function setName() {
     nameInput.value = "";
 }
 
+function selectCard(card) {
+    document.querySelectorAll(".charCard")
+        .forEach(c => c.classList.remove("selected"));
+
+    card.classList.add("selected");
+
+    state.character = card.__charData;
+
+    updatePreview();
+}
+
 function updateCenterCard() {
     const cards = document.querySelectorAll(".charCard");
     const container = document.getElementById("characters");
 
-    const centerX = container.scrollLeft + container.offsetWidth / 2;
+    const containerRect = container.getBoundingClientRect();
+    const centerX = containerRect.left + containerRect.width / 2;
+
+    const cardRect = card.getBoundingClientRect();
+    const cardCenter = cardRect.left + cardRect.width / 2;
 
     let closest = null;
     let closestDistance = Infinity;
