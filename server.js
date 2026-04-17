@@ -36,16 +36,16 @@ const game = {
 
 // CHARACTER STORAGE
 const characters = [
-    { name: "Joe the Elf", front: "/characters/tricerexfront.png", back: "/characters/joetheelf.png" },
+    { name: "Joe the Elf", front: "/characters/tricerexfront.png", back: "/characters/tricerexback.png" },
     { name: "Tricerex", front: "/characters/tricerexfront.png", back: "/characters/tricerexback.png" },
     { name: "Deerhead", front: "/characters/deerheadfront.png", back: "/characters/deerheadback.png" },
-    { name: "Janice Mowes", front: "/characters/tricerexfront.png", back: "/characters/janicemowes.png" },
-    { name: "Old Sawyer", front: "/characters/tricerexfront.png", back: "/characters/oldsawyer.png" },
-    { name: "Jesus", front: "/characters/tricerexfront.png", back: "/characters/jesus.png" },
+    { name: "Janice Mowes", front: "/characters/tricerexfront.png", back: "/characters/tricerexback.png" },
+    { name: "Old Sawyer", front: "/characters/tricerexfront.png", back: "/characters/tricerexback.png" },
+    { name: "Jesus", front: "/characters/tricerexfront.png", back: "/characters/tricerexback.png" },
     { name: "Fancy Dancer", front: "/characters/fancydancerpinkfront.png", back: "/characters/fancydancerpinkback.png" },
-    { name: "Donna", front: "/characters/tricerexfront.png", back: "/characters/donna.png" },
-    { name: "Lorenzo", front: "/characters/tricerexfront.png", back: "/characters/lorenzo.png" },
-    { name: "Caity Satyr", front: "/characters/tricerexfront.png", back: "/characters/caitysatyr.png" },
+    { name: "Donna", front: "/characters/tricerexfront.png", back: "/characters/tricerexback.png" },
+    { name: "Lorenzo", front: "/characters/tricerexfront.png", back: "/characters/tricerexback.png" },
+    { name: "Caity Satyr", front: "/characters/tricerexfront.png", back: "/characters/tricerexback.png" },
     { name: "The Boss", front: "/characters/thebossfront.png", back: "/characters/thebossback.png" }
 ];
 
