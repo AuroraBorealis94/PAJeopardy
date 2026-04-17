@@ -103,13 +103,30 @@
             100% auto;
     }
 
+    /*
     #characters {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(120px, 160px));
-        /*grid-template-columns: repeat(auto-fill, 140px);*/
+        /grid-template-columns: repeat(auto-fill, 140px);
         gap: 10px;
         max-width: 1000px;
         margin: auto;
+    }
+    */
+
+    #characters {
+        display: flex;
+        overflow-x: auto;
+        scroll-snap-type: x mandatory;
+
+        gap: 20px;
+        padding: 20px;
+
+        max-width: 100%;
+    }
+
+    #characters::-webkit-scrollbar {
+        display: none;
     }
 
     #characters button {
@@ -129,14 +146,34 @@
         /*display: flex;
         flex-direction: column;
         align-items: center*/
+
+        scroll-behavior: smooth;
     }
 
+    /*
     .charCard {
         perspective: 800px;
         border: none;
         background: transparent;
         padding: 0;
         transition: transform 0.15s ease;
+    }
+    */
+
+    .charCard {
+        flex: 0 0 140px; /* width of each card */
+        scroll-snap-align: center;
+        perspective: 800px;
+        transition: transform 0.3s ease, opacity 0.3s ease;
+        /* dim effect*/
+        opacity: 0.4;
+        transform: scale(0.9);
+    }
+
+    .charCard.center {
+        opacity: 1;
+        transform: scale(1.1);
+        z-index: 2;
     }
 
     .cardInner {
@@ -384,7 +421,26 @@ socket.on("characterList", (chars) => {
 
         container.appendChild(btn);
     });
+
+    // UPDATE CENTER CARD
+    setTimeout(updateCenterCard, 100);
 });
+
+window.onload = () => {
+    const container = document.getElementById("characters");
+
+    let scrollTimeout;
+
+    container.addEventListener("scroll", () => {
+        updateCenterCard();
+
+        clearTimeout(scrollTimeout);
+        scrollTimeout = setTimeout(() => {
+            const center = document.querySelector(".charCard.center");
+            if (center) center.click();
+        }, 150);
+    });
+};
 
 // SET NAME
 function setName() {
@@ -397,6 +453,34 @@ function setName() {
     updatePreview();
 
     nameInput.value = "";
+}
+
+function updateCenterCard() {
+    const cards = document.querySelectorAll(".charCard");
+    const container = document.getElementById("characters");
+
+    const centerX = container.scrollLeft + container.offsetWidth / 2;
+
+    let closest = null;
+    let closestDistance = Infinity;
+
+    cards.forEach(card => {
+        const cardCenter =
+            card.offsetLeft + card.offsetWidth / 2;
+
+        const distance = Math.abs(centerX - cardCenter);
+
+        if (distance < closestDistance) {
+            closestDistance = distance;
+            closest = card;
+        }
+    });
+
+    cards.forEach(c => c.classList.remove("center"));
+
+    if (closest) {
+        closest.classList.add("center");
+    }
 }
 
 // JOIN GAME - LOCK IN PLAYER
