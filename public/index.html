@@ -131,9 +131,6 @@
 
     #characters button {
         font-family: 'Korinna', serif;
-        /*background: white;
-        border: 1px solid #ccc;
-        border-radius: 8px;*/
         position: relative;
         overflow: hidden;
 
@@ -210,7 +207,7 @@
         transform: rotateY(180deg);
     }
 
-    /* Name overlay (front side) */
+    /* NAME OVERLAY */
     .charName {
         position: absolute;
         bottom: 0;
@@ -239,9 +236,6 @@
 
     .charCard.selected {
         animation: bounceSelect 0.3s ease;
-        /*background: lightgreen;
-        border: 2px solid limegreen;
-        box-shadow: 0 0 15px limegreen;*/
     }
 
     #preview {
@@ -323,7 +317,15 @@
 
 <!-- ENTER CHARACTER -->
 <h2>Choose Your Team Representative</h2>
-<div id="characters"></div>
+<!--<div id="characters"></div>-->
+
+<div style="display:flex; justify-content:center; gap:20px; align-items:center;">
+    <button id="prevBtn">&#8592;</button>
+
+    <div id="characters"></div>
+
+    <button id="nextBtn">&#8594;</button>
+</div>
 
 <br><br>
 
@@ -406,10 +408,6 @@ socket.on("characterList", (chars) => {
         btn.onclick = () => {
             state.character = char;
 
-            // CLEAR BUTTON SELECTION
-            //document.querySelectorAll("#characters button")
-            //    .forEach(b => b.classList.remove("selected"));
-
             document.querySelectorAll(".charCard")
                 .forEach(b => b.classList.remove("selected"));
 
@@ -423,21 +421,67 @@ socket.on("characterList", (chars) => {
     });
 
     // UPDATE CENTER CARD
-    setTimeout(updateCenterCard, 100);
+    const cards = Array.from(container.children);
+    const cloneCount = 3;
+
+    // Clone FIRST cards to end
+    cards.slice(0, cloneCount).forEach(card => {
+        container.appendChild(card.cloneNode(true));
+    });
+
+    // Clone LAST cards to beginning
+    cards.slice(-cloneCount).forEach(card => {
+        container.insertBefore(card.cloneNode(true), container.firstChild);
+    });
+
+    setTimeout(() => {
+        const card = container.querySelector(".charCard");
+        const gap = 20;
+        const cardWidth = card.offsetWidth + gap;
+
+        container.scrollLeft = cardWidth * cloneCount;
+
+        updateCenterCard();
+    }, 100);
 });
 
+// CAROSEL MANAGER
 window.onload = () => {
     const container = document.getElementById("characters");
 
     let scrollTimeout;
 
-    container.addEventListener("scroll", () => {
-        updateCenterCard();
+    // ARROW CONTROLS
+    document.getElementById("nextBtn").onclick = () => scrollByCard(1);
+    document.getElementById("prevBtn").onclick = () => scrollByCard(-1);
 
-        clearTimeout(scrollTimeout);
-        scrollTimeout = setTimeout(() => {
-            const center = document.querySelector(".charCard.center");
-            if (center) center.click();
+    // SCROLL LISTENER
+    container.addEventListener("scroll", () => {
+    const cards = container.children;
+    const card = container.querySelector(".charCard");
+
+    if (!card) return;
+
+    const gap = 20;
+    const cardWidth = card.offsetWidth + gap;
+    const totalCards = cards.length;
+    const cloneCount = 3;
+
+    // LOOP LOGIC
+    if (container.scrollLeft <= 0) {
+        container.scrollLeft = cardWidth * (totalCards - cloneCount * 2);
+    }
+
+    if (container.scrollLeft >= cardWidth * (totalCards - cloneCount)) {
+        container.scrollLeft = cardWidth * cloneCount;
+    }
+
+    updateCenterCard();
+
+    clearTimeout(scrollTimeout);
+    scrollTimeout = setTimeout(() => {
+        const center = document.querySelector(".charCard.center");
+        if (center) center.click();
         }, 150);
     });
 };
@@ -481,6 +525,21 @@ function updateCenterCard() {
     if (closest) {
         closest.classList.add("center");
     }
+}
+
+function scrollByCard(direction) {
+    const container = document.getElementById("characters");
+    const card = container.querySelector(".charCard");
+
+    if (!card) return;
+
+    const gap = 20; // matches your CSS gap
+    const cardWidth = card.offsetWidth + gap;
+
+    container.scrollBy({
+        left: direction * cardWidth,
+        behavior: "smooth"
+    });
 }
 
 // JOIN GAME - LOCK IN PLAYER
