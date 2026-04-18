@@ -117,7 +117,8 @@
     #characters {
         display: flex;
         overflow-x: auto;
-        scroll-snap-type: x mandatory;
+        /*scroll-snap-type: x mandatory;*/
+        scroll-snap-type: none;
 
         gap: 20px;
         padding: 20px;
@@ -169,8 +170,8 @@
 
     .charCard.center {
         opacity: 1;
-        transform: scale(1.1);
-        z-index: 2;
+        transform: scale(1.15);
+        z-index: 3;
     }
 
     .cardInner {
@@ -222,7 +223,7 @@
     
     .charCard:hover {
         transform: scale(1.05);
-        transition: transform 0.15s;
+        /*transition: transform 0.15s;*/
     }
 
     .charCard:hover .cardFront img {
@@ -409,7 +410,6 @@ socket.on("characterList", (chars) => {
 
         btn.onclick = () => {
             setSelectedCard(btn);
-
             centerOnCard(btn);
         };
 
@@ -422,12 +422,12 @@ socket.on("characterList", (chars) => {
 
     // Clone FIRST cards to end
     cards.slice(0, cloneCount).forEach(card => {
-        container.appendChild(card.cloneNode(true));
+        container.appendChild(cloneCard(card));
     });
 
     // Clone LAST cards to beginning
     cards.slice(-cloneCount).forEach(card => {
-        container.insertBefore(card.cloneNode(true), container.firstChild);
+        container.insertBefore(cloneCard(card), container.firstChild);
     });
 
     setTimeout(() => {
@@ -438,14 +438,19 @@ socket.on("characterList", (chars) => {
         container.scrollLeft = cardWidth * cloneCount;
 
         updateCenterCard();
+
+        /*
+        const center = document.querySelector(".charCard.center");
+        if (center) setSelectedCard(center);
+        */
     }, 100);
 });
 
-// CAROSEL MANAGER
+// CAROUSEL MANAGER
 window.onload = () => {
     const container = document.getElementById("characters");
 
-    let scrollTimeout;
+    /*let scrollTimeout;*/
 
     // ARROW CONTROLS
     document.getElementById("nextBtn").onclick = () => scrollByCard(1);
@@ -464,25 +469,28 @@ window.onload = () => {
         const cloneCount = 3;
 
         // LOOP LOGIC
-        if (container.scrollLeft <= 0) {
+        const buffer = cardWidth; // 1 card buffer
+
+        if (container.scrollLeft < buffer) {
             container.scrollLeft = cardWidth * (totalCards - cloneCount * 2);
         }
 
-        if (container.scrollLeft >= cardWidth * (totalCards - cloneCount)) {
+        if (container.scrollLeft > cardWidth * (totalCards - cloneCount) - buffer) {
             container.scrollLeft = cardWidth * cloneCount;
         }
 
         updateCenterCard();
 
-        clearTimeout(scrollTimeout);
+        /*
+        const center = document.querySelector(".charCard.center");
+        if (center) setSelectedCard(center);
+        */
+        /*clearTimeout(scrollTimeout);
 
         scrollTimeout = setTimeout(() => {
             const center = document.querySelector(".charCard.center");
-
-            if (center) {
-                setSelectedCard(center);
-            }
-        }, 350); // slower = smoother, less jitter
+            if (center) setSelectedCard(center);
+        };*/
     });
 };
 
@@ -499,15 +507,43 @@ function setName() {
     nameInput.value = "";
 }
 
-function selectCard(card) {
+function setSelectedCard(card) {
     document.querySelectorAll(".charCard")
         .forEach(c => c.classList.remove("selected"));
 
     card.classList.add("selected");
-
     state.character = card.__charData;
 
     updatePreview();
+}
+
+function cloneCard(original) {
+    const clone = original.cloneNode(true);
+
+    // copy data
+    clone.__charData = original.__charData;
+
+    // reattach click
+    clone.onclick = () => {
+        setSelectedCard(clone);
+        centerOnCard(clone);
+    };
+
+    return clone;
+}
+
+function centerOnCard(card) {
+    const container = document.getElementById("characters");
+
+    const offset =
+        card.offsetLeft -
+        container.offsetWidth / 2 +
+        card.offsetWidth / 2;
+
+    container.scrollTo({
+        left: offset,
+        behavior: "smooth"
+    });
 }
 
 function updateCenterCard() {
@@ -517,15 +553,12 @@ function updateCenterCard() {
     const containerRect = container.getBoundingClientRect();
     const centerX = containerRect.left + containerRect.width / 2;
 
-    const cardRect = card.getBoundingClientRect();
-    const cardCenter = cardRect.left + cardRect.width / 2;
-
     let closest = null;
     let closestDistance = Infinity;
 
     cards.forEach(card => {
-        const cardCenter =
-            card.offsetLeft + card.offsetWidth / 2;
+        const rect = card.getBoundingClientRect();
+        const cardCenter = rect.left + rect.width / 2;
 
         const distance = Math.abs(centerX - cardCenter);
 
