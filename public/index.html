@@ -105,9 +105,10 @@
 
     #characters {
         display: flex;
-        overflow-x: auto;
+        /*overflow-x: auto;*/
+        overflow-y: visible;
         /*scroll-snap-type: none;*/
-        gap: 18px;
+        gap: 10px;
         /*padding: 18px;*/
         padding: 40px 20px;
         max-width: 100%;
@@ -142,8 +143,9 @@
         /* dim effect*/
         opacity: 0.6;
         transform: scale(0.9);
-
         position:relative;
+
+        z-index: 1;
     }
 
     .charCard.center {
@@ -151,10 +153,10 @@
         /*transform: scale(1.15);
         z-index: 3;*/
 
-        transform: scale(1.25) translateY(-25px);
-        z-index: 10;
+        transform: scale(1.25);
+        z-index: 50;
 
-        box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+        /*box-shadow: 0 20px 40px rgba(0,0,0,0.5);*/
     }
 
     .cardInner {
@@ -272,6 +274,21 @@
         background: gray;
         transform: none;
         box-shadow: none;
+    }
+
+    #prevBtn, #nextBtn {
+        position: relative;
+        z-index: 999;
+        /*
+        position: relative;
+        z-index: 100;
+        background: rgba(0,0,0,0.6);
+        color: white;
+        border: 1px solid #666;
+        border-radius: 8px;
+        padding: 10px;
+        cursor: pointer;
+        */
     }
 
 </style>
