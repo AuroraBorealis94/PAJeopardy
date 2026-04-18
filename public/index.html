@@ -103,27 +103,16 @@
             100% auto;
     }
 
-    /*
-    #characters {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(120px, 160px));
-        /grid-template-columns: repeat(auto-fill, 140px);
-        gap: 10px;
-        max-width: 1000px;
-        margin: auto;
-    }
-    */
-
     #characters {
         display: flex;
         overflow-x: auto;
-        /*scroll-snap-type: x mandatory;*/
-        scroll-snap-type: none;
-
-        gap: 20px;
-        padding: 20px;
-
+        /*scroll-snap-type: none;*/
+        gap: 18px;
+        /*padding: 18px;*/
+        padding: 40px 20px;
         max-width: 100%;
+        /*width: 100%*/
+        align-items: center;
     }
 
     #characters::-webkit-scrollbar {
@@ -141,22 +130,9 @@
 
         padding: 0;
         cursor: pointer;
-        /*display: flex;
-        flex-direction: column;
-        align-items: center*/
 
         scroll-behavior: smooth;
     }
-
-    /*
-    .charCard {
-        perspective: 800px;
-        border: none;
-        background: transparent;
-        padding: 0;
-        transition: transform 0.15s ease;
-    }
-    */
 
     .charCard {
         flex: 0 0 140px; /* width of each card */
@@ -164,19 +140,24 @@
         perspective: 800px;
         transition: transform 0.3s ease, opacity 0.3s ease;
         /* dim effect*/
-        opacity: 0.4;
+        opacity: 0.6;
         transform: scale(0.9);
+
+        position:relative;
     }
 
     .charCard.center {
         opacity: 1;
-        transform: scale(1.15);
-        z-index: 3;
+        /*transform: scale(1.15);
+        z-index: 3;*/
+
+        transform: scale(1.25) translateY(-25px);
+        z-index: 10;
+
+        box-shadow: 0 20px 40px rgba(0,0,0,0.5);
     }
 
     .cardInner {
-        /*height: 100%;*/
-        /*position: absolute;*/
         width: 100%;
         aspect-ratio: 3 / 4;
         transition: transform 0.5s ease;
@@ -220,16 +201,15 @@
 
         background: rgba(0,0,0,0.6);
     }
-    
+    /*
     .charCard:hover {
         transform: scale(1.05);
-        /*transition: transform 0.15s;*/
     }
 
     .charCard:hover .cardFront img {
         transform: scale(1.1);
         transition: transform 0.2s;
-    }
+    }*/
 
     .charCard:active {
         transform: scale(0.95);
@@ -254,7 +234,6 @@
     }
 
     #previewImage {
-        /*height: 70PX;*/
         width: 120px;
         aspect-ratio: 3 / 4;
         object-fit: cover;
@@ -301,7 +280,6 @@
 </head>
 <body>
 
-<!--<br><br><br>-->
 <h1 id="h11" style="padding-top: 50px;">PA Jeopardy</h1>
 <h1 id="h12" style="font-size: 35px; padding-bottom: 20px;">2026 Edition</h1>
 
@@ -318,7 +296,6 @@
 
 <!-- ENTER CHARACTER -->
 <h2>Choose Your Team Representative</h2>
-<!--<div id="characters"></div>-->
 
 <div style="display:flex; justify-content:center; gap:20px; align-items:center;">
     <button id="prevBtn">&#8592;</button>
@@ -334,7 +311,6 @@
 <div id="preview">
     <p id="teamLabel" style="display:none;"><b>Team </b><span id="previewName">---</span></p>
 
-    <!--<p><b>Character:</b></p>-->
     <div id="previewCharacterBox">
         <img id="previewImage" src="" />
         <div id="previewCharacterText">---</div>
@@ -438,19 +414,12 @@ socket.on("characterList", (chars) => {
         container.scrollLeft = cardWidth * cloneCount;
 
         updateCenterCard();
-
-        /*
-        const center = document.querySelector(".charCard.center");
-        if (center) setSelectedCard(center);
-        */
     }, 100);
 });
 
 // CAROUSEL MANAGER
 window.onload = () => {
     const container = document.getElementById("characters");
-
-    /*let scrollTimeout;*/
 
     // ARROW CONTROLS
     document.getElementById("nextBtn").onclick = () => scrollByCard(1);
@@ -480,17 +449,6 @@ window.onload = () => {
         }
 
         updateCenterCard();
-
-        /*
-        const center = document.querySelector(".charCard.center");
-        if (center) setSelectedCard(center);
-        */
-        /*clearTimeout(scrollTimeout);
-
-        scrollTimeout = setTimeout(() => {
-            const center = document.querySelector(".charCard.center");
-            if (center) setSelectedCard(center);
-        };*/
     });
 };
 
@@ -581,7 +539,7 @@ function scrollByCard(direction) {
 
     if (!card) return;
 
-    const gap = 20; // matches your CSS gap
+    const gap = 20; // matches CSS gap
     const cardWidth = card.offsetWidth + gap;
 
     container.scrollBy({
