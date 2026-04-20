@@ -36,17 +36,17 @@ const game = {
 
 // CHARACTER STORAGE
 const characters = [
-    { name: "The Newlyweds", front: "/characters/thenewlywedsfront.png", back: "/characters/thenewlywedsback.png" },
-    { name: "Tricerex", front: "/characters/tricerexfront.png", back: "/characters/tricerexback.png" },
-    { name: "Deerhead", front: "/characters/deerheadfront.png", back: "/characters/deerheadback.png" },
+    { name: "The Boss", front: "/characters/thebossfront.png", back: "/characters/thebossback.png" },
     { name: "Janice Mowes", front: "/characters/janicemowesfront.png", back: "/characters/janicemowesback.png" },
-    { name: "Wise Old Man", front: "/characters/oldsawyerfront.png", back: "/characters/oldsawyerback.png" },
-    { name: "Jesus", front: "/characters/jesusfront.png", back: "/characters/jesusback.png" },
+    { name: "Tricerex", front: "/characters/tricerexfront.png", back: "/characters/tricerexback.png" },
     { name: "Fancy Dancer", front: "/characters/fancydancerpinkfront.png", back: "/characters/fancydancerpinkback.png" },
-    { name: "The Guitarist", front: "/characters/tricerexfront.png", back: "/characters/tricerexback.png" },
-    { name: "Lorenzo", front: "/characters/lorenzofront.png", back: "/characters/lorenzoback.png" },
+    { name: "Deerhead", front: "/characters/deerheadfront.png", back: "/characters/deerheadback.png" },
     { name: "Caity Satyr", front: "/characters/caitysatyrfront.png", back: "/characters/caitysatyrback.png" },
-    { name: "The Boss", front: "/characters/thebossfront.png", back: "/characters/thebossback.png" }
+    { name: "The Holy Spirit", front: "/characters/jesusfront.png", back: "/characters/jesusback.png" },
+    { name: "The Newlyweds", front: "/characters/thenewlywedsfront.png", back: "/characters/thenewlywedsback.png" },
+    { name: "Lorenzo", front: "/characters/lorenzofront.png", back: "/characters/lorenzoback.png" },
+    { name: "Wise Old Boy", front: "/characters/oldsawyerfront.png", back: "/characters/oldsawyerback.png" },
+    { name: "The Guitarist", front: "/characters/theguitaristfront.png", back: "/characters/theguitaristback.png" }
 ];
 
 // CLUE STORAGE (filled when game starts)
