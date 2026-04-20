@@ -106,19 +106,18 @@
     #characters {
         display: flex;
         overflow-x: auto;
-        /*scroll-snap-type: none;*/
         gap: 18px;
-        /*padding: 18px;*/
         padding: 40px 0;
         max-width: 100%;
-        /*width: 100%*/
         align-items: center;
     }
 
     #characters::before,
     #characters::after {
         content: "";
-        flex: 0 0 calc(50% - 70px); /* 70px = half card width (140 / 2) */
+        /* Centering Selection */
+        /*flex: 0 0 calc(50% - 70px);*/
+        flex: 0 0 calc(50% - clamp(110px, 30vw, 140px) / 2);
     }
 
     #characters::-webkit-scrollbar {
@@ -141,12 +140,10 @@
     }
 
     .charCard {
-        /*flex: 0 0 140px; width of each card */
         flex: 0 0 clamp(110px, 30vw, 140px);
         scroll-snap-align: center;
         perspective: 800px;
         transition: transform 0.3s ease, opacity 0.3s ease;
-        /* dim effect*/
         opacity: 0.6;
         transform: scale(0.9);
 
@@ -155,13 +152,8 @@
 
     .charCard.center {
         opacity: 1;
-        /*transform: scale(1.15);
-        z-index: 3;*/
-
         transform: scale(1.25);
         z-index: 10;
-
-        /*box-shadow: 0 20px 40px rgba(0,0,0,0.5);*/
     }
 
     .cardInner {
@@ -195,30 +187,6 @@
     .cardBack {
         transform: rotateY(180deg);
     }
-
-    /* NAME OVERLAY */
-    /*
-    .charName {
-        position: absolute;
-        bottom: 0;
-        width: 100%;
-
-        font-family: 'Korinna', serif;
-        color: white;
-        font-size: 14px;
-
-        background: rgba(0,0,0,0.6);
-    }
-    */
-    /*
-    .charCard:hover {
-        transform: scale(1.05);
-    }
-
-    .charCard:hover .cardFront img {
-        transform: scale(1.1);
-        transition: transform 0.2s;
-    }*/
 
     .charCard:active {
         transform: scale(0.95);
@@ -286,16 +254,6 @@
     #prevBtn, #nextBtn {
         position: relative;
         z-index: 999;
-        /*
-        position: relative;
-        z-index: 100;
-        background: rgba(0,0,0,0.6);
-        color: white;
-        border: 1px solid #666;
-        border-radius: 8px;
-        padding: 10px;
-        cursor: pointer;
-        */
     }
 
 </style>
@@ -337,7 +295,7 @@
 
     <div id="previewCharacterBox">
         <img id="previewImage" src="" />
-        <div id="previewCharacterText">---</div>
+        <!--<div id="previewCharacterText">---</div>-->
     </div>
 </div>
 
@@ -360,6 +318,41 @@ const state = {
 // ROOM CODE
 socket.on("roomCode", (code) => {
     document.getElementById("roomCode").textContent = code;
+});
+
+let lockedCharacters = [];
+
+socket.on("lockedCharacters", (locked) => {
+    lockedCharacters = locked;
+
+    document.querySelectorAll(".charCard").forEach(card => {
+        const charName = card.__charData?.name;
+
+        if (!charName) return;
+
+        if (locked.includes(charName)) {
+            card.style.opacity = "0.3";
+            card.style.pointerEvents = "none";
+            card.style.filter = "grayscale(100%)";
+        } else {
+            card.style.opacity = "";
+            card.style.pointerEvents = "";
+            card.style.filter = "";
+        }
+    });
+
+    if (state.character && locked.includes(state.character.name)) {
+        state.character = null;
+
+        document.querySelectorAll(".charCard")
+            .forEach(c => c.classList.remove("selected"));
+
+        updatePreview();
+    }
+});
+
+socket.on("characterTaken", (char) => {
+    alert(char + " is already taken!");
 });
 
 // CHARACTER LIST
@@ -392,16 +385,8 @@ socket.on("characterList", (chars) => {
         const imgBack = document.createElement("img");
         imgBack.src = char.back; // or different image later
 
-        // NAME LABEL (on both sides optional)
-        /*const label = document.createElement("div");
-        label.classList.add("charName");
-        label.textContent = char.name;*/
-
         front.appendChild(imgFront);
-        /*front.appendChild(label);*/
-
         back.appendChild(imgBack);
-
         inner.appendChild(front);
         inner.appendChild(back);
         btn.appendChild(inner);
@@ -409,6 +394,9 @@ socket.on("characterList", (chars) => {
         btn.__charData = char;
 
         btn.onclick = () => {
+            // Prevent selecting used cards
+            if (lockedCharacters.includes(btn.__charData.name)) return;
+            
             setSelectedCard(btn);
             centerOnCard(btn);
         };
@@ -507,6 +495,9 @@ function cloneCard(original) {
 
     // reattach click
     clone.onclick = () => {
+        // Centering Selection
+        if (lockedCharacters.includes(clone.__charData.name)) return;
+        
         setSelectedCard(clone);
         centerOnCard(clone);
     };
@@ -514,20 +505,7 @@ function cloneCard(original) {
     return clone;
 }
 
-/*function centerOnCard(card) {
-    const container = document.getElementById("characters");
-
-    const offset =
-        card.offsetLeft -
-        container.offsetWidth / 2 +
-        card.offsetWidth / 2;
-
-    container.scrollTo({
-        left: offset,
-        behavior: "smooth"
-    });
-}*/
-
+/*
 function centerOnCard(card) {
     const container = document.getElementById("characters");
 
@@ -542,36 +520,21 @@ function centerOnCard(card) {
         left: offset,
         behavior: "smooth"
     });
-}
+}*/
 
-/*function updateCenterCard() {
-    const cards = document.querySelectorAll(".charCard");
+function centerOnCard(card) {
     const container = document.getElementById("characters");
 
-    const containerRect = container.getBoundingClientRect();
-    const centerX = containerRect.left + containerRect.width / 2;
+    const cardCenter = card.offsetLeft + card.offsetWidth / 2;
+    const containerCenter = container.offsetWidth / 2;
 
-    let closest = null;
-    let closestDistance = Infinity;
+    const scrollTarget = cardCenter - containerCenter;
 
-    cards.forEach(card => {
-        const rect = card.getBoundingClientRect();
-        const cardCenter = rect.left + rect.width / 2;
-
-        const distance = Math.abs(centerX - cardCenter);
-
-        if (distance < closestDistance) {
-            closestDistance = distance;
-            closest = card;
-        }
+    container.scrollTo({
+        left: scrollTarget,
+        behavior: "smooth"
     });
-
-    cards.forEach(c => c.classList.remove("center"));
-
-    if (closest) {
-        closest.classList.add("center");
-    }
-}*/
+}
 
 function updateCenterCard() {
     const cards = document.querySelectorAll(".charCard");
@@ -650,7 +613,6 @@ function joinGame() {
 
     // DISABLE BUTTONS AFTER JOINING
     document.getElementById("enterBtn").disabled = true;
-    //document.getElementById("joinBtn").disabled = true;
 }
 
 // PREVIEW UPDATE
@@ -668,7 +630,6 @@ function updatePreview() {
         text.textContent = state.character.name;
     } else {
         img.style.display = "none";
-        //text.textContent = "---";
     }
 }
 
