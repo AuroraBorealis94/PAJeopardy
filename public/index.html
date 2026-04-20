@@ -106,19 +106,16 @@
     #characters {
         display: flex;
         overflow-x: auto;
-        /*scroll-snap-type: none;*/
         gap: 18px;
-        /*padding: 18px;*/
         padding: 40px 0;
         max-width: 100%;
-        /*width: 100%*/
         align-items: center;
     }
 
     #characters::before,
     #characters::after {
         content: "";
-        flex: 0 0 calc(50% - 70px); /* 70px = half card width (140 / 2) */
+        flex: 0 0 calc(50% - 70px);
     }
 
     #characters::-webkit-scrollbar {
@@ -156,7 +153,6 @@
     .charCard.center {
         opacity: 1;
         transform: scale(1.25);
-        /*transform: scale(1.25) translateY(-10px);*/
         z-index: 10;
     }
 
@@ -191,30 +187,6 @@
     .cardBack {
         transform: rotateY(180deg);
     }
-
-    /* NAME OVERLAY */
-    /*
-    .charName {
-        position: absolute;
-        bottom: 0;
-        width: 100%;
-
-        font-family: 'Korinna', serif;
-        color: white;
-        font-size: 14px;
-
-        background: rgba(0,0,0,0.6);
-    }
-    */
-    /*
-    .charCard:hover {
-        transform: scale(1.05);
-    }
-
-    .charCard:hover .cardFront img {
-        transform: scale(1.1);
-        transition: transform 0.2s;
-    }*/
 
     .charCard:active {
         transform: scale(0.95);
@@ -282,16 +254,6 @@
     #prevBtn, #nextBtn {
         position: relative;
         z-index: 999;
-        /*
-        position: relative;
-        z-index: 100;
-        background: rgba(0,0,0,0.6);
-        color: white;
-        border: 1px solid #666;
-        border-radius: 8px;
-        padding: 10px;
-        cursor: pointer;
-        */
     }
 
 </style>
@@ -353,6 +315,9 @@ const state = {
     character: null
 };
 
+// For soft set center after scroll before selecting
+let scrollTimeout;
+
 // ROOM CODE
 socket.on("roomCode", (code) => {
     document.getElementById("roomCode").textContent = code;
@@ -388,16 +353,8 @@ socket.on("characterList", (chars) => {
         const imgBack = document.createElement("img");
         imgBack.src = char.back; // or different image later
 
-        // NAME LABEL (on both sides optional)
-        /*const label = document.createElement("div");
-        label.classList.add("charName");
-        label.textContent = char.name;*/
-
         front.appendChild(imgFront);
-        /*front.appendChild(label);*/
-
         back.appendChild(imgBack);
-
         inner.appendChild(front);
         inner.appendChild(back);
         btn.appendChild(inner);
@@ -446,7 +403,7 @@ window.onload = () => {
     document.getElementById("prevBtn").onclick = () => scrollByCard(-1);
 
     // SCROLL LISTENER
-    container.addEventListener("scroll", () => {
+    /*container.addEventListener("scroll", () => {
         const cards = container.children;
         const card = container.querySelector(".charCard");
 
@@ -469,6 +426,34 @@ window.onload = () => {
         }
 
         updateCenterCard();
+    });*/
+
+    // For soft set center after scroll before selecting
+    container.addEventListener("scroll", () => {
+        const card = container.querySelector(".charCard");
+        if (!card) return;
+
+        const gap = 20;
+        const cardWidth = card.offsetWidth + gap;
+        const totalCards = container.children.length;
+        const cloneCount = 3;
+
+        // LOOP LOGIC
+        if (container.scrollLeft < cardWidth) {
+            container.scrollLeft = cardWidth * (totalCards - cloneCount * 2);
+        }
+
+        if (container.scrollLeft > cardWidth * (totalCards - cloneCount)) {
+            container.scrollLeft = cardWidth * cloneCount;
+        }
+
+        updateCenterCard();
+
+        // Snap AFTER scrolling stops
+        clearTimeout(scrollTimeout);
+        scrollTimeout = setTimeout(() => {
+            snapToNearestCard();
+        }, 120); // tweak: 100–150 feels good
     });
 };
 
@@ -526,35 +511,6 @@ function centerOnCard(card) {
     });
 }
 
-/*function updateCenterCard() {
-    const cards = document.querySelectorAll(".charCard");
-    const container = document.getElementById("characters");
-
-    const containerRect = container.getBoundingClientRect();
-    const centerX = containerRect.left + containerRect.width / 2;
-
-    let closest = null;
-    let closestDistance = Infinity;
-
-    cards.forEach(card => {
-        const rect = card.getBoundingClientRect();
-        const cardCenter = rect.left + rect.width / 2;
-
-        const distance = Math.abs(centerX - cardCenter);
-
-        if (distance < closestDistance) {
-            closestDistance = distance;
-            closest = card;
-        }
-    });
-
-    cards.forEach(c => c.classList.remove("center"));
-
-    if (closest) {
-        closest.classList.add("center");
-    }
-}*/
-
 function updateCenterCard() {
     const cards = document.querySelectorAll(".charCard");
     const container = document.getElementById("characters");
@@ -596,6 +552,39 @@ function scrollByCard(direction) {
     });
 }
 
+// SNAP TO CENTER CARD
+function snapToNearestCard() {
+    const container = document.getElementById("characters");
+    const cards = document.querySelectorAll(".charCard");
+
+    const centerX = container.scrollLeft + container.offsetWidth / 2;
+
+    let closest = null;
+    let closestDistance = Infinity;
+
+    cards.forEach(card => {
+        const cardCenter = card.offsetLeft + card.offsetWidth / 2;
+        const distance = Math.abs(centerX - cardCenter);
+
+        if (distance < closestDistance) {
+            closestDistance = distance;
+            closest = card;
+        }
+    });
+
+    if (closest) {
+        const target =
+            closest.offsetLeft -
+            container.offsetWidth / 2 +
+            closest.offsetWidth / 2;
+
+        container.scrollTo({
+            left: target,
+            behavior: "smooth"
+        });
+    }
+}
+
 // JOIN GAME - LOCK IN PLAYER
 function joinGame() {
     if (!state.name) {
@@ -632,7 +621,6 @@ function joinGame() {
 
     // DISABLE BUTTONS AFTER JOINING
     document.getElementById("enterBtn").disabled = true;
-    //document.getElementById("joinBtn").disabled = true;
 }
 
 // PREVIEW UPDATE
@@ -650,7 +638,6 @@ function updatePreview() {
         text.textContent = state.character.name;
     } else {
         img.style.display = "none";
-        //text.textContent = "---";
     }
 }
 
