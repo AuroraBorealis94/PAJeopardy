@@ -504,7 +504,7 @@ function cloneCard(original) {
     return clone;
 }
 
-
+/*
 function centerOnCard(card) {
     const container = document.getElementById("characters");
 
@@ -519,9 +519,9 @@ function centerOnCard(card) {
         left: offset,
         behavior: "smooth"
     });
-}
+}*/
 
-/*
+
 function centerOnCard(card) {
     const container = document.getElementById("characters");
 
@@ -534,7 +534,7 @@ function centerOnCard(card) {
         left: scrollTarget,
         behavior: "smooth"
     });
-}*/
+}
 
 function updateCenterCard() {
     const cards = document.querySelectorAll(".charCard");
@@ -568,7 +568,7 @@ function scrollByCard(direction) {
 
     if (!card) return;
 
-    const gap = 20; // matches CSS gap
+    const gap = 18; // matches CSS gap
     const cardWidth = card.offsetWidth + gap;
 
     container.scrollBy({
