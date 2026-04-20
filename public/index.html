@@ -117,7 +117,6 @@
         content: "";
         /* Centering Selection */
         flex: 0 0 calc(50% - 70px);
-        /*flex: 0 0 calc(50% - clamp(110px, 30vw, 140px) / 2);*/
     }
 
     #characters::-webkit-scrollbar {
@@ -420,7 +419,7 @@ socket.on("characterList", (chars) => {
 
     setTimeout(() => {
         const card = container.querySelector(".charCard");
-        const gap = 20;
+        const gap = 18;
         const cardWidth = card.offsetWidth + gap;
 
         container.scrollLeft = cardWidth * cloneCount;
@@ -444,7 +443,7 @@ window.onload = () => {
 
         if (!card) return;
 
-        const gap = 20;
+        const gap = 18;
         const cardWidth = card.offsetWidth + gap;
         const totalCards = cards.length;
         const cloneCount = 3;
