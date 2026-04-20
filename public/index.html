@@ -446,15 +446,17 @@ socket.on("characterList", (chars) => {
     }, 100);
     */
     requestAnimationFrame(() => {
-        const card = container.querySelector(".charCard");
-        if (!card) return;
+        const container = document.getElementById("characters");
+        const first = container.querySelector(".charCard");
+        if (!first) return;
 
-        const gap = 18; // MUST match your scroll logic
-        const cardWidth = card.offsetWidth + gap;
+        const gap = 18;
+        const cardWidth = first.offsetWidth + gap;
 
         const cloneCount = 3;
 
-        container.scrollLeft = cardWidth * cloneCount;
+        // important: small offset correction for mobile rounding
+        container.scrollLeft = (cardWidth * cloneCount) + 1;
 
         updateCenterCard();
     });
@@ -469,6 +471,7 @@ window.onload = () => {
     document.getElementById("prevBtn").onclick = () => scrollByCard(-1);
 
     // SCROLL LISTENER
+    /*
     container.addEventListener("scroll", () => {
         //const cards = container.children;
         //const card = container.querySelector(".charCard");
@@ -497,6 +500,7 @@ window.onload = () => {
             container.scrollLeft -= loopWidth;
             return;
         }
+        */
         /*
         // NEW LOOP LOGIC
         const maxScroll =
@@ -527,6 +531,33 @@ window.onload = () => {
             container.scrollLeft = cardWidth * cloneCount;
         }
         */
+
+    container.addEventListener("scroll", () => {
+        const cards = container.querySelectorAll(".charCard");
+        if (!cards.length) return;
+
+        const first = cards[0];
+        const gap = 18;
+        const cardWidth = first.offsetWidth + gap;
+
+        const cloneCount = 3;
+        const totalCards = cards.length;
+
+        const loopSize = cardWidth * (totalCards - cloneCount * 2);
+
+        // LEFT WRAP
+        if (container.scrollLeft <= cardWidth * cloneCount * 0.5) {
+            container.scrollLeft += loopSize;
+            return;
+        }
+
+        // RIGHT WRAP
+        if (container.scrollLeft >= cardWidth * (totalCards - cloneCount * 1.5)) {
+            container.scrollLeft -= loopSize;
+            return;
+        }
+
+        updateCenterCard();
     });
 };
 
@@ -612,17 +643,19 @@ function updateCenterCard() {
 
 function updateCenterCard() {
     const container = document.getElementById("characters");
-    const cards = container.querySelectorAll(".charCard");
+    const cards = Array.from(container.querySelectorAll(".charCard"));
 
     if (!cards.length) return;
 
-    const containerCenter = container.scrollLeft + container.offsetWidth / 2;
+    const containerCenter = container.getBoundingClientRect().left + container.offsetWidth / 2;
 
     let closest = null;
     let closestDistance = Infinity;
 
     cards.forEach(card => {
-        const cardCenter = card.offsetLeft + card.offsetWidth / 2;
+        const rect = card.getBoundingClientRect();
+        const cardCenter = rect.left + rect.width / 2;
+
         const distance = Math.abs(containerCenter - cardCenter);
 
         if (distance < closestDistance) {
