@@ -109,10 +109,16 @@
         /*scroll-snap-type: none;*/
         gap: 18px;
         /*padding: 18px;*/
-        padding: 40px 20px;
+        padding: 40px 0;
         max-width: 100%;
         /*width: 100%*/
         align-items: center;
+    }
+
+    #characters::before,
+    #characters::after {
+        content: "";
+        flex: 0 0 calc(50% - 70px); /* 70px = half card width (140 / 2) */
     }
 
     #characters::-webkit-scrollbar {
@@ -135,7 +141,8 @@
     }
 
     .charCard {
-        flex: 0 0 140px; /* width of each card */
+        /*flex: 0 0 140px; width of each card */
+        flex: 0 0 clamp(110px, 30vw, 140px);
         scroll-snap-align: center;
         perspective: 800px;
         transition: transform 0.3s ease, opacity 0.3s ease;
@@ -507,7 +514,7 @@ function cloneCard(original) {
     return clone;
 }
 
-function centerOnCard(card) {
+/*function centerOnCard(card) {
     const container = document.getElementById("characters");
 
     const offset =
@@ -519,9 +526,25 @@ function centerOnCard(card) {
         left: offset,
         behavior: "smooth"
     });
+}*/
+
+function centerOnCard(card) {
+    const container = document.getElementById("characters");
+
+    const containerRect = container.getBoundingClientRect();
+    const cardRect = card.getBoundingClientRect();
+
+    const offset =
+        (cardRect.left + cardRect.width / 2) -
+        (containerRect.left + containerRect.width / 2);
+
+    container.scrollBy({
+        left: offset,
+        behavior: "smooth"
+    });
 }
 
-function updateCenterCard() {
+/*function updateCenterCard() {
     const cards = document.querySelectorAll(".charCard");
     const container = document.getElementById("characters");
 
@@ -535,6 +558,32 @@ function updateCenterCard() {
         const rect = card.getBoundingClientRect();
         const cardCenter = rect.left + rect.width / 2;
 
+        const distance = Math.abs(centerX - cardCenter);
+
+        if (distance < closestDistance) {
+            closestDistance = distance;
+            closest = card;
+        }
+    });
+
+    cards.forEach(c => c.classList.remove("center"));
+
+    if (closest) {
+        closest.classList.add("center");
+    }
+}*/
+
+function updateCenterCard() {
+    const cards = document.querySelectorAll(".charCard");
+    const container = document.getElementById("characters");
+
+    const centerX = container.scrollLeft + container.offsetWidth / 2;
+
+    let closest = null;
+    let closestDistance = Infinity;
+
+    cards.forEach(card => {
+        const cardCenter = card.offsetLeft + card.offsetWidth / 2;
         const distance = Math.abs(centerX - cardCenter);
 
         if (distance < closestDistance) {
