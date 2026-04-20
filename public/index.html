@@ -116,8 +116,8 @@
     #characters::after {
         content: "";
         /* Centering Selection */
-        /*flex: 0 0 calc(50% - 70px);*/
-        flex: 0 0 calc(50% - clamp(110px, 30vw, 140px) / 2);
+        flex: 0 0 calc(50% - 70px);
+        /*flex: 0 0 calc(50% - clamp(110px, 30vw, 140px) / 2);*/
     }
 
     #characters::-webkit-scrollbar {
@@ -495,7 +495,6 @@ function cloneCard(original) {
 
     // reattach click
     clone.onclick = () => {
-        // Centering Selection
         if (lockedCharacters.includes(clone.__charData.name)) return;
         
         setSelectedCard(clone);
@@ -505,7 +504,7 @@ function cloneCard(original) {
     return clone;
 }
 
-/*
+
 function centerOnCard(card) {
     const container = document.getElementById("characters");
 
@@ -520,8 +519,9 @@ function centerOnCard(card) {
         left: offset,
         behavior: "smooth"
     });
-}*/
+}
 
+/*
 function centerOnCard(card) {
     const container = document.getElementById("characters");
 
@@ -534,7 +534,7 @@ function centerOnCard(card) {
         left: scrollTarget,
         behavior: "smooth"
     });
-}
+}*/
 
 function updateCenterCard() {
     const cards = document.querySelectorAll(".charCard");
