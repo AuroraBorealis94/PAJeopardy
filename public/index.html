@@ -106,16 +106,19 @@
     #characters {
         display: flex;
         overflow-x: auto;
+        /*scroll-snap-type: none;*/
         gap: 18px;
+        /*padding: 18px;*/
         padding: 40px 0;
         max-width: 100%;
+        /*width: 100%*/
         align-items: center;
     }
 
     #characters::before,
     #characters::after {
         content: "";
-        flex: 0 0 calc(50% - 70px);
+        flex: 0 0 calc(50% - 70px); /* 70px = half card width (140 / 2) */
     }
 
     #characters::-webkit-scrollbar {
@@ -138,10 +141,12 @@
     }
 
     .charCard {
+        /*flex: 0 0 140px; width of each card */
         flex: 0 0 clamp(110px, 30vw, 140px);
         scroll-snap-align: center;
         perspective: 800px;
         transition: transform 0.3s ease, opacity 0.3s ease;
+        /* dim effect*/
         opacity: 0.6;
         transform: scale(0.9);
 
@@ -151,6 +156,7 @@
     .charCard.center {
         opacity: 1;
         transform: scale(1.25);
+        /*transform: scale(1.25) translateY(-10px);*/
         z-index: 10;
     }
 
@@ -185,6 +191,30 @@
     .cardBack {
         transform: rotateY(180deg);
     }
+
+    /* NAME OVERLAY */
+    /*
+    .charName {
+        position: absolute;
+        bottom: 0;
+        width: 100%;
+
+        font-family: 'Korinna', serif;
+        color: white;
+        font-size: 14px;
+
+        background: rgba(0,0,0,0.6);
+    }
+    */
+    /*
+    .charCard:hover {
+        transform: scale(1.05);
+    }
+
+    .charCard:hover .cardFront img {
+        transform: scale(1.1);
+        transition: transform 0.2s;
+    }*/
 
     .charCard:active {
         transform: scale(0.95);
@@ -252,6 +282,16 @@
     #prevBtn, #nextBtn {
         position: relative;
         z-index: 999;
+        /*
+        position: relative;
+        z-index: 100;
+        background: rgba(0,0,0,0.6);
+        color: white;
+        border: 1px solid #666;
+        border-radius: 8px;
+        padding: 10px;
+        cursor: pointer;
+        */
     }
 
 </style>
@@ -293,7 +333,7 @@
 
     <div id="previewCharacterBox">
         <img id="previewImage" src="" />
-        <!--<div id="previewCharacterText">---</div>-->
+        <div id="previewCharacterText">---</div>
     </div>
 </div>
 
@@ -348,7 +388,13 @@ socket.on("characterList", (chars) => {
         const imgBack = document.createElement("img");
         imgBack.src = char.back; // or different image later
 
+        // NAME LABEL (on both sides optional)
+        /*const label = document.createElement("div");
+        label.classList.add("charName");
+        label.textContent = char.name;*/
+
         front.appendChild(imgFront);
+        /*front.appendChild(label);*/
 
         back.appendChild(imgBack);
 
@@ -463,20 +509,6 @@ function cloneCard(original) {
 
     return clone;
 }
-
-/*function centerOnCard(card) {
-    const container = document.getElementById("characters");
-
-    const offset =
-        card.offsetLeft -
-        container.offsetWidth / 2 +
-        card.offsetWidth / 2;
-
-    container.scrollTo({
-        left: offset,
-        behavior: "smooth"
-    });
-}*/
 
 function centerOnCard(card) {
     const container = document.getElementById("characters");
