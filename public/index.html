@@ -190,6 +190,7 @@
     }
 
     /* NAME OVERLAY */
+    /*
     .charName {
         position: absolute;
         bottom: 0;
@@ -201,6 +202,7 @@
 
         background: rgba(0,0,0,0.6);
     }
+    */
     /*
     .charCard:hover {
         transform: scale(1.05);
@@ -384,12 +386,12 @@ socket.on("characterList", (chars) => {
         imgBack.src = char.back; // or different image later
 
         // NAME LABEL (on both sides optional)
-        const label = document.createElement("div");
+        /*const label = document.createElement("div");
         label.classList.add("charName");
-        label.textContent = char.name;
+        label.textContent = char.name;*/
 
         front.appendChild(imgFront);
-        front.appendChild(label);
+        /*front.appendChild(label);*/
 
         back.appendChild(imgBack);
 
