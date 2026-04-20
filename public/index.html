@@ -456,9 +456,9 @@ window.onload = () => {
         const cardWidth = card.offsetWidth + gap;
         const totalCards = cards.length;
         const cloneCount = 3;
-
+        /*
         // LOOP LOGIC
-        const buffer = cardWidth; // 1 card buffer
+        const buffer = cardWidth * 0.3; // 1 card buffer
 
         if (container.scrollLeft < buffer) {
             container.scrollLeft = cardWidth * (totalCards - cloneCount * 2);
@@ -467,6 +467,19 @@ window.onload = () => {
         if (container.scrollLeft > cardWidth * (totalCards - cloneCount) - buffer) {
             container.scrollLeft = cardWidth * cloneCount;
         }
+        */
+        const leftEdge = cardWidth * (cloneCount - 0.5);
+        const rightEdge = cardWidth * (totalCards - cloneCount - 0.5);
+
+        if (container.scrollLeft < leftEdge) {
+            container.scrollLeft = cardWidth * (totalCards - cloneCount * 2);
+        }
+
+        if (container.scrollLeft > rightEdge) {
+            container.scrollLeft = cardWidth * cloneCount;
+        }
+
+
 
         updateCenterCard();
     });
