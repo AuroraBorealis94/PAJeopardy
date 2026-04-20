@@ -30,34 +30,122 @@
         100% { transform: scale(1); }
     }
 
+    h1 {
+        font-family: 'Gyparody';
+    }
+
+    #h11 {
+        background: linear-gradient(
+            45deg,
+            #a8a8a8,
+            #ffffff,
+            #ffffff,
+            #a8a8a8
+        );
+
+        text-shadow: 0 0 10px rgba(255,255,255,0.2);
+
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+
+        background-clip: text;
+    }
+
+    #h12 {
+        background: linear-gradient(
+            45deg,
+            #ff9139,
+            #ffe739,
+            #ff9139,
+            #ffcb39
+        );
+
+        text-shadow: 0 0 10px rgba(255,255,255,0.2);
+
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+
+        background-clip: text;
+    }
+
+    h2 {
+        font-family: 'Korinna';
+        font-size: 20px;
+        text-transform: uppercase;
+        padding-top: 50px;
+    }
+
     body {
         font-family: 'Korinna';
+        font-size: 16px;
         margin: 0;
         padding-top: 40px;
         padding-bottom: 120px;
         color: white;
         text-align: center;
-        background-color: black;
+
+        background-color: #000000;
+
+        background-image: 
+            url('/backgrounds/BgTop.png'),
+            url('/backgrounds/BgBottom.png');
+
+        background-repeat: 
+            no-repeat,
+            no-repeat;
+
+        background-position: 
+            top center,
+            bottom center;
+
+        background-size: 
+            100% auto,
+            100% auto;
     }
 
     #characters {
         display: flex;
         overflow-x: auto;
         gap: 18px;
-        padding: 40px 20px;
+        padding: 40px 0;
+        max-width: 100%;
         align-items: center;
+    }
+
+    #characters::before,
+    #characters::after {
+        content: "";
+        flex: 0 0 calc(50% - 70px);
     }
 
     #characters::-webkit-scrollbar {
         display: none;
     }
 
+    #characters button {
+        font-family: 'Korinna', serif;
+        position: relative;
+        overflow: hidden;
+
+        background: black;
+        border: 2px solid #ccc;
+        border-radius: 10px;
+
+        padding: 0;
+        cursor: pointer;
+
+        scroll-behavior: smooth;
+    }
+
     .charCard {
-        flex: 0 0 140px;
+        flex: 0 0 clamp(110px, 30vw, 140px);
         scroll-snap-align: center;
+        perspective: 800px;
         transition: transform 0.3s ease, opacity 0.3s ease;
         opacity: 0.6;
         transform: scale(0.9);
+
+        position:relative;
     }
 
     .charCard.center {
@@ -82,12 +170,9 @@
         width: 100%;
         height: 100%;
         backface-visibility: hidden;
+        object-fit: cover;
         border-radius: 10px;
         overflow: hidden;
-    }
-
-    .cardBack {
-        transform: rotateY(180deg);
     }
 
     .cardFront img,
@@ -97,29 +182,127 @@
         object-fit: cover;
     }
 
-    #prevBtn, #nextBtn {
-        z-index: 10;
+    .cardBack {
+        transform: rotateY(180deg);
     }
-</style>
-</head>
 
+    .charCard:active {
+        transform: scale(0.95);
+    }
+
+    .charCard.selected {
+        animation: bounceSelect 0.3s ease;
+    }
+
+    #preview {
+        font-family: 'Korinna';
+        font-size: 18px;
+        text-transform: uppercase;
+    }
+
+    #previewCharacterBox {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto;
+    }
+
+    #previewImage {
+        width: 120px;
+        aspect-ratio: 3 / 4;
+        object-fit: cover;
+        display: none;
+    }
+
+    #joinBtn {
+        font-family: 'Korinna', serif;
+
+        font-size: 24px;
+        padding: 15px 40px;
+
+        background: linear-gradient(135deg, #ffcc00, #ff6600);
+        color: black;
+
+        border: none;
+        border-radius: 12px;
+
+        cursor: pointer;
+
+        box-shadow: 0 0 15px rgba(255, 140, 0, 0.6);
+
+        transition: all 0.2s ease;
+    }
+
+    #joinBtn:hover {
+        transform: scale(1.05);
+        box-shadow: 0 0 25px rgba(255, 140, 0, 0.9);
+    }
+
+    #joinBtn:active {
+        transform: scale(0.98);
+    }
+
+    #joinBtn:disabled {
+        background: gray;
+        transform: none;
+        box-shadow: none;
+    }
+
+    #prevBtn, #nextBtn {
+        position: relative;
+        z-index: 999;
+    }
+
+</style>
+
+    <title>Jeopardy Lobby</title>
+</head>
 <body>
 
-<h1>PA Jeopardy 2026</h1>
+<h1 id="h11" style="padding-top: 50px;">PA Jeopardy</h1>
+<h1 id="h12" style="font-size: 35px; padding-bottom: 20px;">2026 Edition</h1>
 
-<h2>Enter Name</h2>
-<input id="name">
-<button onclick="setName()">Enter</button>
+<br>
 
-<h2>Choose Character</h2>
+<!-- ENTER NAME -->
+<h2 style="padding-top: 80px;">Choose Your Team Name</h2>
+<input id="name" placeholder="Enter group name">
 
-<div style="display:flex; justify-content:center; align-items:center; gap:20px;">
+
+<button id="enterBtn" onclick="setName()">Enter</button>
+
+<br>
+
+<!-- ENTER CHARACTER -->
+<h2>Choose Your Team Representative</h2>
+
+<div style="display:flex; justify-content:center; gap:20px; align-items:center;">
     <button id="prevBtn">&#8592;</button>
+
     <div id="characters"></div>
+
     <button id="nextBtn">&#8594;</button>
 </div>
 
-<button onclick="joinGame()">Join</button>
+<br><br>
+
+<!-- PREVIEW -->
+<div id="preview">
+    <p id="teamLabel" style="display:none;"><b>Team </b><span id="previewName">---</span></p>
+
+    <div id="previewCharacterBox">
+        <img id="previewImage" src="" />
+        <!--<div id="previewCharacterText">---</div>-->
+    </div>
+</div>
+
+<br><br>
+
+<!-- JOIN - LOCK IN PLAYER -->
+<button id="joinBtn" onclick="joinGame()">Join Game</button>
+
+<hr>
 
 <script src="/socket.io/socket.io.js"></script>
 <script>
@@ -130,6 +313,11 @@ const state = {
     character: null
 };
 
+// ROOM CODE
+socket.on("roomCode", (code) => {
+    document.getElementById("roomCode").textContent = code;
+});
+
 // CHARACTER LIST
 socket.on("characterList", (chars) => {
     const container = document.getElementById("characters");
@@ -137,8 +325,12 @@ socket.on("characterList", (chars) => {
 
     chars.forEach(char => {
         const btn = document.createElement("button");
+        // FOR CARD FLIP
         btn.classList.add("charCard");
+        // CARD POP ENTER
+        btn.style.animation = "cardPopIn 0.5s ease";
 
+        // FOR CARD FLIP
         const inner = document.createElement("div");
         inner.classList.add("cardInner");
 
@@ -148,13 +340,16 @@ socket.on("characterList", (chars) => {
         const back = document.createElement("div");
         back.classList.add("cardBack");
 
+        // FRONT IMAGE
         const imgFront = document.createElement("img");
         imgFront.src = char.front;
 
+        // BACK IMAGE (you can customize this later)
         const imgBack = document.createElement("img");
-        imgBack.src = char.back;
+        imgBack.src = char.back; // or different image later
 
         front.appendChild(imgFront);
+
         back.appendChild(imgBack);
 
         inner.appendChild(front);
@@ -171,13 +366,16 @@ socket.on("characterList", (chars) => {
         container.appendChild(btn);
     });
 
+    // UPDATE CENTER CARD
     const cards = Array.from(container.children);
     const cloneCount = 3;
 
+    // Clone FIRST cards to end
     cards.slice(0, cloneCount).forEach(card => {
         container.appendChild(cloneCard(card));
     });
 
+    // Clone LAST cards to beginning
     cards.slice(-cloneCount).forEach(card => {
         container.insertBefore(cloneCard(card), container.firstChild);
     });
@@ -188,31 +386,39 @@ socket.on("characterList", (chars) => {
         const cardWidth = card.offsetWidth + gap;
 
         container.scrollLeft = cardWidth * cloneCount;
+
         updateCenterCard();
     }, 100);
 });
 
-// CAROUSEL
+// CAROUSEL MANAGER
 window.onload = () => {
     const container = document.getElementById("characters");
 
+    // ARROW CONTROLS
     document.getElementById("nextBtn").onclick = () => scrollByCard(1);
     document.getElementById("prevBtn").onclick = () => scrollByCard(-1);
 
+    // SCROLL LISTENER
     container.addEventListener("scroll", () => {
+        const cards = container.children;
         const card = container.querySelector(".charCard");
+
         if (!card) return;
 
         const gap = 20;
         const cardWidth = card.offsetWidth + gap;
-        const totalCards = container.children.length;
+        const totalCards = cards.length;
         const cloneCount = 3;
 
-        if (container.scrollLeft < cardWidth) {
+        // LOOP LOGIC
+        const buffer = cardWidth; // 1 card buffer
+
+        if (container.scrollLeft < buffer) {
             container.scrollLeft = cardWidth * (totalCards - cloneCount * 2);
         }
 
-        if (container.scrollLeft > cardWidth * (totalCards - cloneCount)) {
+        if (container.scrollLeft > cardWidth * (totalCards - cloneCount) - buffer) {
             container.scrollLeft = cardWidth * cloneCount;
         }
 
@@ -220,11 +426,17 @@ window.onload = () => {
     });
 };
 
-// FUNCTIONS
+// SET NAME
 function setName() {
-    const input = document.getElementById("name");
-    state.name = input.value.trim();
-    input.value = "";
+    const nameInput = document.getElementById("name");
+
+    state.name = nameInput.value.trim();
+
+    document.getElementById("teamLabel").style.display = "block";
+
+    updatePreview();
+
+    nameInput.value = "";
 }
 
 function setSelectedCard(card) {
@@ -233,12 +445,17 @@ function setSelectedCard(card) {
 
     card.classList.add("selected");
     state.character = card.__charData;
+
+    updatePreview();
 }
 
 function cloneCard(original) {
     const clone = original.cloneNode(true);
+
+    // copy data
     clone.__charData = original.__charData;
 
+    // reattach click
     clone.onclick = () => {
         setSelectedCard(clone);
         centerOnCard(clone);
@@ -246,6 +463,20 @@ function cloneCard(original) {
 
     return clone;
 }
+
+/*function centerOnCard(card) {
+    const container = document.getElementById("characters");
+
+    const offset =
+        card.offsetLeft -
+        container.offsetWidth / 2 +
+        card.offsetWidth / 2;
+
+    container.scrollTo({
+        left: offset,
+        behavior: "smooth"
+    });
+}*/
 
 function centerOnCard(card) {
     const container = document.getElementById("characters");
@@ -262,6 +493,35 @@ function centerOnCard(card) {
         behavior: "smooth"
     });
 }
+
+/*function updateCenterCard() {
+    const cards = document.querySelectorAll(".charCard");
+    const container = document.getElementById("characters");
+
+    const containerRect = container.getBoundingClientRect();
+    const centerX = containerRect.left + containerRect.width / 2;
+
+    let closest = null;
+    let closestDistance = Infinity;
+
+    cards.forEach(card => {
+        const rect = card.getBoundingClientRect();
+        const cardCenter = rect.left + rect.width / 2;
+
+        const distance = Math.abs(centerX - cardCenter);
+
+        if (distance < closestDistance) {
+            closestDistance = distance;
+            closest = card;
+        }
+    });
+
+    cards.forEach(c => c.classList.remove("center"));
+
+    if (closest) {
+        closest.classList.add("center");
+    }
+}*/
 
 function updateCenterCard() {
     const cards = document.querySelectorAll(".charCard");
@@ -295,7 +555,7 @@ function scrollByCard(direction) {
 
     if (!card) return;
 
-    const gap = 20;
+    const gap = 20; // matches CSS gap
     const cardWidth = card.offsetWidth + gap;
 
     container.scrollBy({
@@ -304,12 +564,116 @@ function scrollByCard(direction) {
     });
 }
 
+// JOIN GAME - LOCK IN PLAYER
 function joinGame() {
+    if (!state.name) {
+        alert("Please enter your team name first");
+        return;
+    }
+
+    if (!state.character) {
+        alert("Please choose a character");
+        return;
+    }
+
+    const joinBtn = document.getElementById("joinBtn");
+    joinBtn.disabled = true;
+    joinBtn.innerText = "Joined!";
+    joinBtn.style.opacity = "0.6";
+    joinBtn.style.cursor = "not-allowed";
+
+    confettiBurst();
+
     socket.emit("join", {
         name: state.name,
         character: state.character.name
     });
+
+    // LOCK UI AFTER JOINING
+    document.getElementById("name").disabled = true;
+
+    document.querySelectorAll("#characters button")
+    .forEach(b => {
+        b.disabled = true;
+        b.style.pointerEvents = "none";
+    });
+
+    // DISABLE BUTTONS AFTER JOINING
+    document.getElementById("enterBtn").disabled = true;
+    //document.getElementById("joinBtn").disabled = true;
 }
+
+// PREVIEW UPDATE
+function updatePreview() {
+    document.getElementById("previewName").textContent =
+        state.name || "---";
+
+    const img = document.getElementById("previewImage");
+    const text = document.getElementById("previewCharacterText");
+
+    if (state.character) {
+        img.src = state.character.front;
+        img.style.display = "block";
+
+        text.textContent = state.character.name;
+    } else {
+        img.style.display = "none";
+        //text.textContent = "---";
+    }
+}
+
+function confettiBurst() {
+    const images = [
+        "/confetti/confetti1.png",
+        "/confetti/confetti2.png"
+    ];
+
+    for (let i = 0; i < 50; i++) {
+        const confetti = document.createElement("img");
+
+        confetti.src = images[Math.floor(Math.random() * images.length)];
+
+        confetti.style.position = "fixed";
+        confetti.style.left = "50%";
+        confetti.style.top = "40%";
+
+        confetti.style.width = "36px";
+        confetti.style.height = "36px";
+
+        confetti.style.zIndex = "9999";
+        confetti.style.pointerEvents = "none";
+
+        // rainbow tint
+        const hue = Math.floor(Math.random() * 360);
+        confetti.style.filter = `hue-rotate(${hue}deg)`;
+
+        document.body.appendChild(confetti);
+
+        const angle = Math.random() * Math.PI * 2;
+        const velocity = 2 + Math.random() * 5;
+
+        let x = 0;
+        let y = 0;
+        let gravity = 0;
+
+        const interval = setInterval(() => {
+            gravity += 0.15;
+
+            x += Math.cos(angle) * velocity;
+            y += Math.sin(angle) * velocity + gravity;
+
+            confetti.style.transform = `translate(${x}px, ${y}px) rotate(${x * 2}deg)`;
+
+            if (y > window.innerHeight) {
+                clearInterval(interval);
+                confetti.remove();
+            }
+        }, 16);
+    }
+}
+
+updatePreview();
+
 </script>
 
 </body>
