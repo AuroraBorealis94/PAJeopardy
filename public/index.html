@@ -317,7 +317,7 @@
 <!-- ENTER CHARACTER -->
 <h2>Choose Your Team Representative</h2>
 
-<div style="display:flex; justify-content:center; gap:20px; align-items:center;">
+<div style="display:flex; justify-content:center; gap:18px; align-items:center;">
     <button id="prevBtn">&#8592;</button>
 
     <div id="characters"></div>
@@ -386,18 +386,10 @@ socket.on("characterList", (chars) => {
 
         // BACK IMAGE (you can customize this later)
         const imgBack = document.createElement("img");
-        imgBack.src = char.back; // or different image later
-
-        // NAME LABEL (on both sides optional)
-        /*const label = document.createElement("div");
-        label.classList.add("charName");
-        label.textContent = char.name;*/
+        imgBack.src = char.back;
 
         front.appendChild(imgFront);
-        /*front.appendChild(label);*/
-
         back.appendChild(imgBack);
-
         inner.appendChild(front);
         inner.appendChild(back);
         btn.appendChild(inner);
@@ -412,13 +404,14 @@ socket.on("characterList", (chars) => {
         container.appendChild(btn);
     });
 
+    /*
     // UPDATE CENTER CARD
     // With New Loop
     const originalCards = Array.from(container.children);
 
     //const cards = Array.from(container.children);
     const cloneCount = 3;
-
+    */
     /*
     // Clone FIRST cards to end
     cards.slice(0, cloneCount).forEach(card => {
@@ -429,7 +422,7 @@ socket.on("characterList", (chars) => {
     cards.slice(-cloneCount).forEach(card => {
         container.insertBefore(cloneCard(card), container.firstChild);
     });*/
-
+    /*
     // With New Loop
     // clone FIRST > end
     originalCards.slice(0, cloneCount).forEach(card => {
@@ -440,16 +433,31 @@ socket.on("characterList", (chars) => {
     originalCards.slice(-cloneCount).forEach(card => {
         container.insertBefore(cloneCard(card), container.firstChild);
     });
-
+    */
+    /*
     setTimeout(() => {
         const card = container.querySelector(".charCard");
-        const gap = 20;
+        const gap = 18;
         const cardWidth = card.offsetWidth + gap;
 
         container.scrollLeft = cardWidth * cloneCount;
 
         updateCenterCard();
     }, 100);
+    */
+    requestAnimationFrame(() => {
+        const card = container.querySelector(".charCard");
+        if (!card) return;
+
+        const gap = 18; // MUST match your scroll logic
+        const cardWidth = card.offsetWidth + gap;
+
+        const cloneCount = 3;
+
+        container.scrollLeft = cardWidth * cloneCount;
+
+        updateCenterCard();
+    });
 });
 
 // CAROUSEL MANAGER
@@ -474,6 +482,22 @@ window.onload = () => {
         const totalCards = cards.length;
         const cloneCount = 3;
         
+        //NEWER LOOP LOGIC
+        const leftBoundary = cardWidth * (cloneCount - 0.5);
+        const rightBoundary = cardWidth * (totalCards - cloneCount + 0.5);
+        const loopWidth = cardWidth * (totalCards - cloneCount * 2);
+        // LEFT WRAP
+        if (container.scrollLeft <= leftBoundary) {
+            container.scrollLeft += loopWidth;
+            return;
+        }
+
+        // RIGHT WRAP
+        if (container.scrollLeft >= rightBoundary) {
+            container.scrollLeft -= loopWidth;
+            return;
+        }
+        /*
         // NEW LOOP LOGIC
         const maxScroll =
             cardWidth * (totalCards - cloneCount * 2);
@@ -489,10 +513,11 @@ window.onload = () => {
             container.scrollLeft -= maxScroll;
             return;
         }
-        
+        */
         /*
         // LOOP LOGIC
         const buffer = cardWidth * 0.3; // 1 card buffer
+        //const buffer = cardWidth;
 
         if (container.scrollLeft < buffer) {
             container.scrollLeft = cardWidth * (totalCards - cloneCount * 2);
@@ -501,34 +526,6 @@ window.onload = () => {
         if (container.scrollLeft > cardWidth * (totalCards - cloneCount) - buffer) {
             container.scrollLeft = cardWidth * cloneCount;
         }
-        */
-        /*
-        const leftEdge = cardWidth * (cloneCount - 0.5);
-        const rightEdge = cardWidth * (totalCards - cloneCount - 0.5);
-
-        if (container.scrollLeft < leftEdge) {
-            container.scrollLeft = cardWidth * (totalCards - cloneCount * 2);
-        }
-
-        if (container.scrollLeft > rightEdge) {
-            container.scrollLeft = cardWidth * cloneCount;
-        }
-        */
-        /*
-        const leftEdge = cardWidth * (cloneCount - 0.5);
-        const rightEdge = cardWidth * (totalCards - cloneCount - 0.5);
-
-        // LEFT LOOP (fixed)
-        if (container.scrollLeft < leftEdge) {
-            container.scrollLeft += cardWidth * (totalCards - cloneCount * 2);
-        }
-
-        // RIGHT LOOP (already correct)
-        if (container.scrollLeft > rightEdge) {
-            container.scrollLeft -= cardWidth * (totalCards - cloneCount * 2);
-        }
-
-        updateCenterCard();
         */
     });
 };
@@ -586,36 +583,7 @@ function centerOnCard(card) {
         behavior: "smooth"
     });
 }
-
-/*function updateCenterCard() {
-    const cards = document.querySelectorAll(".charCard");
-    const container = document.getElementById("characters");
-
-    const containerRect = container.getBoundingClientRect();
-    const centerX = containerRect.left + containerRect.width / 2;
-
-    let closest = null;
-    let closestDistance = Infinity;
-
-    cards.forEach(card => {
-        const rect = card.getBoundingClientRect();
-        const cardCenter = rect.left + rect.width / 2;
-
-        const distance = Math.abs(centerX - cardCenter);
-
-        if (distance < closestDistance) {
-            closestDistance = distance;
-            closest = card;
-        }
-    });
-
-    cards.forEach(c => c.classList.remove("center"));
-
-    if (closest) {
-        closest.classList.add("center");
-    }
-}*/
-
+/*
 function updateCenterCard() {
     const cards = document.querySelectorAll(".charCard");
     const container = document.getElementById("characters");
@@ -640,6 +608,31 @@ function updateCenterCard() {
     if (closest) {
         closest.classList.add("center");
     }
+}*/
+
+function updateCenterCard() {
+    const container = document.getElementById("characters");
+    const cards = container.querySelectorAll(".charCard");
+
+    if (!cards.length) return;
+
+    const containerCenter = container.scrollLeft + container.offsetWidth / 2;
+
+    let closest = null;
+    let closestDistance = Infinity;
+
+    cards.forEach(card => {
+        const cardCenter = card.offsetLeft + card.offsetWidth / 2;
+        const distance = Math.abs(containerCenter - cardCenter);
+
+        if (distance < closestDistance) {
+            closestDistance = distance;
+            closest = card;
+        }
+    });
+
+    cards.forEach(c => c.classList.remove("center"));
+    if (closest) closest.classList.add("center");
 }
 
 function scrollByCard(direction) {
@@ -648,7 +641,7 @@ function scrollByCard(direction) {
 
     if (!card) return;
 
-    const gap = 20; // matches CSS gap
+    const gap = 18; // matches CSS gap
     const cardWidth = card.offsetWidth + gap;
 
     container.scrollBy({
