@@ -468,6 +468,7 @@ window.onload = () => {
             container.scrollLeft = cardWidth * cloneCount;
         }
         */
+        /*
         const leftEdge = cardWidth * (cloneCount - 0.5);
         const rightEdge = cardWidth * (totalCards - cloneCount - 0.5);
 
@@ -478,8 +479,19 @@ window.onload = () => {
         if (container.scrollLeft > rightEdge) {
             container.scrollLeft = cardWidth * cloneCount;
         }
+        */
+        const leftEdge = cardWidth * (cloneCount - 0.5);
+        const rightEdge = cardWidth * (totalCards - cloneCount - 0.5);
 
+        // LEFT LOOP (fixed)
+        if (container.scrollLeft < leftEdge) {
+            container.scrollLeft += cardWidth * (totalCards - cloneCount * 2);
+        }
 
+        // RIGHT LOOP (already correct)
+        if (container.scrollLeft > rightEdge) {
+            container.scrollLeft -= cardWidth * (totalCards - cloneCount * 2);
+        }
 
         updateCenterCard();
     });
