@@ -102,36 +102,23 @@
             100% auto,
             100% auto;
     }
-    /*
+
     #characters {
         display: flex;
-        overflow: hidden;
+        overflow-x: auto;
+        /*scroll-snap-type: none;*/
         gap: 18px;
+        /*padding: 18px;*/
         padding: 40px 0;
         max-width: 100%;
+        /*width: 100%*/
         align-items: center;
-    }
-    */
-
-    #characters {
-        display: flex;
-        justify-content: center;
-        overflow: hidden;
-        position: relative;
-        padding: 40px 0;
-    }
-
-    #charactersTrack {
-        display: flex;
-        gap: 18px;
-        transition: transform 0.35s ease;
-        will-change: transform;
     }
 
     #characters::before,
     #characters::after {
         content: "";
-        flex: 0 0 calc(50% - 70px);
+        flex: 0 0 calc(50% - 70px); /* 70px = half card width (140 / 2) */
     }
 
     #characters::-webkit-scrollbar {
@@ -154,6 +141,7 @@
     }
 
     .charCard {
+        /*flex: 0 0 140px; width of each card */
         flex: 0 0 clamp(110px, 30vw, 140px);
         scroll-snap-align: center;
         perspective: 800px;
@@ -168,6 +156,7 @@
     .charCard.center {
         opacity: 1;
         transform: scale(1.25);
+        /*transform: scale(1.25) translateY(-10px);*/
         z-index: 10;
     }
 
@@ -202,6 +191,30 @@
     .cardBack {
         transform: rotateY(180deg);
     }
+
+    /* NAME OVERLAY */
+    /*
+    .charName {
+        position: absolute;
+        bottom: 0;
+        width: 100%;
+
+        font-family: 'Korinna', serif;
+        color: white;
+        font-size: 14px;
+
+        background: rgba(0,0,0,0.6);
+    }
+    */
+    /*
+    .charCard:hover {
+        transform: scale(1.05);
+    }
+
+    .charCard:hover .cardFront img {
+        transform: scale(1.1);
+        transition: transform 0.2s;
+    }*/
 
     .charCard:active {
         transform: scale(0.95);
@@ -269,6 +282,16 @@
     #prevBtn, #nextBtn {
         position: relative;
         z-index: 999;
+        /*
+        position: relative;
+        z-index: 100;
+        background: rgba(0,0,0,0.6);
+        color: white;
+        border: 1px solid #666;
+        border-radius: 8px;
+        padding: 10px;
+        cursor: pointer;
+        */
     }
 
 </style>
@@ -297,10 +320,7 @@
 <div style="display:flex; justify-content:center; gap:18px; align-items:center;">
     <button id="prevBtn">&#8592;</button>
 
-    <!--<div id="characters"></div>-->
-    <div id="characters">
-        <div id="charactersTrack"></div>
-    </div>
+    <div id="characters"></div>
 
     <button id="nextBtn">&#8594;</button>
 </div>
@@ -333,17 +353,12 @@ const state = {
     character: null
 };
 
-// For Index Carousel
-let characters = [];
-let currentIndex = 0;
-
 // ROOM CODE
 socket.on("roomCode", (code) => {
     document.getElementById("roomCode").textContent = code;
 });
 
 // CHARACTER LIST
-/*
 socket.on("characterList", (chars) => {
     const container = document.getElementById("characters");
     container.innerHTML = "";
@@ -424,62 +439,18 @@ socket.on("characterList", (chars) => {
         }, 50);
     });
 });
-*/
-
-socket.on("characterList", (chars) => {
-    characters = chars;
-
-    currentIndex = 0;
-
-    renderCarousel();
-});
 
 // CAROUSEL MANAGER
-/*
 window.onload = () => {
-    //const container = document.getElementById("characters");
-    const container = document.getElementById("charactersTrack")
+    const container = document.getElementById("characters");
 
     // ARROW CONTROLS
     document.getElementById("nextBtn").onclick = () => scrollByCard(1);
     document.getElementById("prevBtn").onclick = () => scrollByCard(-1);
-    */
+
     // SCROLL LISTENER
-    /*
     container.addEventListener("scroll", () => {
         updateCenterCard();
-    });
-    */
-//};
-
-window.onload = () => {
-    const container = document.getElementById("characters");
-
-    // Arrow controls
-    document.getElementById("nextBtn").onclick = () => scrollByCard(1);
-    document.getElementById("prevBtn").onclick = () => scrollByCard(-1);
-
-    // SWIPE SUPPORT
-    let startX = 0;
-
-    container.addEventListener("touchstart", (e) => {
-        startX = e.touches[0].clientX;
-    });
-
-    container.addEventListener("touchend", (e) => {
-        const endX = e.changedTouches[0].clientX;
-        const diff = endX - startX;
-
-        if (Math.abs(diff) < 30) return;
-
-        // determine strength
-        const strength = Math.min(3, Math.floor(Math.abs(diff) / 80) + 1);
-
-        if (diff > 0) {
-            scrollByCard(-strength);
-        } else {
-            scrollByCard(strength);
-        }
     });
 };
 
@@ -495,7 +466,7 @@ function setName() {
 
     nameInput.value = "";
 }
-/*
+
 function setSelectedCard(card) {
     document.querySelectorAll(".charCard")
         .forEach(c => c.classList.remove("selected"));
@@ -505,14 +476,7 @@ function setSelectedCard(card) {
 
     updatePreview();
 }
-*/
 
-function setSelectedCard(char) {
-    state.character = char;
-    updatePreview();
-}
-
-/*
 function cloneCard(original) {
     const clone = original.cloneNode(true);
 
@@ -527,8 +491,7 @@ function cloneCard(original) {
 
     return clone;
 }
-*/
-/*
+
 function centerOnCard(card) {
     const container = document.getElementById("characters");
 
@@ -544,8 +507,7 @@ function centerOnCard(card) {
         behavior: "smooth"
     });
 }
-*/
-/*
+
 function updateCenterCard() {
     const container = document.getElementById("characters");
     const cards = container.querySelectorAll(".charCard");
@@ -574,8 +536,7 @@ function updateCenterCard() {
     cards.forEach(c => c.classList.remove("center"));
     if (closest) closest.classList.add("center");
 }
-*/
-/*
+
 function scrollByCard(direction) {
     const container = document.getElementById("characters");
     const card = container.querySelector(".charCard");
@@ -588,247 +549,6 @@ function scrollByCard(direction) {
     container.scrollBy({
         left: direction * cardWidth,
         behavior: "smooth"
-    });
-}
-*/
-/*
-function scrollByCard(direction) {
-    if (!characters.length) return;
-
-    currentIndex =
-        (currentIndex + direction + characters.length) %
-        characters.length;
-
-    renderCarousel();
-}
-*/
-/*
-function scrollByCard(direction) {
-    if (isAnimating) return;
-    isAnimating = true;
-
-    const track = document.getElementById("charactersTrack");
-    const card = track.children[0];
-    const cardWidth = card.offsetWidth + 18;
-
-    // animate movement
-    track.style.transition = "transform 0.35s ease";
-    track.style.transform = `translateX(calc(50% - ${cardWidth * (2 + direction)}px))`;
-
-    // AFTER animation finishes > update index + re-render
-    setTimeout(() => {
-        currentIndex =
-            (currentIndex + direction + characters.length) %
-            characters.length;
-
-        renderCarousel();
-
-        isAnimating = false;
-    }, 350);
-}
-*/
-
-function scrollByCard(direction) {
-    if (isAnimating) return;
-    isAnimating = true;
-
-    const track = document.getElementById("charactersTrack");
-    const card = track.children[0];
-    const cardWidth = card.offsetWidth + 18;
-
-    track.style.transition = "transform 0.35s ease";
-    track.style.transform =
-        `translateX(calc(50% - ${cardWidth * (2 + direction)}px))`;
-
-    const animate = () => {
-        updateCardScales();
-        if (isAnimating) requestAnimationFrame(animate);
-    };
-
-    requestAnimationFrame(animate);
-
-    setTimeout(() => {
-        currentIndex =
-            (currentIndex + direction + characters.length) %
-            characters.length;
-
-        renderCarousel();
-
-        isAnimating = false;
-    }, 350);
-}
-
-/*
-function renderCarousel() {
-    //const container = document.getElementById("characters");
-    const container = document.getElementById("charactersTrack")
-    container.innerHTML = "";
-
-    if (!characters.length) return;
-
-    const leftIndex = (currentIndex - 1 + characters.length) % characters.length;
-    const centerIndex = currentIndex;
-    const rightIndex = (currentIndex + 1) % characters.length;
-
-    const visible = [
-        { char: characters[leftIndex], index: leftIndex },
-        { char: characters[centerIndex], index: centerIndex },
-        { char: characters[rightIndex], index: rightIndex }
-    ];
-
-    visible.forEach(({ char, index }, i) => {
-        const btn = createCard(char);
-
-        if (i === 1) {
-            btn.classList.add("center");
-            state.character = char;
-            updatePreview();
-        }
-
-        btn.onclick = () => {
-            currentIndex = index;
-            renderCarousel();
-        };
-
-        container.appendChild(btn);
-    });
-}
-*/
-
-let isAnimating = false;
-
-function renderCarousel() {
-    const track = document.getElementById("charactersTrack");
-    track.innerHTML = "";
-
-    const total = characters.length;
-
-    // build a 5-card buffer: [L2, L1, C, R1, R2]
-    for (let i = -2; i <= 2; i++) {
-        const index = (currentIndex + i + total) % total;
-        const char = characters[index];
-
-        //const card = createCard(char);
-        const card = createCard(char, i);
-
-        track.appendChild(card);
-    }
-
-    // position so center card is in middle
-    const card = track.children[0];
-    const cardWidth = card.offsetWidth + 18;
-
-    track.style.transition = "none";
-    track.style.transform = `translateX(calc(50% - ${cardWidth * 2}px))`;
-
-    setTimeout(updateCardScales, 0);
-}
-
-
-function applyTrackPosition() {
-    const track = document.getElementById("charactersTrack");
-
-    const card = track.querySelector(".charCard");
-    if (!card) return;
-
-    const cardWidth = card.offsetWidth + 18; // gap
-    const offset = -cardWidth; // center middle card
-
-    track.style.transform = `translateX(calc(50% + ${offset}px))`;
-}
-/*
-function createCard(char) {
-    const btn = document.createElement("button");
-    btn.classList.add("charCard");
-    //btn.style.animation = "cardPopIn 0.3s ease";
-
-    const inner = document.createElement("div");
-    inner.classList.add("cardInner");
-
-    const front = document.createElement("div");
-    front.classList.add("cardFront");
-
-    const back = document.createElement("div");
-    back.classList.add("cardBack");
-
-    const imgFront = document.createElement("img");
-    imgFront.src = char.front;
-
-    const imgBack = document.createElement("img");
-    imgBack.src = char.back;
-
-    front.appendChild(imgFront);
-    back.appendChild(imgBack);
-    inner.appendChild(front);
-    inner.appendChild(back);
-    btn.appendChild(inner);
-
-    btn.__charData = char;
-
-    return btn;
-}
-*/
-
-function createCard(char, indexOffset) {
-    const btn = document.createElement("button");
-    btn.classList.add("charCard");
-
-    const inner = document.createElement("div");
-    inner.classList.add("cardInner");
-
-    const front = document.createElement("div");
-    front.classList.add("cardFront");
-
-    const back = document.createElement("div");
-    back.classList.add("cardBack");
-
-    const imgFront = document.createElement("img");
-    imgFront.src = char.front;
-
-    const imgBack = document.createElement("img");
-    imgBack.src = char.back;
-
-    front.appendChild(imgFront);
-    back.appendChild(imgBack);
-    inner.appendChild(front);
-    inner.appendChild(back);
-    btn.appendChild(inner);
-
-    // CLICK BEHAVIOR (THIS FIXES FLIP + SELECT)
-    btn.onclick = () => {
-        document.querySelectorAll(".charCard")
-            .forEach(c => c.classList.remove("selected"));
-
-        btn.classList.add("selected");
-
-        state.character = char;
-        updatePreview();
-    };
-
-    return btn;
-}
-
-function updateCardScales() {
-    const track = document.getElementById("charactersTrack");
-    const container = document.getElementById("characters");
-
-    const containerCenter =
-        container.getBoundingClientRect().left +
-        container.offsetWidth / 2;
-
-    const cards = track.querySelectorAll(".charCard");
-
-    cards.forEach(card => {
-        const rect = card.getBoundingClientRect();
-        const cardCenter = rect.left + rect.width / 2;
-
-        const distance = Math.abs(containerCenter - cardCenter);
-
-        // normalize (tweak 200 for spread feel)
-        const scale = Math.max(0.85, 1.2 - distance / 300);
-
-        card.style.transform = `scale(${scale})`;
-        card.style.opacity = scale > 1.1 ? 1 : 0.6;
     });
 }
 
