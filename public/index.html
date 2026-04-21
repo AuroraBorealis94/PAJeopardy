@@ -194,10 +194,22 @@
     }
 
     #preview {
-        height: 180px;
+        height: 160px;
         font-family: 'Korinna';
         font-size: 18px;
         text-transform: uppercase;
+
+        margin: 0 auto;
+        transition: height 0.3s ease;
+
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+
+    #preview:empty {
+        height: 120px;
+
     }
 
     #previewCharacterBox {
