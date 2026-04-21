@@ -404,14 +404,13 @@ socket.on("characterList", (chars) => {
         container.appendChild(btn);
     });
 
-    /*
     // UPDATE CENTER CARD
     // With New Loop
     const originalCards = Array.from(container.children);
 
     //const cards = Array.from(container.children);
     const cloneCount = 3;
-    */
+
     /*
     // Clone FIRST cards to end
     cards.slice(0, cloneCount).forEach(card => {
@@ -422,7 +421,7 @@ socket.on("characterList", (chars) => {
     cards.slice(-cloneCount).forEach(card => {
         container.insertBefore(cloneCard(card), container.firstChild);
     });*/
-    /*
+
     // With New Loop
     // clone FIRST > end
     originalCards.slice(0, cloneCount).forEach(card => {
@@ -433,7 +432,7 @@ socket.on("characterList", (chars) => {
     originalCards.slice(-cloneCount).forEach(card => {
         container.insertBefore(cloneCard(card), container.firstChild);
     });
-    */
+
     /*
     setTimeout(() => {
         const card = container.querySelector(".charCard");
@@ -561,8 +560,8 @@ window.onload = () => {
         updateCenterCard();
     });*/
 
-    let isWrapping = false;
-
+    //let isWrapping = false;
+    /*
     container.addEventListener("scroll", () => {
         if (isWrapping) return;
 
@@ -600,6 +599,9 @@ window.onload = () => {
                 isWrapping = false;
             });
         }
+    });*/
+    container.addEventListener("scroll", () => {
+        updateCenterCard();
     });
 };
 
