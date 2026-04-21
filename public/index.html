@@ -458,44 +458,33 @@ window.onload = () => {
 //};
 
 window.onload = () => {
-    const track = document.getElementById("charactersTrack");
+    const container = document.getElementById("charactersTrack");
 
-    track.addEventListener("touchstart", (e) => {
-        isDragging = true;
+    // Arrow controls
+    document.getElementById("nextBtn").onclick = () => scrollByCard(1);
+    document.getElementById("prevBtn").onclick = () => scrollByCard(-1);
+
+    // SWIPE SUPPORT
+    let startX = 0;
+
+    container.addEventListener("touchstart", (e) => {
         startX = e.touches[0].clientX;
-        track.style.transition = "none";
     });
 
-    track.addEventListener("touchmove", (e) => {
-        if (!isDragging) return;
+    container.addEventListener("touchend", (e) => {
+        const endX = e.changedTouches[0].clientX;
+        const diff = endX - startX;
 
-        const currentX = e.touches[0].clientX;
-        const diff = currentX - startX;
+        if (Math.abs(diff) < 30) return;
 
-        currentTranslate = prevTranslate + diff;
+        // determine strength
+        const strength = Math.min(3, Math.floor(Math.abs(diff) / 80) + 1);
 
-        track.style.transform =
-            `translateX(calc(50% + ${currentTranslate}px))`;
-    });
-
-    track.addEventListener("touchend", () => {
-        isDragging = false;
-
-        const card = track.children[0];
-        const cardWidth = card.offsetWidth + 18;
-
-        // snap to nearest card
-        const movedCards = Math.round(currentTranslate / cardWidth);
-
-        currentIndex =
-            (currentIndex - movedCards + characters.length) %
-            characters.length;
-
-        // reset position
-        prevTranslate = 0;
-        currentTranslate = 0;
-
-        renderCarousel();
+        if (diff > 0) {
+            scrollByCard(-strength);
+        } else {
+            scrollByCard(strength);
+        }
     });
 };
 
@@ -730,10 +719,11 @@ function renderCarousel() {
     }
 
     // position so center card is in middle
+    const card = track.children[0];
+    const cardWidth = card.offsetWidth + 18;
+
     track.style.transition = "none";
-    track.style.transform = "translateX(-50%)";
-    track.style.left = "50%";
-    track.style.position = "relative";
+    track.style.transform = `translateX(calc(50% - ${cardWidth * 2}px))`;
 }
 
 
