@@ -550,13 +550,13 @@ function updatePreview() {
         state.name || "---";
 
     const img = document.getElementById("previewImage");
-    const text = document.getElementById("previewCharacterText");
+    //const text = document.getElementById("previewCharacterText");
 
     if (state.character) {
         img.src = state.character.front;
         img.style.display = "block";
 
-        text.textContent = state.character.name;
+        //text.textContent = state.character.name;
     } else {
         img.style.display = "none";
     }
