@@ -266,7 +266,7 @@
     #prevBtn, #nextBtn {
         position: relative;
         z-index: 999;
-        
+        /*
         position: relative;
         z-index: 100;
         background: rgba(0,0,0,0.6);
@@ -275,11 +275,16 @@
         border-radius: 8px;
         padding: 10px;
         cursor: pointer;
-        
+        */
+    }
+
+    .charCard.locked {
+        filter: grayscale(1);
+        opacity: 0.3;
+        cursor: not-allowed;
     }
 
 </style>
-
     <title>Jeopardy Lobby</title>
 </head>
 <body>
@@ -379,6 +384,8 @@ socket.on("characterList", (chars) => {
         btn.__index = index;
 
         btn.onclick = () => {
+            if (lockedSet.has(char.name.toLowerCase())) return;
+
             setSelectedCard(btn);
             currentIndex = index;
             centerOnCard(btn);
@@ -392,6 +399,7 @@ socket.on("characterList", (chars) => {
 
     requestAnimationFrame(() => {
         updateCenterCard();
+        updateLockedUI();
     });
 });
 
@@ -408,6 +416,13 @@ window.onload = () => {
         updateCenterCard();
     });
 };
+
+// LOCKED CARDS
+let lockedSet = new Set();
+socket.on("lockedCharacters", (locked) => {
+    lockedSet = new Set(locked.map(c => c.toLowerCase()));
+    updateLockedUI();
+});
 
 // SET NAME
 function setName() {
@@ -499,6 +514,24 @@ function scrollByCard(direction) {
 
     setSelectedCard(card);
     centerOnCard(card);
+}
+
+function updateLockedUI() {
+    document.querySelectorAll(".charCard").forEach(card => {
+        const name = card.__charData.name.toLowerCase();
+
+        if (lockedSet.has(name)) {
+            card.classList.add("locked");
+            card.style.opacity = "0.3";
+            card.style.pointerEvents = "none";
+            card.style.filter = "grayscale(1)";
+        } else {
+            card.classList.remove("locked");
+            card.style.opacity = "";
+            card.style.pointerEvents = "";
+            card.style.filter = "";
+        }
+    });
 }
 
 // JOIN GAME - LOCK IN PLAYER

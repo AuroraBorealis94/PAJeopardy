@@ -49,6 +49,9 @@ const characters = [
     { name: "The Guitarist", front: "/characters/theguitaristfront.png", back: "/characters/theguitaristback.png" }
 ];
 
+// LOCKED CHARACTERS
+const lockedCharacters = new Set();
+
 // CLUE STORAGE (filled when game starts)
 const cluePool = {
     "Category A": {
@@ -118,30 +121,43 @@ io.on("connection", (socket) => {
     console.log("A player connected:", socket.id);
 
     // JOIN LOBBY
-    socket.on("join", ({name, character}) => {
+    socket.on("join", ({ name, character }) => {
 
-        // ONE JOIN PER DEVICE
-        const alreadyJoined = game.players.find(p => p.id === socket.id);
-        if (alreadyJoined) return;
+    const alreadyJoined = game.players.find(p => p.id === socket.id);
+    if (alreadyJoined) return;
 
-        game.players.push({
-            id: socket.id,
-            name: name,
-            character: character
-        });
+    const normalized = character.toLowerCase();
 
-        console.log(name + " joined the lobby");
+    // BLOCK IF LOCKED
+    if (lockedCharacters.has(normalized)) {
+        socket.emit("characterTaken", normalized);
+        return;
+    }
 
-        io.emit("playerList", game.players);
-        broadcastToUnity({
-            type: "playerList",
-            players: game.players.map(p => ({
-                id: p.id,
-                name: p.name,
-                characterId: p.character.toLowerCase()
-            }))
-        });
+    // LOCK CHARACTER
+    lockedCharacters.add(normalized);
+
+    game.players.push({
+        id: socket.id,
+        name,
+        character
     });
+
+    console.log(name + " joined with " + character);
+
+    // SEND UPDATED STATE TO ALL CLIENTS
+    io.emit("playerList", game.players);
+    io.emit("lockedCharacters", Array.from(lockedCharacters));
+
+    broadcastToUnity({
+        type: "playerList",
+        players: game.players.map(p => ({
+            id: p.id,
+            name: p.name,
+            characterId: p.character.toLowerCase()
+        }))
+    });
+});
 
     // START GAME
     socket.on("startGame", () => {
