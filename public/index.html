@@ -105,7 +105,7 @@
 
     #characters {
         display: flex;
-        overflow: hidden;
+        overflow-x: auto;
         /*scroll-snap-type: none;*/
         gap: 18px;
         /*padding: 18px;*/
@@ -353,17 +353,12 @@ const state = {
     character: null
 };
 
-// For Index Carousel
-let characters = [];
-let currentIndex = 0;
-
 // ROOM CODE
 socket.on("roomCode", (code) => {
     document.getElementById("roomCode").textContent = code;
 });
 
 // CHARACTER LIST
-/*
 socket.on("characterList", (chars) => {
     const container = document.getElementById("characters");
     container.innerHTML = "";
@@ -444,15 +439,6 @@ socket.on("characterList", (chars) => {
         }, 50);
     });
 });
-*/
-
-socket.on("characterList", (chars) => {
-    characters = chars;
-
-    currentIndex = 0;
-
-    renderCarousel();
-});
 
 // CAROUSEL MANAGER
 window.onload = () => {
@@ -463,11 +449,9 @@ window.onload = () => {
     document.getElementById("prevBtn").onclick = () => scrollByCard(-1);
 
     // SCROLL LISTENER
-    /*
     container.addEventListener("scroll", () => {
         updateCenterCard();
     });
-    */
 };
 
 // SET NAME
@@ -482,7 +466,7 @@ function setName() {
 
     nameInput.value = "";
 }
-/*
+
 function setSelectedCard(card) {
     document.querySelectorAll(".charCard")
         .forEach(c => c.classList.remove("selected"));
@@ -492,14 +476,7 @@ function setSelectedCard(card) {
 
     updatePreview();
 }
-*/
 
-function setSelectedCard(char) {
-    state.character = char;
-    updatePreview();
-}
-
-/*
 function cloneCard(original) {
     const clone = original.cloneNode(true);
 
@@ -514,8 +491,7 @@ function cloneCard(original) {
 
     return clone;
 }
-*/
-/*
+
 function centerOnCard(card) {
     const container = document.getElementById("characters");
 
@@ -531,8 +507,7 @@ function centerOnCard(card) {
         behavior: "smooth"
     });
 }
-*/
-/*
+
 function updateCenterCard() {
     const container = document.getElementById("characters");
     const cards = container.querySelectorAll(".charCard");
@@ -561,8 +536,7 @@ function updateCenterCard() {
     cards.forEach(c => c.classList.remove("center"));
     if (closest) closest.classList.add("center");
 }
-*/
-/*
+
 function scrollByCard(direction) {
     const container = document.getElementById("characters");
     const card = container.querySelector(".charCard");
@@ -576,82 +550,6 @@ function scrollByCard(direction) {
         left: direction * cardWidth,
         behavior: "smooth"
     });
-}
-*/
-
-function scrollByCard(direction) {
-    if (!characters.length) return;
-
-    currentIndex =
-        (currentIndex + direction + characters.length) %
-        characters.length;
-
-    renderCarousel();
-}
-
-function renderCarousel() {
-    const container = document.getElementById("characters");
-    container.innerHTML = "";
-
-    if (!characters.length) return;
-
-    const leftIndex = (currentIndex - 1 + characters.length) % characters.length;
-    const centerIndex = currentIndex;
-    const rightIndex = (currentIndex + 1) % characters.length;
-
-    const visible = [
-        { char: characters[leftIndex], index: leftIndex },
-        { char: characters[centerIndex], index: centerIndex },
-        { char: characters[rightIndex], index: rightIndex }
-    ];
-
-    visible.forEach(({ char, index }, i) => {
-        const btn = createCard(char);
-
-        if (i === 1) {
-            btn.classList.add("center");
-            state.character = char;
-            updatePreview();
-        }
-
-        btn.onclick = () => {
-            currentIndex = index;
-            renderCarousel();
-        };
-
-        container.appendChild(btn);
-    });
-}
-
-function createCard(char) {
-    const btn = document.createElement("button");
-    btn.classList.add("charCard");
-    btn.style.animation = "cardPopIn 0.3s ease";
-
-    const inner = document.createElement("div");
-    inner.classList.add("cardInner");
-
-    const front = document.createElement("div");
-    front.classList.add("cardFront");
-
-    const back = document.createElement("div");
-    back.classList.add("cardBack");
-
-    const imgFront = document.createElement("img");
-    imgFront.src = char.front;
-
-    const imgBack = document.createElement("img");
-    imgBack.src = char.back;
-
-    front.appendChild(imgFront);
-    back.appendChild(imgBack);
-    inner.appendChild(front);
-    inner.appendChild(back);
-    btn.appendChild(inner);
-
-    btn.__charData = char;
-
-    return btn;
 }
 
 // JOIN GAME - LOCK IN PLAYER
