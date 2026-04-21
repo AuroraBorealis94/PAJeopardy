@@ -406,11 +406,9 @@ socket.on("characterList", (chars) => {
 
     // UPDATE CENTER CARD
     // With New Loop
-    //const originalCards = Array.from(container.children);
-    const originalCards = Array.from(container.querySelectorAll(".charCard"));
+    const originalCards = Array.from(container.children);
     const cloneCount = 3;
 
-    /*
     // prepend clones
     originalCards.slice(-cloneCount).forEach(card => {
         container.appendChild(cloneCard(card));
@@ -419,24 +417,6 @@ socket.on("characterList", (chars) => {
     // originals
     originalCards.forEach(card => {
         container.appendChild(card);
-    });
-
-    // append clones
-    originalCards.slice(0, cloneCount).forEach(card => {
-        container.appendChild(cloneCard(card));
-    });
-    */
-
-    container.innerHTML = "";
-
-    // prepend clones
-    originalCards.slice(-cloneCount).forEach(card => {
-        container.appendChild(cloneCard(card));
-    });
-
-    // originals
-    originalCards.forEach(card => {
-        container.appendChild(card));
     });
 
     // append clones
@@ -453,12 +433,10 @@ socket.on("characterList", (chars) => {
         const cardWidth = first.offsetWidth + gap;
         const cloneCount = 3;
 
-        container.scrollLeft = cardWidth * cloneCount;
-
         setTimeout(() => {
-            //container.scrollLeft = cardWidth * cloneCount;
+            container.scrollLeft = cardWidth * cloneCount;
             updateCenterCard();
-        }, 50); //}, 0);
+        }, 50);
     });
 });
 
