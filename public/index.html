@@ -470,13 +470,15 @@ window.onload = () => {
         const endX = e.changedTouches[0].clientX;
         const diff = endX - startX;
 
-        // ignore tiny swipes
         if (Math.abs(diff) < 30) return;
 
+        // determine strength
+        const strength = Math.min(3, Math.floor(Math.abs(diff) / 80) + 1);
+
         if (diff > 0) {
-            scrollByCard(-1); // swipe right > move left
+            scrollByCard(-strength);
         } else {
-            scrollByCard(1);  // swipe left > move right
+            scrollByCard(strength);
         }
     });
 };
@@ -600,7 +602,7 @@ function scrollByCard(direction) {
     renderCarousel();
 }
 */
-
+/*
 function scrollByCard(direction) {
     if (isAnimating) return;
     isAnimating = true;
@@ -614,6 +616,30 @@ function scrollByCard(direction) {
     track.style.transform = `translateX(calc(50% - ${cardWidth * (2 + direction)}px))`;
 
     // AFTER animation finishes > update index + re-render
+    setTimeout(() => {
+        currentIndex =
+            (currentIndex + direction + characters.length) %
+            characters.length;
+
+        renderCarousel();
+
+        isAnimating = false;
+    }, 350);
+}
+*/
+
+function scrollByCard(direction) {
+    if (isAnimating) return;
+    isAnimating = true;
+
+    const track = document.getElementById("charactersTrack");
+    const card = track.children[0];
+    const cardWidth = card.offsetWidth + 18;
+
+    track.style.transition = "transform 0.35s ease";
+    track.style.transform =
+        `translateX(calc(50% - ${cardWidth * (2 + direction)}px))`;
+
     setTimeout(() => {
         currentIndex =
             (currentIndex + direction + characters.length) %
@@ -675,7 +701,8 @@ function renderCarousel() {
         const index = (currentIndex + i + total) % total;
         const char = characters[index];
 
-        const card = createCard(char);
+        //const card = createCard(char);
+        const card = createCard(char, i);
 
         if (i === 0) {
             card.classList.add("center");
@@ -706,7 +733,7 @@ function applyTrackPosition() {
 
     track.style.transform = `translateX(calc(50% + ${offset}px))`;
 }
-
+/*
 function createCard(char) {
     const btn = document.createElement("button");
     btn.classList.add("charCard");
@@ -734,6 +761,53 @@ function createCard(char) {
     btn.appendChild(inner);
 
     btn.__charData = char;
+
+    return btn;
+}
+*/
+
+function createCard(char, indexOffset) {
+    const btn = document.createElement("button");
+    btn.classList.add("charCard");
+
+    const inner = document.createElement("div");
+    inner.classList.add("cardInner");
+
+    const front = document.createElement("div");
+    front.classList.add("cardFront");
+
+    const back = document.createElement("div");
+    back.classList.add("cardBack");
+
+    const imgFront = document.createElement("img");
+    imgFront.src = char.front;
+
+    const imgBack = document.createElement("img");
+    imgBack.src = char.back;
+
+    front.appendChild(imgFront);
+    back.appendChild(imgBack);
+    inner.appendChild(front);
+    inner.appendChild(back);
+    btn.appendChild(inner);
+
+    // CLICK BEHAVIOR (THIS FIXES FLIP + SELECT)
+    btn.onclick = () => {
+        // move carousel to this card
+        if (indexOffset !== 0) {
+            scrollByCard(indexOffset);
+            return;
+        }
+
+        // flip if center
+        document.querySelectorAll(".charCard")
+            .forEach(c => c.classList.remove("selected"));
+
+        btn.classList.add("selected");
+
+        state.character = char;
+        updatePreview();
+    };
 
     return btn;
 }
