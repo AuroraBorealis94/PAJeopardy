@@ -337,6 +337,11 @@ const state = {
 let characters = [];
 let currentIndex = 0;
 
+let isDragging = false;
+let startX = 0;
+let currentTranslate = 0;
+let prevTranslate = 0;
+
 // ROOM CODE
 socket.on("roomCode", (code) => {
     document.getElementById("roomCode").textContent = code;
@@ -453,7 +458,7 @@ window.onload = () => {
 //};
 
 window.onload = () => {
-    const container = document.getElementById("characters");
+    const container = document.getElementById("charactersTrack");
 
     // Arrow controls
     document.getElementById("nextBtn").onclick = () => scrollByCard(1);
