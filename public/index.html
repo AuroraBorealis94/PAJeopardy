@@ -102,23 +102,36 @@
             100% auto,
             100% auto;
     }
-
+    /*
     #characters {
         display: flex;
         overflow: hidden;
-        /*scroll-snap-type: none;*/
         gap: 18px;
-        /*padding: 18px;*/
         padding: 40px 0;
         max-width: 100%;
-        /*width: 100%*/
         align-items: center;
+    }
+    */
+
+    #characters {
+        display: flex;
+        justify-content: center;
+        overflow: hidden;
+        position: relative;
+        padding: 40px 0;
+    }
+
+    #charactersTrack {
+        display: flex;
+        gap: 18px;
+        transition: transform 0.35s ease;
+        will-change: transform;
     }
 
     #characters::before,
     #characters::after {
         content: "";
-        flex: 0 0 calc(50% - 70px); /* 70px = half card width (140 / 2) */
+        flex: 0 0 calc(50% - 70px);
     }
 
     #characters::-webkit-scrollbar {
@@ -141,7 +154,6 @@
     }
 
     .charCard {
-        /*flex: 0 0 140px; width of each card */
         flex: 0 0 clamp(110px, 30vw, 140px);
         scroll-snap-align: center;
         perspective: 800px;
@@ -156,7 +168,6 @@
     .charCard.center {
         opacity: 1;
         transform: scale(1.25);
-        /*transform: scale(1.25) translateY(-10px);*/
         z-index: 10;
     }
 
@@ -191,30 +202,6 @@
     .cardBack {
         transform: rotateY(180deg);
     }
-
-    /* NAME OVERLAY */
-    /*
-    .charName {
-        position: absolute;
-        bottom: 0;
-        width: 100%;
-
-        font-family: 'Korinna', serif;
-        color: white;
-        font-size: 14px;
-
-        background: rgba(0,0,0,0.6);
-    }
-    */
-    /*
-    .charCard:hover {
-        transform: scale(1.05);
-    }
-
-    .charCard:hover .cardFront img {
-        transform: scale(1.1);
-        transition: transform 0.2s;
-    }*/
 
     .charCard:active {
         transform: scale(0.95);
@@ -282,16 +269,6 @@
     #prevBtn, #nextBtn {
         position: relative;
         z-index: 999;
-        /*
-        position: relative;
-        z-index: 100;
-        background: rgba(0,0,0,0.6);
-        color: white;
-        border: 1px solid #666;
-        border-radius: 8px;
-        padding: 10px;
-        cursor: pointer;
-        */
     }
 
 </style>
@@ -320,7 +297,10 @@
 <div style="display:flex; justify-content:center; gap:18px; align-items:center;">
     <button id="prevBtn">&#8592;</button>
 
-    <div id="characters"></div>
+    <!--<div id="characters"></div>-->
+    <div id="characters">
+        <div id="charactersTrack"></div>
+    </div>
 
     <button id="nextBtn">&#8594;</button>
 </div>
@@ -455,19 +435,58 @@ socket.on("characterList", (chars) => {
 });
 
 // CAROUSEL MANAGER
+/*
 window.onload = () => {
-    const container = document.getElementById("characters");
+    //const container = document.getElementById("characters");
+    const container = document.getElementById("charactersTrack")
 
     // ARROW CONTROLS
     document.getElementById("nextBtn").onclick = () => scrollByCard(1);
     document.getElementById("prevBtn").onclick = () => scrollByCard(-1);
-
+    */
     // SCROLL LISTENER
     /*
     container.addEventListener("scroll", () => {
         updateCenterCard();
     });
     */
+//};
+
+window.onload = () => {
+    const container = document.getElementById("characters");
+
+    // Arrow controls
+    document.getElementById("nextBtn").onclick = () => scrollByCard(1);
+    document.getElementById("prevBtn").onclick = () => scrollByCard(-1);
+
+    // SWIPE SUPPORT
+    let startX = 0;
+
+    container.addEventListener("touchstart", (e) => {
+        startX = e.touches[0].clientX;
+    });
+
+    container.addEventListener("touchend", (e) => {
+        const endX = e.changedTouches[0].clientX;
+        const diff = endX - startX;
+
+        // ignore tiny swipes
+        if (Math.abs(diff) < 30) return;
+
+        if (diff > 0) {
+            // swipe right > go LEFT in carousel
+            currentIndex =
+                (currentIndex - 1 + characters.length) %
+                characters.length;
+        } else {
+            // swipe left > go RIGHT in carousel
+            currentIndex =
+                (currentIndex + 1) %
+                characters.length;
+        }
+
+        renderCarousel();
+    });
 };
 
 // SET NAME
@@ -578,7 +597,7 @@ function scrollByCard(direction) {
     });
 }
 */
-
+/*
 function scrollByCard(direction) {
     if (!characters.length) return;
 
@@ -588,9 +607,20 @@ function scrollByCard(direction) {
 
     renderCarousel();
 }
+*/
 
+function scrollByCard(direction) {
+    currentIndex =
+        (currentIndex + direction + characters.length) %
+        characters.length;
+
+    renderCarousel();
+}
+
+/*
 function renderCarousel() {
-    const container = document.getElementById("characters");
+    //const container = document.getElementById("characters");
+    const container = document.getElementById("charactersTrack")
     container.innerHTML = "";
 
     if (!characters.length) return;
@@ -621,6 +651,47 @@ function renderCarousel() {
 
         container.appendChild(btn);
     });
+}
+*/
+
+function renderCarousel() {
+    const track = document.getElementById("charactersTrack");
+    track.innerHTML = "";
+
+    const prevIndex = (currentIndex - 1 + characters.length) % characters.length;
+    const nextIndex = (currentIndex + 1) % characters.length;
+
+    const visible = [
+        characters[prevIndex],
+        characters[currentIndex],
+        characters[nextIndex]
+    ];
+
+    visible.forEach((char, i) => {
+        const card = createCard(char);
+
+        if (i === 1) {
+            card.classList.add("center");
+            state.character = char;
+            updatePreview();
+        }
+
+        track.appendChild(card);
+    });
+
+    applyTrackPosition();
+}
+
+function applyTrackPosition() {
+    const track = document.getElementById("charactersTrack");
+
+    const card = track.querySelector(".charCard");
+    if (!card) return;
+
+    const cardWidth = card.offsetWidth + 18; // gap
+    const offset = -cardWidth; // center middle card
+
+    track.style.transform = `translateX(calc(50% + ${offset}px))`;
 }
 
 function createCard(char) {
