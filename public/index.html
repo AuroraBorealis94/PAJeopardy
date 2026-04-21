@@ -424,6 +424,7 @@ socket.on("characterList", (chars) => {
 
     // With New Loop
     // clone FIRST > end
+    /*
     originalCards.slice(0, cloneCount).forEach(card => {
         container.appendChild(cloneCard(card));
     });
@@ -431,6 +432,21 @@ socket.on("characterList", (chars) => {
     // clone LAST > beginning
     originalCards.slice(-cloneCount).forEach(card => {
         container.insertBefore(cloneCard(card), container.firstChild);
+    });*/
+
+    // prepend clones
+    originalCards.slice(-cloneCount).forEach(card => {
+        container.appendChild(cloneCard(card));
+    });
+
+    // originals
+    originalCards.forEach(card => {
+        container.appendChild(card);
+    });
+
+    // append clones
+    originalCards.slice(0, cloneCount).forEach(card => {
+        container.appendChild(cloneCard(card));
     });
 
     /*
