@@ -455,10 +455,11 @@ socket.on("characterList", (chars) => {
 
         const cloneCount = 3;
 
-        // important: small offset correction for mobile rounding
-        container.scrollLeft = (cardWidth * cloneCount) + 1;
-
-        updateCenterCard();
+        // wait for layout stability
+        setTimeout(() => {
+            container.scrollLeft = cardWidth * cloneCount;
+            updateCenterCard();
+        }, 50);
     });
 });
 
@@ -531,7 +532,7 @@ window.onload = () => {
             container.scrollLeft = cardWidth * cloneCount;
         }
         */
-
+    /*
     container.addEventListener("scroll", () => {
         const cards = container.querySelectorAll(".charCard");
         if (!cards.length) return;
@@ -558,6 +559,47 @@ window.onload = () => {
         }
 
         updateCenterCard();
+    });*/
+
+    let isWrapping = false;
+
+    container.addEventListener("scroll", () => {
+        if (isWrapping) return;
+
+        const cards = container.querySelectorAll(".charCard");
+        const first = cards[0];
+        if (!first) return;
+
+        const gap = 18;
+        const cardWidth = first.offsetWidth + gap;
+
+        const cloneCount = 3;
+        const totalCards = cards.length;
+
+        const loopWidth = cardWidth * (totalCards - cloneCount * 2);
+
+        const leftEdge = cardWidth * cloneCount;
+        const rightEdge = cardWidth * (totalCards - cloneCount);
+
+        updateCenterCard();
+
+        if (container.scrollLeft <= leftEdge) {
+            isWrapping = true;
+            container.scrollLeft += loopWidth;
+
+            requestAnimationFrame(() => {
+                isWrapping = false;
+            });
+        }
+
+        else if (container.scrollLeft >= rightEdge) {
+            isWrapping = true;
+            container.scrollLeft -= loopWidth;
+
+            requestAnimationFrame(() => {
+                isWrapping = false;
+            });
+        }
     });
 };
 
@@ -640,7 +682,7 @@ function updateCenterCard() {
         closest.classList.add("center");
     }
 }*/
-
+/*
 function updateCenterCard() {
     const container = document.getElementById("characters");
     const cards = Array.from(container.querySelectorAll(".charCard"));
@@ -657,6 +699,35 @@ function updateCenterCard() {
         const cardCenter = rect.left + rect.width / 2;
 
         const distance = Math.abs(containerCenter - cardCenter);
+
+        if (distance < closestDistance) {
+            closestDistance = distance;
+            closest = card;
+        }
+    });
+
+    cards.forEach(c => c.classList.remove("center"));
+    if (closest) closest.classList.add("center");
+}*/
+
+function updateCenterCard() {
+    const container = document.getElementById("characters");
+    const cards = container.querySelectorAll(".charCard");
+
+    if (!cards.length) return;
+
+    const containerCenter =
+        container.getBoundingClientRect().left +
+        container.offsetWidth / 2;
+
+    let closest = null;
+    let closestDistance = Infinity;
+
+    cards.forEach(card => {
+        const rect = card.getBoundingClientRect();
+        const center = rect.left + rect.width / 2;
+
+        const distance = Math.abs(center - containerCenter);
 
         if (distance < closestDistance) {
             closestDistance = distance;
