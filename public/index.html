@@ -359,18 +359,17 @@ socket.on("roomCode", (code) => {
 });
 
 // CHARACTER LIST
+let realCards = [];
+
 socket.on("characterList", (chars) => {
     const container = document.getElementById("characters");
     container.innerHTML = "";
 
-    chars.forEach(char => {
+    realCards = chars.map((char, index) => {
         const btn = document.createElement("button");
-        // FOR CARD FLIP
         btn.classList.add("charCard");
-        // CARD POP ENTER
         btn.style.animation = "cardPopIn 0.5s ease";
 
-        // FOR CARD FLIP
         const inner = document.createElement("div");
         inner.classList.add("cardInner");
 
@@ -380,11 +379,9 @@ socket.on("characterList", (chars) => {
         const back = document.createElement("div");
         back.classList.add("cardBack");
 
-        // FRONT IMAGE
         const imgFront = document.createElement("img");
         imgFront.src = char.front;
 
-        // BACK IMAGE (you can customize this later)
         const imgBack = document.createElement("img");
         imgBack.src = char.back;
 
@@ -395,48 +392,22 @@ socket.on("characterList", (chars) => {
         btn.appendChild(inner);
 
         btn.__charData = char;
+        btn.__index = index;
 
         btn.onclick = () => {
             setSelectedCard(btn);
+            currentIndex = index;
             centerOnCard(btn);
         };
 
         container.appendChild(btn);
+        return btn;
     });
 
-    // UPDATE CENTER CARD
-    // With New Loop
-    const originalCards = Array.from(container.children);
-    const cloneCount = 3;
-
-    // prepend clones
-    originalCards.slice(-cloneCount).forEach(card => {
-        container.appendChild(cloneCard(card));
-    });
-
-    // originals
-    originalCards.forEach(card => {
-        container.appendChild(card);
-    });
-
-    // append clones
-    originalCards.slice(0, cloneCount).forEach(card => {
-        container.appendChild(cloneCard(card));
-    });
+    currentIndex = 0;
 
     requestAnimationFrame(() => {
-        const container = document.getElementById("characters");
-        const first = container.querySelector(".charCard");
-        if (!first) return;
-
-        const gap = 18;
-        const cardWidth = first.offsetWidth + gap;
-        const cloneCount = 3;
-
-        setTimeout(() => {
-            container.scrollLeft = cardWidth * cloneCount;
-            updateCenterCard();
-        }, 50);
+        updateCenterCard();
     });
 });
 
@@ -477,21 +448,6 @@ function setSelectedCard(card) {
     updatePreview();
 }
 
-function cloneCard(original) {
-    const clone = original.cloneNode(true);
-
-    // copy data
-    clone.__charData = original.__charData;
-
-    // reattach click
-    clone.onclick = () => {
-        setSelectedCard(clone);
-        centerOnCard(clone);
-    };
-
-    return clone;
-}
-
 function centerOnCard(card) {
     const container = document.getElementById("characters");
 
@@ -520,7 +476,7 @@ function updateCenterCard() {
 
     let closest = null;
     let closestDistance = Infinity;
-
+    
     cards.forEach(card => {
         const rect = card.getBoundingClientRect();
         const center = rect.left + rect.width / 2;
@@ -534,22 +490,31 @@ function updateCenterCard() {
     });
 
     cards.forEach(c => c.classList.remove("center"));
-    if (closest) closest.classList.add("center");
+
+    if (closest) {
+        closest.classList.add("center");
+        currentIndex = realCards.indexOf(closest);
+    }
 }
 
 function scrollByCard(direction) {
-    const container = document.getElementById("characters");
-    const card = container.querySelector(".charCard");
+    if (!realCards.length) return;
 
+    currentIndex += direction;
+
+    if (currentIndex < 0) {
+        currentIndex = realCards.length - 1;
+    }
+
+    if (currentIndex >= realCards.length) {
+        currentIndex = 0;
+    }
+
+    const card = realCards[currentIndex];
     if (!card) return;
 
-    const gap = 18; // matches CSS gap
-    const cardWidth = card.offsetWidth + gap;
-
-    container.scrollBy({
-        left: direction * cardWidth,
-        behavior: "smooth"
-    });
+    setSelectedCard(card);
+    centerOnCard(card);
 }
 
 // JOIN GAME - LOCK IN PLAYER
