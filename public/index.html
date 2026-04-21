@@ -478,8 +478,6 @@ window.onload = () => {
         } else {
             scrollByCard(1);  // swipe left > move right
         }
-
-        renderCarousel();
     });
 };
 
@@ -712,7 +710,7 @@ function applyTrackPosition() {
 function createCard(char) {
     const btn = document.createElement("button");
     btn.classList.add("charCard");
-    btn.style.animation = "cardPopIn 0.3s ease";
+    //btn.style.animation = "cardPopIn 0.3s ease";
 
     const inner = document.createElement("div");
     inner.classList.add("cardInner");
