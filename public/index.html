@@ -106,19 +106,16 @@
     #characters {
         display: flex;
         overflow-x: auto;
-        /*scroll-snap-type: none;*/
         gap: 18px;
-        /*padding: 18px;*/
         padding: 40px 0;
         max-width: 100%;
-        /*width: 100%*/
         align-items: center;
     }
 
     #characters::before,
     #characters::after {
         content: "";
-        flex: 0 0 calc(50% - 70px); /* 70px = half card width (140 / 2) */
+        flex: 0 0 calc(50% - 70px);
     }
 
     #characters::-webkit-scrollbar {
@@ -141,22 +138,18 @@
     }
 
     .charCard {
-        /*flex: 0 0 140px; width of each card */
         flex: 0 0 clamp(110px, 30vw, 140px);
         scroll-snap-align: center;
         perspective: 800px;
         transition: transform 0.3s ease, opacity 0.3s ease;
-        /* dim effect*/
         opacity: 0.6;
         transform: scale(0.9);
-
         position:relative;
     }
 
     .charCard.center {
         opacity: 1;
         transform: scale(1.25);
-        /*transform: scale(1.25) translateY(-10px);*/
         z-index: 10;
     }
 
@@ -206,15 +199,6 @@
         background: rgba(0,0,0,0.6);
     }
     */
-    /*
-    .charCard:hover {
-        transform: scale(1.05);
-    }
-
-    .charCard:hover .cardFront img {
-        transform: scale(1.1);
-        transition: transform 0.2s;
-    }*/
 
     .charCard:active {
         transform: scale(0.95);
@@ -553,7 +537,6 @@ function joinGame() {
 
     // DISABLE BUTTONS AFTER JOINING
     document.getElementById("enterBtn").disabled = true;
-    //document.getElementById("joinBtn").disabled = true;
 }
 
 // PREVIEW UPDATE
@@ -571,7 +554,6 @@ function updatePreview() {
         text.textContent = state.character.name;
     } else {
         img.style.display = "none";
-        //text.textContent = "---";
     }
 }
 
