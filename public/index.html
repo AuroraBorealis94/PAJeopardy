@@ -474,15 +474,9 @@ window.onload = () => {
         if (Math.abs(diff) < 30) return;
 
         if (diff > 0) {
-            // swipe right > go LEFT in carousel
-            currentIndex =
-                (currentIndex - 1 + characters.length) %
-                characters.length;
+            scrollByCard(-1); // swipe right > move left
         } else {
-            // swipe left > go RIGHT in carousel
-            currentIndex =
-                (currentIndex + 1) %
-                characters.length;
+            scrollByCard(1);  // swipe left > move right
         }
 
         renderCarousel();
@@ -610,11 +604,27 @@ function scrollByCard(direction) {
 */
 
 function scrollByCard(direction) {
-    currentIndex =
-        (currentIndex + direction + characters.length) %
-        characters.length;
+    if (isAnimating) return;
+    isAnimating = true;
 
-    renderCarousel();
+    const track = document.getElementById("charactersTrack");
+    const card = track.children[0];
+    const cardWidth = card.offsetWidth + 18;
+
+    // animate movement
+    track.style.transition = "transform 0.35s ease";
+    track.style.transform = `translateX(calc(50% - ${cardWidth * (2 + direction)}px))`;
+
+    // AFTER animation finishes > update index + re-render
+    setTimeout(() => {
+        currentIndex =
+            (currentIndex + direction + characters.length) %
+            characters.length;
+
+        renderCarousel();
+
+        isAnimating = false;
+    }, 350);
 }
 
 /*
@@ -654,33 +664,38 @@ function renderCarousel() {
 }
 */
 
+let isAnimating = false;
+
 function renderCarousel() {
     const track = document.getElementById("charactersTrack");
     track.innerHTML = "";
 
-    const prevIndex = (currentIndex - 1 + characters.length) % characters.length;
-    const nextIndex = (currentIndex + 1) % characters.length;
+    const total = characters.length;
 
-    const visible = [
-        characters[prevIndex],
-        characters[currentIndex],
-        characters[nextIndex]
-    ];
+    // build a 5-card buffer: [L2, L1, C, R1, R2]
+    for (let i = -2; i <= 2; i++) {
+        const index = (currentIndex + i + total) % total;
+        const char = characters[index];
 
-    visible.forEach((char, i) => {
         const card = createCard(char);
 
-        if (i === 1) {
+        if (i === 0) {
             card.classList.add("center");
             state.character = char;
             updatePreview();
         }
 
         track.appendChild(card);
-    });
+    }
 
-    applyTrackPosition();
+    // position so center card is in middle
+    const card = track.children[0];
+    const cardWidth = card.offsetWidth + 18;
+
+    track.style.transition = "none";
+    track.style.transform = `translateX(calc(50% - ${cardWidth * 2}px))`;
 }
+
 
 function applyTrackPosition() {
     const track = document.getElementById("charactersTrack");
