@@ -360,6 +360,8 @@ socket.on("roomCode", (code) => {
 
 // CHARACTER LIST
 let realCards = [];
+let currentIndex = 0;
+let isAdjusting = false;
 
 socket.on("characterList", (chars) => {
     const container = document.getElementById("characters");
@@ -407,6 +409,14 @@ socket.on("characterList", (chars) => {
     currentIndex = 0;
 
     requestAnimationFrame(() => {
+        const metrics = getCardMetrics();
+        if (!metrics) return;
+
+        const container = document.getElementById("characters");
+
+        // Start in middle of "infinite space"
+        container.scrollLeft = metrics.cycleWidth * 10;
+
         updateCenterCard();
     });
 });
@@ -421,7 +431,30 @@ window.onload = () => {
 
     // SCROLL LISTENER
     container.addEventListener("scroll", () => {
+        if (isAdjusting) return;
+
         updateCenterCard();
+
+        const metrics = getCardMetrics();
+        if (!metrics) return;
+
+        const { cycleWidth } = metrics;
+
+        const scrollLeft = container.scrollLeft;
+
+        // If we scroll too far right > jump back 1 cycle
+        if (scrollLeft >= cycleWidth) {
+            isAdjusting = true;
+            container.scrollLeft -= cycleWidth;
+            isAdjusting = false;
+        }
+
+        // If we scroll too far left > jump forward 1 cycle
+        if (scrollLeft < 0) {
+            isAdjusting = true;
+            container.scrollLeft += cycleWidth;
+            isAdjusting = false;
+        }
     });
 };
 
@@ -495,26 +528,39 @@ function updateCenterCard() {
         closest.classList.add("center");
         currentIndex = realCards.indexOf(closest);
     }
+
+    currentIndex = realCards.indexOf(closest);
 }
 
 function scrollByCard(direction) {
-    if (!realCards.length) return;
+    const container = document.getElementById("characters");
 
-    currentIndex += direction;
+    const first = container.querySelector(".charCard");
+    if (!first) return;
 
-    if (currentIndex < 0) {
-        currentIndex = realCards.length - 1;
-    }
+    const gap = 18;
+    const cardWidth = first.offsetWidth + gap;
 
-    if (currentIndex >= realCards.length) {
-        currentIndex = 0;
-    }
+    container.scrollBy({
+        left: direction * cardWidth,
+        behavior: "smooth"
+    });
+}
 
-    const card = realCards[currentIndex];
-    if (!card) return;
+function getCardMetrics() {
+    const container = document.getElementById("characters");
+    const first = container.querySelector(".charCard");
+    if (!first) return null;
 
-    setSelectedCard(card);
-    centerOnCard(card);
+    const gap = 18;
+    const cardWidth = first.offsetWidth + gap;
+    const total = realCards.length;
+
+    return {
+        cardWidth,
+        total,
+        cycleWidth: cardWidth * total
+    };
 }
 
 // JOIN GAME - LOCK IN PLAYER
