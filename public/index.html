@@ -294,8 +294,6 @@
         */
     }
 
-    let realCards = [];
-
 </style>
 
     <title>Jeopardy Lobby</title>
@@ -354,8 +352,6 @@ const state = {
     name: "",
     character: null
 };
-
-const CLONE_COUNT = 3;
 
 // ROOM CODE
 socket.on("roomCode", (code) => {
@@ -469,9 +465,9 @@ socket.on("characterList", (chars) => {
 socket.on("characterList", (chars) => {
     const container = document.getElementById("characters");
 
-    /* 1. CREATE REAL CARDS FIRST (NOT CLONES)*/
-    /*const realCards = [];*/
-    /*
+    // 1. CREATE REAL CARDS FIRST (NOT CLONES)
+    const realCards = [];
+
     chars.forEach(char => {
         const btn = document.createElement("button");
         btn.classList.add("charCard");
@@ -507,51 +503,14 @@ socket.on("characterList", (chars) => {
 
         realCards.push(btn);
     });
-    */
-
-    let realCards = chars.map(char => {
-        const btn = document.createElement("button");
-        btn.classList.add("charCard");
-        btn.style.animation = "cardPopIn 0.5s ease";
-
-        const inner = document.createElement("div");
-        inner.classList.add("cardInner");
-
-        const front = document.createElement("div");
-        front.classList.add("cardFront");
-
-        const back = document.createElement("div");
-        back.classList.add("cardBack");
-
-        const imgFront = document.createElement("img");
-        imgFront.src = char.front;
-
-        const imgBack = document.createElement("img");
-        imgBack.src = char.back;
-
-        front.appendChild(imgFront);
-        back.appendChild(imgBack);
-        inner.appendChild(front);
-        inner.appendChild(back);
-        btn.appendChild(inner);
-
-        btn.__charData = char;
-
-        btn.onclick = () => {
-            setSelectedCard(btn);
-            centerOnCard(btn);
-        };
-
-        return btn;
-    });
 
     // 2. NOW SAFELY RESET CONTAINER
     container.innerHTML = "";
 
-    //const cloneCount = 3;
+    const cloneCount = 3;
 
     // prepend clones
-    realCards.slice(-CLONE_COUNT).forEach(card => {
+    realCards.slice(-cloneCount).forEach(card => {
         container.appendChild(cloneCard(card));
     });
 
@@ -561,7 +520,7 @@ socket.on("characterList", (chars) => {
     });
 
     // append clones
-    realCards.slice(0, CLONE_COUNT).forEach(card => {
+    realCards.slice(0, cloneCount).forEach(card => {
         container.appendChild(cloneCard(card));
     });
 
@@ -573,7 +532,7 @@ socket.on("characterList", (chars) => {
         const gap = 18;
         const cardWidth = first.offsetWidth + gap;
 
-        container.scrollLeft = cardWidth * CLONE_COUNT;
+        container.scrollLeft = cardWidth * cloneCount;
 
         updateCenterCard();
     });
@@ -587,6 +546,7 @@ window.onload = () => {
     document.getElementById("nextBtn").onclick = () => scrollByCard(1);
     document.getElementById("prevBtn").onclick = () => scrollByCard(-1);
 
+    // SCROLL LISTENER
     container.addEventListener("scroll", () => {
         updateCenterCard();
     });
@@ -648,7 +608,7 @@ function centerOnCard(card) {
 
 function updateCenterCard() {
     const container = document.getElementById("characters");
-    container.children
+    const cards = container.querySelectorAll(".charCard");
 
     if (!cards.length) return;
 
