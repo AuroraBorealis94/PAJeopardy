@@ -640,6 +640,13 @@ function scrollByCard(direction) {
     track.style.transform =
         `translateX(calc(50% - ${cardWidth * (2 + direction)}px))`;
 
+    const animate = () => {
+        updateCardScales();
+        if (isAnimating) requestAnimationFrame(animate);
+    };
+
+    requestAnimationFrame(animate);
+
     setTimeout(() => {
         currentIndex =
             (currentIndex + direction + characters.length) %
@@ -704,12 +711,6 @@ function renderCarousel() {
         //const card = createCard(char);
         const card = createCard(char, i);
 
-        if (i === 0) {
-            card.classList.add("center");
-            state.character = char;
-            updatePreview();
-        }
-
         track.appendChild(card);
     }
 
@@ -719,6 +720,8 @@ function renderCarousel() {
 
     track.style.transition = "none";
     track.style.transform = `translateX(calc(50% - ${cardWidth * 2}px))`;
+
+    setTimeout(updateCardScales, 0);
 }
 
 
@@ -793,13 +796,6 @@ function createCard(char, indexOffset) {
 
     // CLICK BEHAVIOR (THIS FIXES FLIP + SELECT)
     btn.onclick = () => {
-        // move carousel to this card
-        if (indexOffset !== 0) {
-            scrollByCard(indexOffset);
-            return;
-        }
-
-        // flip if center
         document.querySelectorAll(".charCard")
             .forEach(c => c.classList.remove("selected"));
 
@@ -810,6 +806,30 @@ function createCard(char, indexOffset) {
     };
 
     return btn;
+}
+
+function updateCardScales() {
+    const track = document.getElementById("charactersTrack");
+    const container = document.getElementById("characters");
+
+    const containerCenter =
+        container.getBoundingClientRect().left +
+        container.offsetWidth / 2;
+
+    const cards = track.querySelectorAll(".charCard");
+
+    cards.forEach(card => {
+        const rect = card.getBoundingClientRect();
+        const cardCenter = rect.left + rect.width / 2;
+
+        const distance = Math.abs(containerCenter - cardCenter);
+
+        // normalize (tweak 200 for spread feel)
+        const scale = Math.max(0.85, 1.2 - distance / 300);
+
+        card.style.transform = `scale(${scale})`;
+        card.style.opacity = scale > 1.1 ? 1 : 0.6;
+    });
 }
 
 // JOIN GAME - LOCK IN PLAYER
