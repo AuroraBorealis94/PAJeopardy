@@ -8,18 +8,6 @@ app.use("/backgrounds", express.static("backgrounds"));
 app.use("/sprites", express.static("sprites"));
 app.use("/confetti", express.static("public/confetti"));
 
-// HARD RESET ON SERVER START / REDEPLOY
-function resetGameState() {
-    game.players = [];
-    game.state = "lobby";
-    game.board = {};
-    lockedCharacters.clear();
-}
-
-resetGameState();
-
-let GAME_SESSION = Date.now();
-
 // BRIDGE FROM SOCKET.IO TO WEBSOCKET
 const WebSocket = require("ws");
 const wss = new WebSocket.Server({ server: http });
@@ -114,15 +102,6 @@ function generateBoard() {
     }
 }
 
-function resetGameState() {
-    game.players = [];
-    game.state = "lobby";
-    game.board = {};
-    lockedCharacters.clear();
-
-    GAME_SESSION = Date.now();
-}
-
 // ROOM CODE
 //const ROOM_CODE = Math.random().toString(36).substring(2,6).toUpperCase();
 const ROOM_CODE = "PA26"; // fixed code
@@ -136,7 +115,6 @@ app.get("/", (req, res) => {
 // NEW CONNECTION
 io.on("connection", (socket) => {
     // SEND INFO TO WEB
-    socket.emit("gameSession", GAME_SESSION);
     socket.emit("roomCode", ROOM_CODE);
     socket.emit("characterList", characters);
 
