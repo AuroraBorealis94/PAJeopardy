@@ -394,6 +394,7 @@ socket.on("roomCode", (code) => {
 });
 
 // AUTO REJOIN ON RECONNECT
+/*
 socket.on("connect", () => {
     if (disconnectTimer) {
         clearTimeout(disconnectTimer);
@@ -426,14 +427,27 @@ socket.on("connect", () => {
         // restore UI
         state.name = savedName;
         state.character = savedCharacter;
-
-        /*
-        setTimeout(() => {
-            showWaitingScreen();
-        }, 300);
-        */
     }
 });
+*/
+
+socket.on("connect", () => {
+    const savedSession = localStorage.getItem("gameSession");
+
+    // SESSION CHANGED > FULL RESET
+    if (savedSession && savedSession !== currentSession) {
+        console.log("Game reset detected");
+
+        localStorage.removeItem("hasJoined");
+        localStorage.removeItem("playerId");
+        localStorage.removeItem("name");
+        localStorage.removeItem("character");
+
+        state.name = "";
+        state.character = null;
+
+        return;
+    }
 
 // CHARACTER LIST
 let realCards = [];
@@ -547,9 +561,10 @@ socket.on("disconnect", () => {
     showReconnectOverlay();
 
     setTimeout(() => {
-        const stillGone = game.players.find(p => p.playerId === player.playerId && p.disconnected);
+        const exists = game.players.find(p => p.playerId === player.playerId);
 
-        if (stillGone) {
+        // still gone
+        if (!exists || exists.disconnected) {
             console.log(player.name + " fully removed");
 
             lockedCharacters.delete(player.character.toLowerCase());
@@ -575,10 +590,13 @@ socket.on("forceReset", () => {
 
 socket.on("joinSuccess", () => {
     localStorage.setItem("hasJoined", "true");
+    localStorage.setItem("gameSession", currentSession);
 
+    /*
     setTimeout(() => {
         showWaitingScreen();
     }, 1200);
+    */
 });
 
 // SET NAME
