@@ -388,6 +388,9 @@ const state = {
     character: null
 };
 
+let currentSession = null;
+let realCards = [];
+
 // ROOM CODE
 socket.on("roomCode", (code) => {
     document.getElementById("roomCode").textContent = code;
@@ -431,6 +434,7 @@ socket.on("connect", () => {
 });
 */
 
+/*
 socket.on("connect", () => {
     const savedSession = localStorage.getItem("gameSession");
 
@@ -448,10 +452,21 @@ socket.on("connect", () => {
 
         return;
     }
+});
+*/
+
+socket.on("connect", () => {
+    console.log("Connected:", socket.id);
+
+    if (disconnectTimer) {
+        clearTimeout(disconnectTimer);
+        disconnectTimer = null;
+    }
+
+    hideReconnectOverlay();
+});
 
 // CHARACTER LIST
-let realCards = [];
-
 socket.on("characterList", (chars) => {
     const container = document.getElementById("characters");
     container.innerHTML = "";
@@ -560,20 +575,13 @@ socket.on("disconnect", () => {
 
     showReconnectOverlay();
 
-    setTimeout(() => {
-        const exists = game.players.find(p => p.playerId === player.playerId);
+    disconnectTimer = setTimeout(() => {
+        console.log("Clearing local session");
 
-        // still gone
-        if (!exists || exists.disconnected) {
-            console.log(player.name + " fully removed");
-
-            lockedCharacters.delete(player.character.toLowerCase());
-
-            game.players = game.players.filter(p => p.playerId !== player.playerId);
-
-            io.emit("playerList", game.players);
-            io.emit("lockedCharacters", Array.from(lockedCharacters));
-        }
+        localStorage.removeItem("hasJoined");
+        localStorage.removeItem("playerId");
+        localStorage.removeItem("name");
+        localStorage.removeItem("character");
     }, 5000);
 });
 
@@ -592,11 +600,28 @@ socket.on("joinSuccess", () => {
     localStorage.setItem("hasJoined", "true");
     localStorage.setItem("gameSession", currentSession);
 
-    /*
     setTimeout(() => {
         showWaitingScreen();
     }, 1200);
-    */
+});
+
+socket.on("gameSession", (session) => {
+    const savedSession = localStorage.getItem("gameSession");
+
+    currentSession = session;
+
+    // THIS IS THE CORRECT PLACE
+    if (savedSession && savedSession !== session) {
+        console.log("Game reset detected");
+
+        localStorage.clear();
+
+        state.name = "";
+        state.character = null;
+
+        location.reload(); // ensures UI is clean
+        return;
+    }
 });
 
 // SET NAME
