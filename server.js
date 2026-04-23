@@ -123,13 +123,12 @@ io.on("connection", (socket) => {
     // JOIN LOBBY
     socket.on("join", ({ playerId, name, character }) => {
         const normalized = character.toLowerCase();
-        socket.emit("joinSuccess");
-        // CHECK IF PLAYER IS RECONNECTING
+
         let existingPlayer = game.players.find(p => p.playerId === playerId);
 
+        // RECONNECT (valid only if still in game)
         if (existingPlayer) {
             if (existingPlayer.disconnected) {
-                // VALID RECONNECT (within window)
                 existingPlayer.id = socket.id;
                 existingPlayer.disconnected = false;
 
@@ -137,40 +136,45 @@ io.on("connection", (socket) => {
 
                 io.emit("playerList", game.players);
                 io.emit("lockedCharacters", Array.from(lockedCharacters));
+
+                socket.emit("joinSuccess");
             }
-
             return;
         }
 
-        // BLOCK stale reconnects (client thinks it's joined but server forgot them)
-        const wasPlayer = playerId && !existingPlayer && lockedCharacters.has(normalized);
+        // STALE CLIENT (server forgot them)
+        const characterOwnedBySomeoneElse = game.players.find(
+            p => p.character.toLowerCase() === normalized
+        );
 
-        if (wasPlayer) {
-            socket.emit("forceReset");
+        if (characterOwnedBySomeoneElse) {
+            socket.emit("characterTaken");
             return;
         }
 
-        // BLOCK IF CHARACTER ALREADY LOCKED
+        // CHARACTER TAKEN
         if (lockedCharacters.has(normalized)) {
-            socket.emit("characterTaken", normalized);
+            socket.emit("characterTaken");
             return;
         }
 
-        // LOCK CHARACTER
+        // VALID JOIN
         lockedCharacters.add(normalized);
 
         game.players.push({
             id: socket.id,
-            playerId, // persistent identity
+            playerId,
             name,
-            character
+            character,
+            disconnected: false
         });
 
         console.log(name + " joined with " + character);
 
-        // SEND UPDATED STATE TO ALL CLIENTS
         io.emit("playerList", game.players);
         io.emit("lockedCharacters", Array.from(lockedCharacters));
+
+        socket.emit("joinSuccess");
 
         broadcastToUnity({
             type: "playerList",

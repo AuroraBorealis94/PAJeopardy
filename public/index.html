@@ -427,9 +427,11 @@ socket.on("connect", () => {
         state.name = savedName;
         state.character = savedCharacter;
 
+        /*
         setTimeout(() => {
             showWaitingScreen();
         }, 300);
+        */
     }
 });
 
@@ -544,13 +546,19 @@ socket.on("disconnect", () => {
 
     showReconnectOverlay();
 
-    disconnectTimer = setTimeout(() => {
-        console.log("Clearing local session");
+    setTimeout(() => {
+        const stillGone = game.players.find(p => p.playerId === player.playerId && p.disconnected);
 
-        localStorage.removeItem("hasJoined");
-        localStorage.removeItem("playerId");
-        localStorage.removeItem("name");
-        localStorage.removeItem("character");
+        if (stillGone) {
+            console.log(player.name + " fully removed");
+
+            lockedCharacters.delete(player.character.toLowerCase());
+
+            game.players = game.players.filter(p => p.playerId !== player.playerId);
+
+            io.emit("playerList", game.players);
+            io.emit("lockedCharacters", Array.from(lockedCharacters));
+        }
     }, 5000);
 });
 
