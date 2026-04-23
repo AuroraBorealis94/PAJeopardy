@@ -123,7 +123,7 @@ io.on("connection", (socket) => {
     // JOIN LOBBY
     socket.on("join", ({ playerId, name, character }) => {
         const normalized = character.toLowerCase();
-
+        socket.emit("joinSuccess");
         // CHECK IF PLAYER IS RECONNECTING
         let existingPlayer = game.players.find(p => p.playerId === playerId);
 

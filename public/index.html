@@ -323,39 +323,42 @@
 </head>
 <body>
 
-<!-- TITLE -->
-<h1 id="h11">PA Jeopardy</h1>
-<h1 id="h12">2026 Edition</h1>
+<!-- LOBBY SCREEN -->
+<div id="lobbyUI">
+    <!-- TITLE -->
+    <h1 id="h11">PA Jeopardy</h1>
+    <h1 id="h12">2026 Edition</h1>
 
-<!-- PREVIEW -->
-<div id="preview">
-    <p id="teamLabel" style="display:none;"><b>Team </b><span id="previewName">---</span></p>
+    <!-- PREVIEW -->
+    <div id="preview">
+        <p id="teamLabel" style="display:none;"><b>Team </b><span id="previewName">---</span></p>
 
-    <div id="previewCharacterBox">
-        <img id="previewImage" src="" />
+        <div id="previewCharacterBox">
+            <img id="previewImage" src="" />
+        </div>
     </div>
+
+    <!-- ENTER NAME -->
+    <h2 style="padding-top: 20px;">Choose Your Team Name</h2>
+    <input id="name" placeholder="Enter group name">
+    <button id="enterBtn" onclick="setName()">Enter</button>
+
+    <br>
+
+    <!-- ENTER CHARACTER -->
+    <h2 style="padding-top: 10px;">Choose Your Team Representative</h2>
+
+    <div style="display:flex; justify-content:center; gap:18px; align-items:center;">
+        <button id="prevBtn">&#8592;</button>
+
+        <div id="characters"></div>
+
+        <button id="nextBtn">&#8594;</button>
+    </div>
+
+    <!-- JOIN - LOCK IN PLAYER -->
+    <button id="joinBtn" onclick="joinGame()">Join Game</button>
 </div>
-
-<!-- ENTER NAME -->
-<h2 style="padding-top: 20px;">Choose Your Team Name</h2>
-<input id="name" placeholder="Enter group name">
-<button id="enterBtn" onclick="setName()">Enter</button>
-
-<br>
-
-<!-- ENTER CHARACTER -->
-<h2 style="padding-top: 10px;">Choose Your Team Representative</h2>
-
-<div style="display:flex; justify-content:center; gap:18px; align-items:center;">
-    <button id="prevBtn">&#8592;</button>
-
-    <div id="characters"></div>
-
-    <button id="nextBtn">&#8594;</button>
-</div>
-
-<!-- JOIN - LOCK IN PLAYER -->
-<button id="joinBtn" onclick="joinGame()">Join Game</button>
 
 <!-- WAITING SCREEN -->
 <div id="waitingScreen" class="hidden">
@@ -369,7 +372,7 @@
     <p id="playerCount">0 players joined</p>
 </div>
 
-<!-- RECONNECTING -->
+<!-- RECONNECTING SCREEN -->
 <div id="reconnectOverlay" class="hidden">
     <h2>Reconnecting...</h2>
 </div>
@@ -548,7 +551,7 @@ socket.on("disconnect", () => {
         localStorage.removeItem("playerId");
         localStorage.removeItem("name");
         localStorage.removeItem("character");
-    }, 10000); // 40 seconds
+    }, 5000);
 });
 
 socket.on("forceReset", () => {
@@ -799,15 +802,15 @@ function confettiBurst() {
 function showWaitingScreen() {
     const screen = document.getElementById("waitingScreen");
 
+    // hide lobby
+    document.getElementById("lobbyUI").style.display = "none";
+
     // populate player info
     document.getElementById("waitingImage").src = state.character.front;
     document.getElementById("waitingName").textContent = state.name;
-    //document.body.style.pointerEvents = "none";
-    document.getElementById("waitingScreen").style.pointerEvents = "all";
 
     screen.classList.remove("hidden");
 
-    // allow CSS transition
     requestAnimationFrame(() => {
         screen.classList.add("show");
     });
