@@ -225,7 +225,7 @@ io.on("connection", (socket) => {
                 io.emit("playerList", game.players);
                 io.emit("lockedCharacters", Array.from(lockedCharacters));
             }
-        }, 40000);
+        }, 5000);
     });
 });
 

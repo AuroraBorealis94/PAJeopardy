@@ -548,7 +548,7 @@ socket.on("disconnect", () => {
         localStorage.removeItem("playerId");
         localStorage.removeItem("name");
         localStorage.removeItem("character");
-    }, 5000); // 40 seconds
+    }, 10000); // 40 seconds
 });
 
 socket.on("forceReset", () => {
