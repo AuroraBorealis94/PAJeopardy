@@ -388,8 +388,6 @@ const state = {
     character: null
 };
 
-let currentSession = null;
-
 // ROOM CODE
 socket.on("roomCode", (code) => {
     document.getElementById("roomCode").textContent = code;
@@ -463,6 +461,34 @@ socket.on("connect", () => {
     }
 
     hideReconnectOverlay();
+
+    const savedName = localStorage.getItem("name");
+    const savedCharacterRaw = localStorage.getItem("character");
+    const hasJoined = localStorage.getItem("hasJoined");
+
+    if (savedName && savedCharacterRaw && hasJoined === "true") {
+        const savedCharacter = JSON.parse(savedCharacterRaw);
+
+        let playerId = localStorage.getItem("playerId");
+
+        if (!playerId) {
+            playerId = crypto.randomUUID();
+            localStorage.setItem("playerId", playerId);
+        }
+
+        socket.emit("join", {
+            playerId,
+            name: savedName,
+            character: savedCharacter.name
+        });
+
+        state.name = savedName;
+        state.character = savedCharacter;
+
+        setTimeout(() => {
+            showWaitingScreen();
+        }, 300);
+    }
 });
 
 let realCards = [];
@@ -603,13 +629,17 @@ socket.on("joinSuccess", () => {
     }, 1200);
 });
 
+let currentSession = null;
+
 socket.on("gameSession", (session) => {
     const savedSession = localStorage.getItem("gameSession");
+    const hasJoined = localStorage.getItem("hasJoined");
 
     currentSession = session;
 
-    if (savedSession && savedSession !== session) {
-        console.log("Game reset detected");
+    // ONLY reset if player was actually in a game
+    if (hasJoined === "true" && savedSession && savedSession !== session) {
+        console.log("Server restarted - clearing session");
 
         localStorage.clear();
 
@@ -617,7 +647,6 @@ socket.on("gameSession", (session) => {
         state.character = null;
 
         location.reload();
-        return;
     }
 });
 
