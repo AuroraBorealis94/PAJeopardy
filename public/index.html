@@ -428,17 +428,6 @@ socket.on("connect", () => {
             showWaitingScreen();
         }, 300);
     }
-    /*
-    setTimeout(() => {
-        if (state.character) {
-            realCards.forEach(card => {
-                if (card.__charData.name === state.character.name) {
-                    setSelectedCard(card);
-                    centerOnCard(card);
-                }
-            });
-        }
-    }, 100);*/
 });
 
 // CHARACTER LIST
@@ -536,8 +525,13 @@ socket.on("lockedCharacters", (locked) => {
 });
 
 // CHARACTER TAKEN
-socket.on("characterTaken", (char) => {
+socket.on("characterTaken", () => {
     alert("That character was just taken. Please choose another.");
+
+    const joinBtn = document.getElementById("joinBtn");
+    joinBtn.disabled = false;
+    joinBtn.innerText = "Join Game";
+    joinBtn.style.opacity = "1";
 });
 
 let disconnectTimer = null;
@@ -555,6 +549,25 @@ socket.on("disconnect", () => {
         localStorage.removeItem("name");
         localStorage.removeItem("character");
     }, 40000); // 40 seconds
+});
+
+socket.on("forceReset", () => {
+    console.log("Session expired, resetting");
+
+    localStorage.removeItem("hasJoined");
+    localStorage.removeItem("playerId");
+    localStorage.removeItem("name");
+    localStorage.removeItem("character");
+
+    location.reload();
+});
+
+socket.on("joinSuccess", () => {
+    localStorage.setItem("hasJoined", "true");
+
+    setTimeout(() => {
+        showWaitingScreen();
+    }, 1200);
 });
 
 // SET NAME
@@ -723,7 +736,7 @@ function joinGame() {
         character: state.character.name
     });
 
-    localStorage.setItem("hasJoined", "true");
+    //localStorage.setItem("hasJoined", "true");
 
     // LOCK UI
     document.getElementById("name").disabled = true;
@@ -734,9 +747,9 @@ function joinGame() {
     });
 
     // DELAY TRANSITION
-    setTimeout(() => {
-        showWaitingScreen();
-    }, 1200);
+    //setTimeout(() => {
+    //    showWaitingScreen();
+    //}, 1200);
 }
 
 // CONFETTI
@@ -797,6 +810,8 @@ function showWaitingScreen() {
     // populate player info
     document.getElementById("waitingImage").src = state.character.front;
     document.getElementById("waitingName").textContent = state.name;
+    //document.body.style.pointerEvents = "none";
+    document.getElementById("waitingScreen").style.pointerEvents = "all";
 
     screen.classList.remove("hidden");
 

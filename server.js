@@ -122,22 +122,31 @@ io.on("connection", (socket) => {
 
     // JOIN LOBBY
     socket.on("join", ({ playerId, name, character }) => {
-
         const normalized = character.toLowerCase();
 
         // CHECK IF PLAYER IS RECONNECTING
         let existingPlayer = game.players.find(p => p.playerId === playerId);
 
         if (existingPlayer) {
-            // RECONNECT: update socket id only
-            existingPlayer.id = socket.id;
-            existingPlayer.disconnected = false;
+            if (existingPlayer.disconnected) {
+                // VALID RECONNECT (within window)
+                existingPlayer.id = socket.id;
+                existingPlayer.disconnected = false;
 
-            console.log(name + " reconnected");
+                console.log(name + " reconnected");
 
-            io.emit("playerList", game.players);
-            io.emit("lockedCharacters", Array.from(lockedCharacters));
+                io.emit("playerList", game.players);
+                io.emit("lockedCharacters", Array.from(lockedCharacters));
+            }
 
+            return;
+        }
+
+        // BLOCK stale reconnects (client thinks it's joined but server forgot them)
+        const wasPlayer = playerId && !existingPlayer && lockedCharacters.has(normalized);
+
+        if (wasPlayer) {
+            socket.emit("forceReset");
             return;
         }
 
@@ -216,7 +225,7 @@ io.on("connection", (socket) => {
                 io.emit("playerList", game.players);
                 io.emit("lockedCharacters", Array.from(lockedCharacters));
             }
-        }, 10000); // 5 second reconnect window
+        }, 40000);
     });
 });
 
