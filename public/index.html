@@ -605,7 +605,18 @@ socket.on("disconnect", () => {
     disconnectTimer = setTimeout(() => {
         console.log("Clearing local session");
 
-        localStorage.clear();
+        //localStorage.clear();
+        localStorage.removeItem("hasJoined");
+        localStorage.removeItem("name");
+        localStorage.removeItem("character");
+
+        state.name = "";
+        state.character = null;
+
+        document.querySelectorAll(".charCard")
+            .forEach(c => c.classList.remove("selected"));
+
+        updatePreview();
     }, 5000);
 });
 
@@ -641,7 +652,12 @@ socket.on("gameSession", (session) => {
     if (hasJoined === "true" && savedSession && savedSession !== session) {
         console.log("Server restarted - clearing session");
 
-        localStorage.clear();
+        //localStorage.clear();
+        localStorage.removeItem("hasJoined");
+        localStorage.removeItem("name");
+        localStorage.removeItem("character");
+        localStorage.removeItem("playerId");
+        localStorage.removeItem("gameSession");
 
         state.name = "";
         state.character = null;
