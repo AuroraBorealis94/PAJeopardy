@@ -388,6 +388,8 @@ const state = {
     character: null
 };
 
+const hasJoined = localStorage.getItem("hasJoined");
+
 // ROOM CODE
 socket.on("roomCode", (code) => {
     document.getElementById("roomCode").textContent = code;
@@ -545,7 +547,7 @@ socket.on("characterList", (chars) => {
         updateCenterCard();
         updateLockedUI();
 
-        if (state.character) {
+        if (state.character && hasJoined === "true") {
             const match = realCards.find(
                 c => c.__charData.name === state.character.name
             );
@@ -607,6 +609,7 @@ socket.on("disconnect", () => {
 
         //localStorage.clear();
         localStorage.removeItem("hasJoined");
+        localStorage.removeItem("playerId");
         localStorage.removeItem("name");
         localStorage.removeItem("character");
 
@@ -644,7 +647,7 @@ let currentSession = null;
 
 socket.on("gameSession", (session) => {
     const savedSession = localStorage.getItem("gameSession");
-    const hasJoined = localStorage.getItem("hasJoined");
+    //const hasJoined = localStorage.getItem("hasJoined");
 
     currentSession = session;
 
