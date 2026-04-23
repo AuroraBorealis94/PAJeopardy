@@ -121,43 +121,57 @@ io.on("connection", (socket) => {
     console.log("A player connected:", socket.id);
 
     // JOIN LOBBY
-    socket.on("join", ({ name, character }) => {
+    socket.on("join", ({ playerId, name, character }) => {
 
-    const alreadyJoined = game.players.find(p => p.id === socket.id);
-    if (alreadyJoined) return;
+        const normalized = character.toLowerCase();
 
-    const normalized = character.toLowerCase();
+        // CHECK IF PLAYER IS RECONNECTING
+        let existingPlayer = game.players.find(p => p.playerId === playerId);
 
-    // BLOCK IF LOCKED
-    if (lockedCharacters.has(normalized)) {
-        socket.emit("characterTaken", normalized);
-        return;
-    }
+        if (existingPlayer) {
+            // RECONNECT: update socket id only
+            existingPlayer.id = socket.id;
+            existingPlayer.disconnected = false;
 
-    // LOCK CHARACTER
-    lockedCharacters.add(normalized);
+            console.log(name + " reconnected");
 
-    game.players.push({
-        id: socket.id,
-        name,
-        character
+            io.emit("playerList", game.players);
+            io.emit("lockedCharacters", Array.from(lockedCharacters));
+
+            return;
+        }
+
+        // BLOCK IF CHARACTER ALREADY LOCKED
+        if (lockedCharacters.has(normalized)) {
+            socket.emit("characterTaken", normalized);
+            return;
+        }
+
+        // LOCK CHARACTER
+        lockedCharacters.add(normalized);
+
+        game.players.push({
+            id: socket.id,
+            playerId, // persistent identity
+            name,
+            character
+        });
+
+        console.log(name + " joined with " + character);
+
+        // SEND UPDATED STATE TO ALL CLIENTS
+        io.emit("playerList", game.players);
+        io.emit("lockedCharacters", Array.from(lockedCharacters));
+
+        broadcastToUnity({
+            type: "playerList",
+            players: game.players.map(p => ({
+                id: p.id,
+                name: p.name,
+                characterId: p.character.toLowerCase()
+            }))
+        });
     });
-
-    console.log(name + " joined with " + character);
-
-    // SEND UPDATED STATE TO ALL CLIENTS
-    io.emit("playerList", game.players);
-    io.emit("lockedCharacters", Array.from(lockedCharacters));
-
-    broadcastToUnity({
-        type: "playerList",
-        players: game.players.map(p => ({
-            id: p.id,
-            name: p.name,
-            characterId: p.character.toLowerCase()
-        }))
-    });
-});
 
     // START GAME
     socket.on("startGame", () => {
@@ -180,8 +194,29 @@ io.on("connection", (socket) => {
 
     // DISCONNECT
     socket.on("disconnect", () => {
-        game.players = game.players.filter(p => p.id !== socket.id);
-        io.emit("playerList", game.players);
+        const player = game.players.find(p => p.id === socket.id);
+
+        if (!player) return;
+
+        console.log(player.name + " temporarily disconnected");
+
+        player.disconnected = true;
+
+        setTimeout(() => {
+            // if still disconnected after delay, remove
+            const stillGone = game.players.find(p => p.playerId === player.playerId && p.disconnected);
+
+            if (stillGone) {
+                console.log(player.name + " fully removed");
+
+                lockedCharacters.delete(player.character.toLowerCase());
+
+                game.players = game.players.filter(p => p.playerId !== player.playerId);
+
+                io.emit("playerList", game.players);
+                io.emit("lockedCharacters", Array.from(lockedCharacters));
+            }
+        }, 10000); // 5 second reconnect window
     });
 });
 

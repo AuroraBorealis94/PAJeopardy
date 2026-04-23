@@ -3,6 +3,7 @@
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
+/* #region Fonts */
     @font-face {
         font-family: 'Gyparody';
         src: url('/fonts/gyparody hv.ttf') format('truetype');
@@ -11,46 +12,13 @@
         font-family: 'Korinna';
         src: url('/fonts/ITC Korinna Regular.otf') format('opentype');
     }
+/* #endregion */
 
+/* #region Headers & Body */
     h1 {
         font-family: 'Gyparody';
         margin: 0;
         line-height: 1;
-    }
-
-    #h11 {
-        background: linear-gradient(
-            45deg,
-            #a8a8a8,
-            #ffffff,
-            #ffffff,
-            #a8a8a8
-        );
-
-        text-shadow: 0 0 10px rgba(255,255,255,0.2);
-        font-size: 45px;
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-
-        background-clip: text;
-    }
-
-    #h12 {
-        background: linear-gradient(
-            45deg,
-            #ff9139,
-            #ffe739,
-            #ff9139,
-            #ffcb39
-        );
-
-        text-shadow: 0 0 10px rgba(255,255,255,0.2);
-        font-size: 30px;
-        padding-bottom: 30px;
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-
-        background-clip: text;
     }
 
     h2 {
@@ -85,6 +53,43 @@
         background-size: 
             100% auto,
             100% auto;
+    }
+/* #endregion */
+
+/* #region Page1 */
+    #h11 {
+        background: linear-gradient(
+            45deg,
+            #a8a8a8,
+            #ffffff,
+            #ffffff,
+            #a8a8a8
+        );
+
+        text-shadow: 0 0 10px rgba(255,255,255,0.2);
+        font-size: 45px;
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+
+        background-clip: text;
+    }
+
+    #h12 {
+        background: linear-gradient(
+            45deg,
+            #ff9139,
+            #ffe739,
+            #ff9139,
+            #ffcb39
+        );
+
+        text-shadow: 0 0 10px rgba(255,255,255,0.2);
+        font-size: 30px;
+        padding-bottom: 30px;
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+
+        background-clip: text;
     }
 
     #characters {
@@ -170,21 +175,6 @@
         transform: rotateY(180deg);
     }
 
-    /* NAME OVERLAY */
-    /*
-    .charName {
-        position: absolute;
-        bottom: 0;
-        width: 100%;
-
-        font-family: 'Korinna', serif;
-        color: white;
-        font-size: 14px;
-
-        background: rgba(0,0,0,0.6);
-    }
-    */
-
     .charCard:active {
         transform: scale(0.95);
     }
@@ -258,12 +248,82 @@
         opacity: 0.3;
         cursor: not-allowed;
     }
+/* #endregion */
+
+/* #region Page2 */
+    #waitingScreen {
+        position: fixed;
+        inset: 0;
+        background: black;
+        color: white;
+
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.5s ease;
+    }
+
+    #waitingScreen.show {
+        opacity: 1;
+        pointer-events: auto;
+    }
+
+    #waitingCharacter img {
+        width: 140px;
+        margin-top: 20px;
+    }
+
+    .hidden {
+        display: none;
+    }
+
+
+    #waitingCharacter img {
+        transform: scale(0.9);
+        opacity: 0;
+        transition: all 0.4s ease;
+    }
+
+    #waitingScreen.show #waitingCharacter img {
+        transform: scale(1);
+        opacity: 1;
+    }
+
+    #reconnectOverlay {
+        position: fixed;
+        inset: 0;
+        background: black;
+        color: white;
+
+        display: flex;
+        justify-content: center;
+        align-items: center;
+
+        z-index: 9999;
+
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.3s ease;
+    }
+
+    #reconnectOverlay.show {
+        opacity: 1;
+        pointer-events: auto;
+    }
+/* #endregion */
 
 </style>
+
+<!-- HTML -->
     <title>Jeopardy Lobby</title>
 </head>
 <body>
 
+<!-- TITLE -->
 <h1 id="h11">PA Jeopardy</h1>
 <h1 id="h12">2026 Edition</h1>
 
@@ -279,8 +339,6 @@
 <!-- ENTER NAME -->
 <h2 style="padding-top: 20px;">Choose Your Team Name</h2>
 <input id="name" placeholder="Enter group name">
-
-
 <button id="enterBtn" onclick="setName()">Enter</button>
 
 <br>
@@ -299,10 +357,27 @@
 <!-- JOIN - LOCK IN PLAYER -->
 <button id="joinBtn" onclick="joinGame()">Join Game</button>
 
-<hr>
+<!-- WAITING SCREEN -->
+<div id="waitingScreen" class="hidden">
+    <h2>Waiting for other players...</h2>
 
+    <div id="waitingCharacter">
+        <img id="waitingImage" />
+        <p id="waitingName"></p>
+    </div>
+
+    <p id="playerCount">0 players joined</p>
+</div>
+
+<!-- RECONNECTING -->
+<div id="reconnectOverlay" class="hidden">
+    <h2>Reconnecting...</h2>
+</div>
+
+<!-- JS -->
 <script src="/socket.io/socket.io.js"></script>
 <script>
+
 const socket = io();
 
 const state = {
@@ -313,6 +388,57 @@ const state = {
 // ROOM CODE
 socket.on("roomCode", (code) => {
     document.getElementById("roomCode").textContent = code;
+});
+
+// AUTO REJOIN ON RECONNECT
+socket.on("connect", () => {
+    if (disconnectTimer) {
+        clearTimeout(disconnectTimer);
+        disconnectTimer = null;
+    }
+    hideReconnectOverlay();
+
+    console.log("Connected:", socket.id);
+
+    const savedName = state.name || localStorage.getItem("name");
+    const savedCharacterRaw = localStorage.getItem("character");
+    const savedCharacter = state.character || (savedCharacterRaw ? JSON.parse(savedCharacterRaw) : null);
+    
+    let playerId = localStorage.getItem("playerId");
+
+    if (!playerId) {
+        playerId = crypto.randomUUID();
+        localStorage.setItem("playerId", playerId);
+    }
+
+    const hasJoined = localStorage.getItem("hasJoined");
+
+    if (savedName && savedCharacter && hasJoined === "true") {
+        socket.emit("join", {
+            playerId,
+            name: savedName,
+            character: savedCharacter.name || savedCharacter
+        });
+
+        // restore UI
+        state.name = savedName;
+        state.character = savedCharacter;
+
+        setTimeout(() => {
+            showWaitingScreen();
+        }, 300);
+    }
+    /*
+    setTimeout(() => {
+        if (state.character) {
+            realCards.forEach(card => {
+                if (card.__charData.name === state.character.name) {
+                    setSelectedCard(card);
+                    centerOnCard(card);
+                }
+            });
+        }
+    }, 100);*/
 });
 
 // CHARACTER LIST
@@ -368,7 +494,24 @@ socket.on("characterList", (chars) => {
     requestAnimationFrame(() => {
         updateCenterCard();
         updateLockedUI();
+
+        if (state.character) {
+            const match = realCards.find(
+                c => c.__charData.name === state.character.name
+            );
+
+            if (match) {
+                setSelectedCard(match);
+                centerOnCard(match);
+            }
+        }
     });
+});
+
+// PLAYER LIST
+socket.on("playerList", (players) => {
+    document.getElementById("playerCount").textContent =
+        players.length + " players joined";
 });
 
 // CAROUSEL MANAGER
@@ -392,11 +535,34 @@ socket.on("lockedCharacters", (locked) => {
     updateLockedUI();
 });
 
+// CHARACTER TAKEN
+socket.on("characterTaken", (char) => {
+    alert("That character was just taken. Please choose another.");
+});
+
+let disconnectTimer = null;
+
+socket.on("disconnect", () => {
+    console.log("Disconnected from server");
+
+    showReconnectOverlay();
+
+    disconnectTimer = setTimeout(() => {
+        console.log("Clearing local session");
+
+        localStorage.removeItem("hasJoined");
+        localStorage.removeItem("playerId");
+        localStorage.removeItem("name");
+        localStorage.removeItem("character");
+    }, 40000); // 40 seconds
+});
+
 // SET NAME
 function setName() {
     const nameInput = document.getElementById("name");
-
     state.name = nameInput.value.trim();
+
+    localStorage.setItem("name", state.name);
 
     document.getElementById("teamLabel").style.display = "block";
 
@@ -411,6 +577,8 @@ function setSelectedCard(card) {
 
     card.classList.add("selected");
     state.character = card.__charData;
+
+    localStorage.setItem("character", JSON.stringify(state.character));
 
     updatePreview();
 }
@@ -501,44 +669,6 @@ function updateLockedUI() {
     });
 }
 
-// JOIN GAME - LOCK IN PLAYER
-function joinGame() {
-    if (!state.name) {
-        alert("Please enter your team name first");
-        return;
-    }
-
-    if (!state.character) {
-        alert("Please choose a character");
-        return;
-    }
-
-    const joinBtn = document.getElementById("joinBtn");
-    joinBtn.disabled = true;
-    joinBtn.innerText = "Joined!";
-    joinBtn.style.opacity = "0.6";
-    joinBtn.style.cursor = "not-allowed";
-
-    confettiBurst();
-
-    socket.emit("join", {
-        name: state.name,
-        character: state.character.name
-    });
-
-    // LOCK UI AFTER JOINING
-    document.getElementById("name").disabled = true;
-
-    document.querySelectorAll("#characters button")
-    .forEach(b => {
-        b.disabled = true;
-        b.style.pointerEvents = "none";
-    });
-
-    // DISABLE BUTTONS AFTER JOINING
-    document.getElementById("enterBtn").disabled = true;
-}
-
 // PREVIEW UPDATE
 function updatePreview() {
     document.getElementById("previewName").textContent =
@@ -557,6 +687,59 @@ function updatePreview() {
     }
 }
 
+updatePreview();
+
+// JOIN GAME - LOCK IN PLAYER
+function joinGame() {
+    if (!state.name) {
+        alert("Please enter your team name first");
+        return;
+    }
+
+    if (!state.character) {
+        alert("Please choose a character");
+        return;
+    }
+
+    const joinBtn = document.getElementById("joinBtn");
+    joinBtn.disabled = true;
+    joinBtn.innerText = "Joining...";
+    joinBtn.style.opacity = "0.6";
+    //joinBtn.style.cursor = "not-allowed";
+
+    confettiBurst();
+
+    // PERSISTENT PLAYER ID
+    let playerId = localStorage.getItem("playerId");
+
+    if (!playerId) {
+        playerId = crypto.randomUUID();
+        localStorage.setItem("playerId", playerId);
+    }
+
+    socket.emit("join", {
+        playerId,
+        name: state.name,
+        character: state.character.name
+    });
+
+    localStorage.setItem("hasJoined", "true");
+
+    // LOCK UI
+    document.getElementById("name").disabled = true;
+    document.getElementById("enterBtn").disabled = true;
+    document.querySelectorAll("#characters button").forEach(b => {
+        b.disabled = true;
+        b.style.pointerEvents = "none";
+    });
+
+    // DELAY TRANSITION
+    setTimeout(() => {
+        showWaitingScreen();
+    }, 1200);
+}
+
+// CONFETTI
 function confettiBurst() {
     const images = [
         "/confetti/confetti1.png",
@@ -607,7 +790,39 @@ function confettiBurst() {
     }
 }
 
-updatePreview();
+// WAITING SCREEN (P2)
+function showWaitingScreen() {
+    const screen = document.getElementById("waitingScreen");
+
+    // populate player info
+    document.getElementById("waitingImage").src = state.character.front;
+    document.getElementById("waitingName").textContent = state.name;
+
+    screen.classList.remove("hidden");
+
+    // allow CSS transition
+    requestAnimationFrame(() => {
+        screen.classList.add("show");
+    });
+}
+
+function showReconnectOverlay() {
+    const el = document.getElementById("reconnectOverlay");
+    el.classList.remove("hidden");
+
+    requestAnimationFrame(() => {
+        el.classList.add("show");
+    });
+}
+
+function hideReconnectOverlay() {
+    const el = document.getElementById("reconnectOverlay");
+    el.classList.remove("show");
+
+    setTimeout(() => {
+        el.classList.add("hidden");
+    }, 300);
+}
 
 </script>
 
