@@ -548,7 +548,7 @@ socket.on("disconnect", () => {
         localStorage.removeItem("playerId");
         localStorage.removeItem("name");
         localStorage.removeItem("character");
-    }, 40000); // 40 seconds
+    }, 5000); // 40 seconds
 });
 
 socket.on("forceReset", () => {
@@ -718,7 +718,6 @@ function joinGame() {
     joinBtn.disabled = true;
     joinBtn.innerText = "Joining...";
     joinBtn.style.opacity = "0.6";
-    //joinBtn.style.cursor = "not-allowed";
 
     confettiBurst();
 
@@ -736,8 +735,6 @@ function joinGame() {
         character: state.character.name
     });
 
-    //localStorage.setItem("hasJoined", "true");
-
     // LOCK UI
     document.getElementById("name").disabled = true;
     document.getElementById("enterBtn").disabled = true;
@@ -745,11 +742,6 @@ function joinGame() {
         b.disabled = true;
         b.style.pointerEvents = "none";
     });
-
-    // DELAY TRANSITION
-    //setTimeout(() => {
-    //    showWaitingScreen();
-    //}, 1200);
 }
 
 // CONFETTI
