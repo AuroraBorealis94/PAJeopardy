@@ -389,7 +389,6 @@ const state = {
 };
 
 let currentSession = null;
-let realCards = [];
 
 // ROOM CODE
 socket.on("roomCode", (code) => {
@@ -465,6 +464,8 @@ socket.on("connect", () => {
 
     hideReconnectOverlay();
 });
+
+let realCards = [];
 
 // CHARACTER LIST
 socket.on("characterList", (chars) => {
@@ -578,10 +579,7 @@ socket.on("disconnect", () => {
     disconnectTimer = setTimeout(() => {
         console.log("Clearing local session");
 
-        localStorage.removeItem("hasJoined");
-        localStorage.removeItem("playerId");
-        localStorage.removeItem("name");
-        localStorage.removeItem("character");
+        localStorage.clear();
     }, 5000);
 });
 
@@ -610,7 +608,6 @@ socket.on("gameSession", (session) => {
 
     currentSession = session;
 
-    // THIS IS THE CORRECT PLACE
     if (savedSession && savedSession !== session) {
         console.log("Game reset detected");
 
@@ -619,7 +616,7 @@ socket.on("gameSession", (session) => {
         state.name = "";
         state.character = null;
 
-        location.reload(); // ensures UI is clean
+        location.reload();
         return;
     }
 });
