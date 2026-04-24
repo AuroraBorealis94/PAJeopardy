@@ -393,6 +393,7 @@ socket.on("roomCode", (code) => {
     document.getElementById("roomCode").textContent = code;
 });
 
+/*
 // AUTO REJOIN ON RECONNECT
 socket.on("connect", () => {
     console.log("Connected:", socket.id);
@@ -432,6 +433,20 @@ socket.on("connect", () => {
             showWaitingScreen();
         }, 300);
     }
+});
+*/
+
+socket.on("connect", () => {
+    console.log("Connected:", socket.id);
+
+    // stop disconnect wipe timer
+    if (disconnectTimer) {
+        clearTimeout(disconnectTimer);
+        disconnectTimer = null;
+    }
+
+    // hide reconnect UI
+    hideReconnectOverlay();
 });
 
 let realCards = [];
@@ -603,6 +618,7 @@ socket.on("joinSuccess", () => {
 
 let currentSession = null;
 
+/*
 socket.on("gameSession", (session) => {
     const savedSession = localStorage.getItem("gameSession");
     const hasJoined = localStorage.getItem("hasJoined");
@@ -622,6 +638,45 @@ socket.on("gameSession", (session) => {
         state.character = null;
 
         location.reload();
+    }
+});
+*/
+
+socket.on("gameSession", (session) => {
+    currentSession = session;
+
+    const savedName = localStorage.getItem("name");
+    const savedCharacterRaw = localStorage.getItem("character");
+    const hasJoined = localStorage.getItem("hasJoined");
+    const savedSession = localStorage.getItem("gameSession");
+
+    if (
+        savedName &&
+        savedCharacterRaw &&
+        hasJoined === "true" &&
+        savedSession === session
+    ) {
+        const savedCharacter = JSON.parse(savedCharacterRaw);
+
+        let playerId = localStorage.getItem("playerId");
+
+        if (!playerId) {
+            playerId = crypto.randomUUID();
+            localStorage.setItem("playerId", playerId);
+        }
+
+        socket.emit("join", {
+            playerId,
+            name: savedName,
+            character: savedCharacter.name
+        });
+
+        state.name = savedName;
+        state.character = savedCharacter;
+
+        setTimeout(() => {
+            showWaitingScreen();
+        }, 300);
     }
 });
 

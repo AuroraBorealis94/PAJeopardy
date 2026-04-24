@@ -124,11 +124,14 @@ app.get("/", (req, res) => {
 
 // NEW CONNECTION
 io.on("connection", (socket) => {
-    socket.emit("resetClientState");
+    //socket.emit("resetClientState");
     // SEND INFO TO WEB
     socket.emit("gameSession", GAME_SESSION);
     socket.emit("roomCode", ROOM_CODE);
     socket.emit("characterList", characters);
+
+    socket.emit("playerList", game.players);
+    socket.emit("lockedCharacters", Array.from(lockedCharacters));
 
     console.log("A player connected:", socket.id);
 
