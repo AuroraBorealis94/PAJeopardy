@@ -388,8 +388,6 @@ const state = {
     character: null
 };
 
-const hasJoined = localStorage.getItem("hasJoined");
-
 // ROOM CODE
 socket.on("roomCode", (code) => {
     document.getElementById("roomCode").textContent = code;
@@ -489,7 +487,7 @@ socket.on("characterList", (chars) => {
         updateCenterCard();
         updateLockedUI();
 
-        if (state.character && hasJoined === "true") {
+        if (state.character && localStorage.getItem("hasJoined") === "true") {
             const match = realCards.find(
                 c => c.__charData.name === state.character.name
             );
@@ -526,7 +524,10 @@ window.onload = () => {
 let lockedSet = new Set();
 socket.on("lockedCharacters", (locked) => {
     lockedSet = new Set(locked.map(c => c.toLowerCase()));
-    updateLockedUI();
+
+    requestAnimationFrame(() => {
+        updateLockedUI();
+    });
 });
 
 // CHARACTER TAKEN
@@ -551,7 +552,7 @@ socket.on("disconnect", () => {
 
         //localStorage.clear();
         localStorage.removeItem("hasJoined");
-        //localStorage.removeItem("playerId");
+        localStorage.removeItem("playerId");
         localStorage.removeItem("name");
         localStorage.removeItem("character");
 
@@ -579,6 +580,21 @@ socket.on("forceReset", () => {
 socket.on("joinSuccess", () => {
     localStorage.setItem("hasJoined", "true");
     localStorage.setItem("gameSession", currentSession);
+
+    const joinBtn = document.getElementById("joinBtn");
+    joinBtn.disabled = true;
+    joinBtn.innerText = "Joined";
+    joinBtn.style.opacity = "0.6";
+
+    confettiBurst();
+
+    document.getElementById("name").disabled = true;
+    document.getElementById("enterBtn").disabled = true;
+
+    document.querySelectorAll("#characters button").forEach(b => {
+        b.disabled = true;
+        b.style.pointerEvents = "none";
+    });
 
     setTimeout(() => {
         showWaitingScreen();
@@ -754,12 +770,14 @@ function joinGame() {
         return;
     }
 
+    /*
     const joinBtn = document.getElementById("joinBtn");
     joinBtn.disabled = true;
     joinBtn.innerText = "Joining...";
     joinBtn.style.opacity = "0.6";
 
     confettiBurst();
+    */
 
     // PERSISTENT PLAYER ID
     let playerId = localStorage.getItem("playerId");
@@ -775,6 +793,7 @@ function joinGame() {
         character: state.character.name
     });
 
+    /*
     // LOCK UI
     document.getElementById("name").disabled = true;
     document.getElementById("enterBtn").disabled = true;
@@ -782,6 +801,7 @@ function joinGame() {
         b.disabled = true;
         b.style.pointerEvents = "none";
     });
+    */
 }
 
 // CONFETTI

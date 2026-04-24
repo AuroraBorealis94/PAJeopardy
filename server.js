@@ -159,11 +159,6 @@ io.on("connection", (socket) => {
             return;
         }
 
-        // STALE CLIENT (server forgot them)
-        //const characterOwnedBySomeoneElse = game.players.find(
-        //    p => p.character.toLowerCase() === normalized
-        //);
-
         // CHARACTER TAKEN
         const characterOwnedBySomeoneElse = game.players.find(
             p => p.character.toLowerCase() === normalized && p.playerId !== playerId
