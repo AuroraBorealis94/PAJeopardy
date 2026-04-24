@@ -396,64 +396,6 @@ socket.on("roomCode", (code) => {
 });
 
 // AUTO REJOIN ON RECONNECT
-/*
-socket.on("connect", () => {
-    if (disconnectTimer) {
-        clearTimeout(disconnectTimer);
-        disconnectTimer = null;
-    }
-    hideReconnectOverlay();
-
-    console.log("Connected:", socket.id);
-
-    const savedName = state.name || localStorage.getItem("name");
-    const savedCharacterRaw = localStorage.getItem("character");
-    const savedCharacter = state.character || (savedCharacterRaw ? JSON.parse(savedCharacterRaw) : null);
-    
-    let playerId = localStorage.getItem("playerId");
-
-    if (!playerId) {
-        playerId = crypto.randomUUID();
-        localStorage.setItem("playerId", playerId);
-    }
-
-    const hasJoined = localStorage.getItem("hasJoined");
-
-    if (savedName && savedCharacter && hasJoined === "true") {
-        socket.emit("join", {
-            playerId,
-            name: savedName,
-            character: savedCharacter.name || savedCharacter
-        });
-
-        // restore UI
-        state.name = savedName;
-        state.character = savedCharacter;
-    }
-});
-*/
-
-/*
-socket.on("connect", () => {
-    const savedSession = localStorage.getItem("gameSession");
-
-    // SESSION CHANGED > FULL RESET
-    if (savedSession && savedSession !== currentSession) {
-        console.log("Game reset detected");
-
-        localStorage.removeItem("hasJoined");
-        localStorage.removeItem("playerId");
-        localStorage.removeItem("name");
-        localStorage.removeItem("character");
-
-        state.name = "";
-        state.character = null;
-
-        return;
-    }
-});
-*/
-
 socket.on("connect", () => {
     console.log("Connected:", socket.id);
 
@@ -607,11 +549,11 @@ socket.on("disconnect", () => {
     disconnectTimer = setTimeout(() => {
         console.log("Clearing local session");
 
-        localStorage.clear();
-        //localStorage.removeItem("hasJoined");
+        //localStorage.clear();
+        localStorage.removeItem("hasJoined");
         //localStorage.removeItem("playerId");
-        //localStorage.removeItem("name");
-        //localStorage.removeItem("character");
+        localStorage.removeItem("name");
+        localStorage.removeItem("character");
 
         state.name = "";
         state.character = null;
@@ -647,7 +589,6 @@ let currentSession = null;
 
 socket.on("gameSession", (session) => {
     const savedSession = localStorage.getItem("gameSession");
-    //const hasJoined = localStorage.getItem("hasJoined");
 
     currentSession = session;
 
@@ -659,7 +600,7 @@ socket.on("gameSession", (session) => {
         localStorage.removeItem("hasJoined");
         localStorage.removeItem("name");
         localStorage.removeItem("character");
-        localStorage.removeItem("playerId");
+        //localStorage.removeItem("playerId");
         localStorage.removeItem("gameSession");
 
         state.name = "";
