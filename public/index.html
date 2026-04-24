@@ -625,6 +625,13 @@ socket.on("gameSession", (session) => {
     }
 });
 
+socket.on("resetClientState", () => {
+    localStorage.removeItem("hasJoined");
+    localStorage.removeItem("character");
+    localStorage.removeItem("name");
+    localStorage.removeItem("gameSession");
+});
+
 // SET NAME
 function setName() {
     const nameInput = document.getElementById("name");

@@ -8,17 +8,7 @@ app.use("/backgrounds", express.static("backgrounds"));
 app.use("/sprites", express.static("sprites"));
 app.use("/confetti", express.static("public/confetti"));
 
-/*
-// HARD RESET ON SERVER START / REDEPLOY
-function resetGameState() {
-    game.players = [];
-    game.state = "lobby";
-    game.board = {};
-    lockedCharacters.clear();
-}
-
 let GAME_SESSION = Date.now();
-*/
 
 // BRIDGE FROM SOCKET.IO TO WEBSOCKET
 const WebSocket = require("ws");
@@ -134,6 +124,7 @@ app.get("/", (req, res) => {
 
 // NEW CONNECTION
 io.on("connection", (socket) => {
+    socket.emit("resetClientState");
     // SEND INFO TO WEB
     socket.emit("gameSession", GAME_SESSION);
     socket.emit("roomCode", ROOM_CODE);
@@ -263,6 +254,7 @@ io.on("connection", (socket) => {
 });
 
 resetGameState();
+console.log("NEW SERVER SESSION:", GAME_SESSION);
 
 // START SERVER
 http.listen(PORT, "0.0.0.0", () => {
