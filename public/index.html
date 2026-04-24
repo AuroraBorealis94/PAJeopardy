@@ -407,8 +407,9 @@ socket.on("connect", () => {
     const savedName = localStorage.getItem("name");
     const savedCharacterRaw = localStorage.getItem("character");
     const hasJoined = localStorage.getItem("hasJoined");
+    const savedSession = localStorage.getItem("gameSession");
 
-    if (savedName && savedCharacterRaw && hasJoined === "true") {
+    if (savedName && savedCharacterRaw && hasJoined === "true" && savedSession === currentSession) {
         const savedCharacter = JSON.parse(savedCharacterRaw);
 
         let playerId = localStorage.getItem("playerId");
@@ -550,7 +551,6 @@ socket.on("disconnect", () => {
     disconnectTimer = setTimeout(() => {
         console.log("Clearing local session");
 
-        //localStorage.clear();
         localStorage.removeItem("hasJoined");
         localStorage.removeItem("playerId");
         localStorage.removeItem("name");
@@ -605,14 +605,13 @@ let currentSession = null;
 
 socket.on("gameSession", (session) => {
     const savedSession = localStorage.getItem("gameSession");
+    const hasJoined = localStorage.getItem("hasJoined");
 
     currentSession = session;
 
-    // ONLY reset if player was actually in a game
     if (hasJoined === "true" && savedSession && savedSession !== session) {
         console.log("Server restarted - clearing session");
 
-        //localStorage.clear();
         localStorage.removeItem("hasJoined");
         localStorage.removeItem("name");
         localStorage.removeItem("character");

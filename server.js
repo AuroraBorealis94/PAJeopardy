@@ -8,6 +8,7 @@ app.use("/backgrounds", express.static("backgrounds"));
 app.use("/sprites", express.static("sprites"));
 app.use("/confetti", express.static("public/confetti"));
 
+/*
 // HARD RESET ON SERVER START / REDEPLOY
 function resetGameState() {
     game.players = [];
@@ -17,6 +18,7 @@ function resetGameState() {
 }
 
 let GAME_SESSION = Date.now();
+*/
 
 // BRIDGE FROM SOCKET.IO TO WEBSOCKET
 const WebSocket = require("ws");
@@ -146,7 +148,9 @@ io.on("connection", (socket) => {
         let existingPlayer = game.players.find(p => p.playerId === playerId);
 
         // RECONNECT (even if marked disconnected)
-        if (existingPlayer && existingPlayer.disconnected) {
+        const RECONNECT_WINDOW = 5000;
+
+        if (existingPlayer && existingPlayer.disconnected && Date.now() - existingPlayer.disconnectTime < RECONNECT_WINDOW) {
             existingPlayer.id = socket.id;
             existingPlayer.disconnected = false;
 
@@ -157,6 +161,12 @@ io.on("connection", (socket) => {
 
             socket.emit("joinSuccess");
             return;
+        }
+        if (existingPlayer && existingPlayer.disconnected) {
+            // expired reconnect window treat as new join
+            lockedCharacters.delete(existingPlayer.character.toLowerCase());
+
+            game.players = game.players.filter(p => p.playerId !== playerId);
         }
 
         // CHARACTER TAKEN
@@ -183,6 +193,7 @@ io.on("connection", (socket) => {
             name,
             character,
             disconnected: false
+            disconnectTime: null
         });
 
         console.log(name + " joined with " + character);
@@ -230,6 +241,7 @@ io.on("connection", (socket) => {
         console.log(player.name + " temporarily disconnected");
 
         player.disconnected = true;
+        player.disconnectTime = Date.now();
 
         setTimeout(() => {
             // if still disconnected after delay, remove
