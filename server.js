@@ -146,7 +146,7 @@ io.on("connection", (socket) => {
         let existingPlayer = game.players.find(p => p.playerId === playerId);
 
         // RECONNECT (even if marked disconnected)
-        if (existingPlayer) {
+        if (existingPlayer && existingPlayer.disconnected) {
             existingPlayer.id = socket.id;
             existingPlayer.disconnected = false;
 
