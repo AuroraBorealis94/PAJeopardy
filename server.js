@@ -161,10 +161,11 @@ io.on("connection", (socket) => {
         }
 
         // STALE CLIENT (server forgot them)
-        //const characterOwnedBySomeoneElse = game.players.find(
-        //    p => p.character.toLowerCase() === normalized
-        //);
+        const characterOwnedBySomeoneElse = game.players.find(
+            p => p.character.toLowerCase() === normalized
+        );
 
+        // CHARACTER TAKEN
         const characterOwnedBySomeoneElse = game.players.find(
             p => p.character.toLowerCase() === normalized && p.playerId !== playerId
         );
@@ -174,7 +175,6 @@ io.on("connection", (socket) => {
             return;
         }
 
-        // CHARACTER TAKEN
         if (lockedCharacters.has(normalized)) {
             socket.emit("characterTaken");
             return;
