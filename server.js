@@ -169,6 +169,11 @@ io.on("connection", (socket) => {
             p => p.character.toLowerCase() === normalized && p.playerId !== playerId
         );
 
+        if (characterOwnedBySomeoneElse) {
+            socket.emit("characterTaken");
+            return;
+        }
+
         // CHARACTER TAKEN
         if (lockedCharacters.has(normalized)) {
             socket.emit("characterTaken");
