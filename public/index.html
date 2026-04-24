@@ -643,19 +643,25 @@ socket.on("gameSession", (session) => {
 */
 
 socket.on("gameSession", (session) => {
+    const savedSession = localStorage.getItem("gameSession");
+    const hasJoined = localStorage.getItem("hasJoined");
+
     currentSession = session;
 
+    // SERVER RESTART wipe
+    if (hasJoined === "true" && savedSession && savedSession !== session) {
+        console.log("Server restarted - clearing session");
+
+        localStorage.clear();
+        location.reload();
+        return;
+    }
+
+    // RECONNECT restore player
     const savedName = localStorage.getItem("name");
     const savedCharacterRaw = localStorage.getItem("character");
-    const hasJoined = localStorage.getItem("hasJoined");
-    const savedSession = localStorage.getItem("gameSession");
 
-    if (
-        savedName &&
-        savedCharacterRaw &&
-        hasJoined === "true" &&
-        savedSession === session
-    ) {
+    if (savedName && savedCharacterRaw && hasJoined === "true") {
         const savedCharacter = JSON.parse(savedCharacterRaw);
 
         let playerId = localStorage.getItem("playerId");
@@ -676,7 +682,7 @@ socket.on("gameSession", (session) => {
 
         setTimeout(() => {
             showWaitingScreen();
-        }, 300);
+        }, 200);
     }
 });
 
