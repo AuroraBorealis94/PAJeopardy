@@ -183,7 +183,7 @@ io.on("connection", (socket) => {
             playerId,
             name,
             character,
-            disconnected: false
+            disconnected: false,
             disconnectTime: null
         });
 
