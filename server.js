@@ -16,7 +16,6 @@ function resetGameState() {
     lockedCharacters.clear();
 }
 
-resetGameState();
 let GAME_SESSION = Date.now();
 
 // BRIDGE FROM SOCKET.IO TO WEBSOCKET
