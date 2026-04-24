@@ -122,8 +122,7 @@ function resetGameState() {
 }
 
 // ROOM CODE
-//const ROOM_CODE = Math.random().toString(36).substring(2,6).toUpperCase();
-const ROOM_CODE = "PA26"; // fixed code
+const ROOM_CODE = "PA26";
 console.log("Room code for players to join:", ROOM_CODE);
 
 // WEBPAGE
@@ -161,9 +160,9 @@ io.on("connection", (socket) => {
         }
 
         // STALE CLIENT (server forgot them)
-        const characterOwnedBySomeoneElse = game.players.find(
-            p => p.character.toLowerCase() === normalized
-        );
+        //const characterOwnedBySomeoneElse = game.players.find(
+        //    p => p.character.toLowerCase() === normalized
+        //);
 
         // CHARACTER TAKEN
         const characterOwnedBySomeoneElse = game.players.find(
@@ -250,7 +249,7 @@ io.on("connection", (socket) => {
 
                 io.emit("playerList", game.players);
                 io.emit("lockedCharacters", Array.from(lockedCharacters));
-                socket.emit("forceReset");
+                //socket.emit("forceReset");
             }
         }, 5000);
     });
