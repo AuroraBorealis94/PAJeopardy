@@ -248,6 +248,7 @@ io.on("connection", (socket) => {
 
                 io.emit("playerList", game.players);
                 io.emit("lockedCharacters", Array.from(lockedCharacters));
+                socket.emit("forceReset");
             }
         }, 5000);
     });

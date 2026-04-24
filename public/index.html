@@ -607,11 +607,11 @@ socket.on("disconnect", () => {
     disconnectTimer = setTimeout(() => {
         console.log("Clearing local session");
 
-        //localStorage.clear();
-        localStorage.removeItem("hasJoined");
-        localStorage.removeItem("playerId");
-        localStorage.removeItem("name");
-        localStorage.removeItem("character");
+        localStorage.clear();
+        //localStorage.removeItem("hasJoined");
+        //localStorage.removeItem("playerId");
+        //localStorage.removeItem("name");
+        //localStorage.removeItem("character");
 
         state.name = "";
         state.character = null;
