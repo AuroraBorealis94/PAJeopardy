@@ -609,7 +609,7 @@ socket.on("gameSession", (session) => {
     currentSession = session;
 
     // ONLY reset if player was actually in a game
-    if (hasJoined === "true" && savedSession && savedSession !== session) {
+    if (localStorage.getItem("hasJoined") === "true" && savedSession && savedSession !== session) {
         console.log("Server restarted - clearing session");
 
         //localStorage.clear();
