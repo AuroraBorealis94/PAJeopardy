@@ -146,19 +146,17 @@ io.on("connection", (socket) => {
 
         let existingPlayer = game.players.find(p => p.playerId === playerId);
 
-        // RECONNECT (valid only if still in game)
+        // RECONNECT (even if marked disconnected)
         if (existingPlayer) {
-            if (existingPlayer.disconnected) {
-                existingPlayer.id = socket.id;
-                existingPlayer.disconnected = false;
+            existingPlayer.id = socket.id;
+            existingPlayer.disconnected = false;
 
-                console.log(name + " reconnected");
+            console.log(name + " reconnected and reclaimed slot");
 
-                io.emit("playerList", game.players);
-                io.emit("lockedCharacters", Array.from(lockedCharacters));
+            io.emit("playerList", game.players);
+            io.emit("lockedCharacters", Array.from(lockedCharacters));
 
-                socket.emit("joinSuccess");
-            }
+            socket.emit("joinSuccess");
             return;
         }
 
