@@ -229,13 +229,18 @@ io.on("connection", (socket) => {
             name,
             character,
             disconnected: false,
-            disconnectTime: null
-            //disconnectTimer: null
+            disconnectTime: null,
+            disconnectTimer: null
         });
 
         console.log(name + " joined with " + character);
 
-        io.emit("playerList", game.players);
+        io.emit("playerList", game.players.map(p => ({
+            id: p.id,
+            playerId: p.playerId,
+            name: p.name,
+            character: p.character
+        })));
         io.emit("lockedCharacters", Array.from(lockedCharacters));
 
         socket.emit("joinSuccess");
