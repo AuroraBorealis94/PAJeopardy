@@ -9,6 +9,7 @@ app.use("/sprites", express.static("sprites"));
 app.use("/confetti", express.static("public/confetti"));
 
 let GAME_SESSION = Date.now();
+const disconnectTimers = new Map();
 
 // BRIDGE FROM SOCKET.IO TO WEBSOCKET
 const WebSocket = require("ws");
@@ -160,6 +161,13 @@ io.on("connection", (socket) => {
                 existingPlayer.disconnected = false;
                 existingPlayer.disconnectTime = null;
 
+                // CANCEL OLD DELETE TIMER
+                const timer = disconnectTimers.get(playerId);
+                if (timer) {
+                    clearTimeout(timer);
+                    disconnectTimers.delete(playerId);
+                }
+
                 console.log(name + " reconnected and reclaimed slot");
 
                 io.emit("playerList", game.players);
@@ -251,22 +259,25 @@ io.on("connection", (socket) => {
         player.disconnected = true;
         player.disconnectTime = Date.now();
 
-        setTimeout(() => {
-            // if still disconnected after delay, remove
-            const stillGone = game.players.find(p => p.playerId === player.playerId && p.disconnected);
+        const timer = setTimeout(() => {
+            const p = game.players.find(p => p.playerId === player.playerId);
 
-            if (stillGone) {
-                console.log(player.name + " fully removed");
+            // IMPORTANT: only remove if STILL disconnected AND no reconnection happened
+            if (!p || !p.disconnected) return;
 
-                lockedCharacters.delete(player.character.toLowerCase());
+            console.log(player.name + " fully removed");
 
-                game.players = game.players.filter(p => p.playerId !== player.playerId);
+            lockedCharacters.delete(player.character.toLowerCase());
 
-                io.emit("playerList", game.players);
-                io.emit("lockedCharacters", Array.from(lockedCharacters));
-                //socket.emit("forceReset");
-            }
+            game.players = game.players.filter(p => p.playerId !== player.playerId);
+
+            io.emit("playerList", game.players);
+            io.emit("lockedCharacters", Array.from(lockedCharacters));
+
+            disconnectTimers.delete(player.playerId);
         }, 5000);
+
+        disconnectTimers.set(player.playerId, timer);
     });
 });
 
