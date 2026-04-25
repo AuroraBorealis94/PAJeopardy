@@ -68,7 +68,7 @@ const cluePool = {
     },
     "Category B": {
         200: [
-            { clue: "Water freezes at this temperature in Celsius", answer: "0" }
+            { clue: "Water freezes at temperature in Celsius", answer: "0" }
         ]
     }
 };
