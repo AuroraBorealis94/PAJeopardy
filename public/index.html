@@ -388,32 +388,23 @@ const state = {
     character: null
 };
 
+console.log("LOCAL PLAYER ID ON LOAD:", localStorage.getItem("playerId"));
+
 // ROOM CODE
 socket.on("roomCode", (code) => {
     document.getElementById("roomCode").textContent = code;
 });
 
-<<<<<<< HEAD
-socket.on("connect", () => {
-    console.log("Connected:", socket.id);
-
-    // stop disconnect wipe timer
-=======
 let hasReconnected = false;
 
 socket.on("connect", () => {
     console.log("Connected:", socket.id);
 
->>>>>>> parent of 9deb157 (Revert "Getting closer")
     if (disconnectTimer) {
         clearTimeout(disconnectTimer);
         disconnectTimer = null;
     }
 
-<<<<<<< HEAD
-    // hide reconnect UI
-    hideReconnectOverlay();
-=======
     hideReconnectOverlay();
 
     if (hasReconnected) return;
@@ -443,7 +434,6 @@ socket.on("connect", () => {
 
         hasReconnected = true;
     }
->>>>>>> parent of 9deb157 (Revert "Getting closer")
 });
 
 let realCards = [];
@@ -518,38 +508,6 @@ socket.on("characterList", (chars) => {
             }
         }
     });
-<<<<<<< HEAD
-
-    // RECONNECT HERE INSTEAD
-    const savedName = localStorage.getItem("name");
-    const savedCharacterRaw = localStorage.getItem("character");
-    const hasJoined = localStorage.getItem("hasJoined");
-
-    if (savedName && savedCharacterRaw && hasJoined === "true") {
-        const savedCharacter = JSON.parse(savedCharacterRaw);
-
-        let playerId = localStorage.getItem("playerId");
-
-        if (!playerId) {
-            playerId = crypto.randomUUID();
-            localStorage.setItem("playerId", playerId);
-        }
-
-        socket.emit("join", {
-            playerId,
-            name: savedName,
-            character: savedCharacter.name
-        });
-
-        state.name = savedName;
-        state.character = savedCharacter;
-
-        setTimeout(() => {
-            showWaitingScreen();
-        }, 200);
-    }
-=======
->>>>>>> parent of 9deb157 (Revert "Getting closer")
 });
 
 // PLAYER LIST
@@ -593,31 +551,6 @@ socket.on("characterTaken", () => {
 });
 
 let disconnectTimer = null;
-
-/*
-socket.on("disconnect", () => {
-    console.log("Disconnected from server");
-
-    showReconnectOverlay();
-
-    disconnectTimer = setTimeout(() => {
-        console.log("Clearing local session");
-
-        localStorage.removeItem("hasJoined");
-        localStorage.removeItem("playerId");
-        localStorage.removeItem("name");
-        localStorage.removeItem("character");
-
-        state.name = "";
-        state.character = null;
-
-        document.querySelectorAll(".charCard")
-            .forEach(c => c.classList.remove("selected"));
-
-        updatePreview();
-    }, 5000);
-});
-*/
 
 socket.on("disconnect", () => {
     const player = game.players.find(p => p.id === socket.id);
@@ -851,15 +784,6 @@ function joinGame() {
         alert("Please choose a character");
         return;
     }
-
-    /*
-    const joinBtn = document.getElementById("joinBtn");
-    joinBtn.disabled = true;
-    joinBtn.innerText = "Joining...";
-    joinBtn.style.opacity = "0.6";
-
-    confettiBurst();
-    */
 
     // PERSISTENT PLAYER ID
     let playerId = localStorage.getItem("playerId");
