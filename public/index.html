@@ -396,7 +396,10 @@ socket.on("roomCode", (code) => {
 });
 
 let hasReconnected = false;
+let hasJoinedThisSocket = false;
+let characterListReady = false;
 
+/*
 socket.on("connect", () => {
     console.log("Connected:", socket.id);
 
@@ -435,11 +438,49 @@ socket.on("connect", () => {
         hasReconnected = true;
     }
 });
+*/
+socket.on("connect", () => {
+    console.log("Connected:", socket.id);
+
+    hideReconnectOverlay();
+
+    const savedName = localStorage.getItem("name");
+    const savedCharacterRaw = localStorage.getItem("character");
+    const playerId = localStorage.getItem("playerId");
+
+    if (!savedName || !savedCharacterRaw || !playerId) return;
+
+    if (hasJoinedThisSocket) return; // prevents duplicate join
+
+    hasJoinedThisSocket = true;
+
+    const savedCharacter = JSON.parse(savedCharacterRaw);
+
+    if (!characterListReady) {
+        const interval = setInterval(() => {
+        if (!characterListReady) return;
+
+        clearInterval(interval);
+            socket.emit("join", {
+                playerId,
+                name: savedName,
+                character: savedCharacter.name
+            });
+        }, 50);
+        return;
+    }
+
+    state.name = savedName;
+    state.character = savedCharacter;
+});
 
 let realCards = [];
 
 // CHARACTER LIST
 socket.on("characterList", (chars) => {
+    characters = chars;
+    characterListReady = true;
+
     console.log("RECONNECT CHECK:", {
         hasJoined: localStorage.getItem("hasJoined"),
         name: localStorage.getItem("name"),
@@ -553,6 +594,7 @@ socket.on("characterTaken", () => {
 let disconnectTimer = null;
 
 socket.on("disconnect", () => {
+    hasJoinedThisSocket = false;
     const player = game.players.find(p => p.id === socket.id);
     if (!player) return;
 
