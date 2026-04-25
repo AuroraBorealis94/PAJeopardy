@@ -402,20 +402,8 @@ socket.on("roomCode", (code) => {
 let hasReconnected = false;
 
 // RECONNECT
-/*
 socket.on("connect", () => {
     console.log("connected:", socket.id);
-});
-*/
-
-socket.on("connect", () => {
-    console.log("Connected:", socket.id);
-
-    const playerId = localStorage.getItem("playerId");
-
-    if (playerId) {
-        socket.emit("identify", { playerId });
-    }
 });
 
 let realCards = [];
