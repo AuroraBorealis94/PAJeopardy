@@ -136,7 +136,6 @@ io.on("connection", (socket) => {
 
     // JOIN LOBBY
     socket.on("join", ({ playerId, name, character }) => {
-        console.log("JOIN ATTEMPT:", { playerId, name, character });
         const normalized = character.toLowerCase();
 
         let existingPlayer = game.players.find(p => p.playerId === playerId);
