@@ -479,12 +479,12 @@ socket.on("characterList", (chars) => {
         }
     });
 
+    // RECONNECT HERE INSTEAD
     const savedName = localStorage.getItem("name");
     const savedCharacterRaw = localStorage.getItem("character");
     const hasJoined = localStorage.getItem("hasJoined");
-    const playerId = localStorage.getItem("playerId");
 
-    if (savedName && savedCharacterRaw && playerId) { //hasJoined === "true") {
+    if (savedName && savedCharacterRaw && hasJoined === "true") {
         const savedCharacter = JSON.parse(savedCharacterRaw);
 
         let playerId = localStorage.getItem("playerId");
