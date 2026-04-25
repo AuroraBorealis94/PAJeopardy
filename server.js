@@ -35,6 +35,17 @@ const game = {
     board: {}
 };
 
+// SANITIZE PLAYERS
+function sanitizePlayers() {
+    return game.players.map(p => ({
+        id: p.id,
+        playerId: p.playerId,
+        name: p.name,
+        character: p.character,
+        disconnected: p.disconnected
+    }));
+}
+
 // CHARACTER STORAGE
 const characters = [
     { name: "The Boss", front: "/characters/thebossfront.png", back: "/characters/thebossback.png" },
@@ -144,38 +155,6 @@ io.on("connection", (socket) => {
         // RECONNECT (even if marked disconnected)
         const RECONNECT_WINDOW = 10000;
 
-        /*
-        if (existingPlayer && existingPlayer.disconnected) {
-            const withinWindow =
-                Date.now() - existingPlayer.disconnectTime < RECONNECT_WINDOW;
-
-            if (withinWindow) {
-                existingPlayer.id = socket.id;
-                existingPlayer.disconnected = false;
-                existingPlayer.disconnectTime = null;
-
-                console.log(name + " reconnected and reclaimed slot");
-
-                io.emit("playerList", game.players);
-                io.emit("lockedCharacters", Array.from(lockedCharacters));
-
-                socket.emit("joinSuccess");
-                return;
-            }
-
-            // expired clean up old player
-            lockedCharacters.delete(existingPlayer.character.toLowerCase());
-            game.players = game.players.filter(p => p.playerId !== playerId);
-        }
-
-        if (existingPlayer && existingPlayer.disconnected) {
-            // expired reconnect window treat as new join
-            lockedCharacters.delete(existingPlayer.character.toLowerCase());
-
-            game.players = game.players.filter(p => p.playerId !== playerId);
-        }
-        */
-
         if (existingPlayer && existingPlayer.disconnected) {
             const withinWindow =
                 Date.now() - existingPlayer.disconnectTime < RECONNECT_WINDOW;
@@ -193,7 +172,7 @@ io.on("connection", (socket) => {
 
                 console.log(name + " reconnected and reclaimed slot");
 
-                io.emit("playerList", game.players);
+                io.emit("playerList", sanitizePlayers());
                 io.emit("lockedCharacters", Array.from(lockedCharacters));
 
                 socket.emit("joinSuccess");
@@ -229,8 +208,7 @@ io.on("connection", (socket) => {
             name,
             character,
             disconnected: false,
-            disconnectTime: null,
-            disconnectTimer: null
+            disconnectTime: null
         });
 
         console.log(name + " joined with " + character);
@@ -275,36 +253,6 @@ io.on("connection", (socket) => {
     });
 
     // DISCONNECT
-    /*
-    socket.on("disconnect", () => {
-        const player = game.players.find(p => p.id === socket.id);
-
-        if (!player) return;
-
-        console.log(player.name + " temporarily disconnected");
-
-        player.disconnected = true;
-        player.disconnectTime = Date.now();
-
-        setTimeout(() => {
-            // if still disconnected after delay, remove
-            const stillGone = game.players.find(p => p.playerId === player.playerId && p.disconnected);
-
-            if (stillGone) {
-                console.log(player.name + " fully removed");
-
-                lockedCharacters.delete(player.character.toLowerCase());
-
-                game.players = game.players.filter(p => p.playerId !== player.playerId);
-
-                io.emit("playerList", game.players);
-                io.emit("lockedCharacters", Array.from(lockedCharacters));
-                //socket.emit("forceReset");
-            }
-        }, 5000);
-    });
-    */
-
     socket.on("disconnect", () => {
         const player = game.players.find(p => p.id === socket.id);
 
@@ -330,7 +278,7 @@ io.on("connection", (socket) => {
                     p => p.playerId !== player.playerId
                 );
 
-                io.emit("playerList", game.players);
+                io.emit("playerList", sanitizePlayers());
                 io.emit("lockedCharacters", Array.from(lockedCharacters));
             }
         }, 5000);
