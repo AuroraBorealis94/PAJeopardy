@@ -402,45 +402,8 @@ socket.on("roomCode", (code) => {
 let hasReconnected = false;
 
 // RECONNECT
-/*
 socket.on("connect", () => {
     console.log("connected:", socket.id);
-});
-*/
-socket.on("connect", () => {
-    console.log("Connected:", socket.id);
-
-    const playerId = localStorage.getItem("playerId");
-
-    if (playerId) {
-        socket.emit("identify", { playerId });
-    }
-});
-
-socket.on("stateSync", (data) => {
-    console.log("STATE SYNC:", data);
-
-    // restore player
-    if (data.player) {
-        state.name = data.player.name;
-        state.character = {
-            name: data.player.character
-        };
-
-        localStorage.setItem("name", state.name);
-        localStorage.setItem("character", JSON.stringify(state.character));
-        localStorage.setItem("hasJoined", "true");
-
-        // go straight to waiting screen
-        showWaitingScreen();
-    }
-
-    // update UI lists
-    lockedSet = new Set(data.locked.map(c => c.toLowerCase()));
-    updateLockedUI();
-
-    document.getElementById("playerCount").textContent =
-        data.players.length + " players joined";
 });
 
 let realCards = [];
@@ -450,8 +413,7 @@ socket.on("characterList", (chars) => {
     characters = chars;
 
     if (localStorage.getItem("hasJoined") === "true") {
-        //document.getElementById("lobbyUI").style.display = "none";
-        return;
+        document.getElementById("lobbyUI").style.display = "none";
     }
 
     console.log("RECONNECT CHECK:", {
