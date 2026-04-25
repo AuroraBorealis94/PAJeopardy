@@ -483,17 +483,25 @@ socket.on("characterList", (chars) => {
 
     const savedName = localStorage.getItem("name");
     const savedCharacterRaw = localStorage.getItem("character");
+    const hasJoined = localStorage.getItem("hasJoined");
     const playerId = localStorage.getItem("playerId");
 
-    if (savedName && savedCharacterRaw && playerId) {
+    if (savedName && savedCharacterRaw && playerId) { //hasJoined === "true") {
+        
+    console.log("RECONNECT EMIT:", {
+        playerId,
+        name: savedName,
+        character: savedCharacter.name
+    });
+    
+    const savedCharacter = JSON.parse(savedCharacterRaw);
 
-        const savedCharacter = JSON.parse(savedCharacterRaw);
+        let playerId = localStorage.getItem("playerId");
 
-        console.log("RECONNECT EMIT:", {
-            playerId,
-            name: savedName,
-            character: savedCharacter.name
-        });
+        if (!playerId) {
+            playerId = crypto.randomUUID();
+            localStorage.setItem("playerId", playerId);
+        }
 
         socket.emit("join", {
             playerId,
