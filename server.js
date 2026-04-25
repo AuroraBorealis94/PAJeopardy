@@ -12,11 +12,11 @@ let GAME_SESSION = Date.now();
 
 // BRIDGE FROM SOCKET.IO TO WEBSOCKET
 const WebSocket = require("ws");
-const wss = new WebSocket.Server({ server: http });
+//const wss = new WebSocket.Server({ server: http });
 
-wss.on("connection", (ws) => {
-    console.log("Unity connected via WebSocket");
-});
+//wss.on("connection", (ws) => {
+//    console.log("Unity connected via WebSocket");
+//});
 
 // SOCKET.IO
 const io = require("socket.io")(http, {
@@ -83,6 +83,7 @@ const cluePool = {
 };
 
 // WEBSOCKET TO UNITY
+/*
 function broadcastToUnity(data) {
     try {
         const message = JSON.stringify(data);
@@ -95,6 +96,10 @@ function broadcastToUnity(data) {
     } catch (e) {
         console.log("Unity broadcast failed:", e.message);
     }
+}
+*/
+function broadcastToUnity(data) {
+    io.emit("unity", data);
 }
 
 // GENERATE BOARD

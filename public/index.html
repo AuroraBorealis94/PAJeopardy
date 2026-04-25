@@ -395,9 +395,11 @@ socket.on("roomCode", (code) => {
 
 let characterListReady = false;
 let uiReady = false;
+let hasJoined = false;
 let hasReconnected = false;
 
 socket.on("connect", () => {
+    hasJoined = false;
     console.log("Connected:", socket.id);
 
     if (disconnectTimer) {
@@ -794,6 +796,8 @@ updatePreview();
 
 // JOIN GAME - LOCK IN PLAYER
 function joinGame() {
+    if (hasJoined) return;
+
     if (!state.name) {
         alert("Please enter your team name first");
         return;
@@ -817,6 +821,8 @@ function joinGame() {
         name: state.name,
         character: state.character.name
     });
+
+    hasJoined = true;
 
     /*
     // LOCK UI
