@@ -141,34 +141,17 @@ app.get("/", (req, res) => {
 // NEW CONNECTION
 io.on("connection", (socket) => {
     console.log("Socket connected:", socket.id);
-
+    socket.data.joined = false;
+    socket.isUnity = false;
+    // SEND INFO TO WEB
     socket.emit("gameSession", GAME_SESSION);
     socket.emit("roomCode", ROOM_CODE);
     socket.emit("characterList", characters);
 
-    // Identify returning player
-    socket.on("identify", ({ playerId }) => {
-        const player = game.players.find(p => p.playerId === playerId);
+    socket.emit("playerList", game.players);
+    socket.emit("lockedCharacters", Array.from(lockedCharacters));
 
-        if (player) {
-            player.id = socket.id;
-            player.disconnected = false;
-            player.disconnectTime = null;
-
-            // cancel disconnect timer
-            const timer = disconnectTimers.get(playerId);
-            if (timer) {
-                clearTimeout(timer);
-                disconnectTimers.delete(playerId);
-            }
-
-            console.log(player.name + " reattached via identify");
-
-            sendFullState(socket, player);
-        } else {
-            sendFullState(socket, null);
-        }
-    });
+    console.log("A player connected:", socket.id);
 
     // JOIN LOBBY
     socket.on("join", ({ playerId, name, character }) => {
@@ -178,7 +161,7 @@ io.on("connection", (socket) => {
         console.log("JOIN ATTEMPT:", { playerId, name, character });
         const normalized = character.toLowerCase();
 
-        //let existingPlayer = game.players.find(p => p.playerId === playerId);
+        let existingPlayer = game.players.find(p => p.playerId === playerId);
 
         // RECONNECT (even if marked disconnected)
         const RECONNECT_WINDOW = 10000;
@@ -250,8 +233,6 @@ io.on("connection", (socket) => {
         io.emit("lockedCharacters", Array.from(lockedCharacters));
 
         socket.emit("joinSuccess");
-
-        sendFullState(socket, game.players.find(p => p.playerId === playerId));
 
         broadcastToUnity({
             type: "playerList",
