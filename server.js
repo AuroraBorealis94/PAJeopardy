@@ -84,17 +84,13 @@ const cluePool = {
 
 // WEBSOCKET TO UNITY
 function broadcastToUnity(data) {
-    try {
-        const message = JSON.stringify(data);
+    const message = JSON.stringify(data);
 
-        wss.clients.forEach(client => {
-            if (client.readyState === WebSocket.OPEN) {
-                client.send(message);
-            }
-        });
-    } catch (e) {
-        console.log("Unity broadcast failed:", e.message);
-    }
+    wss.clients.forEach(client => {
+        if (client.readyState === WebSocket.OPEN) {
+            client.send(message);
+        }
+    });
 }
 
 // GENERATE BOARD
@@ -216,15 +212,13 @@ io.on("connection", (socket) => {
         });
 
         console.log(name + " joined with " + character);
-        /*
+
         io.emit("playerList", game.players.map(p => ({
             id: p.id,
             playerId: p.playerId,
             name: p.name,
             character: p.character
         })));
-        */
-        io.emit("playerList", sanitizePlayers());
         io.emit("lockedCharacters", Array.from(lockedCharacters));
 
         socket.emit("joinSuccess");

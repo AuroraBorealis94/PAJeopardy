@@ -394,7 +394,6 @@ socket.on("roomCode", (code) => {
 });
 
 let characterListReady = false;
-let uiReady = false;
 let hasReconnected = false;
 
 socket.on("connect", () => {
@@ -415,7 +414,7 @@ socket.on("connect", () => {
     const savedCharacter = characters.find(c => c.name === savedCharacterName);
     const playerId = localStorage.getItem("playerId");
 
-    if (!characterListReady || !uiReady) return;
+    if (!characterListReady) return;
     if (savedName && savedCharacterRaw && playerId) {
         const savedCharacter = JSON.parse(savedCharacterRaw);
 
@@ -425,20 +424,11 @@ socket.on("connect", () => {
             character: savedCharacter.name
         });
 
-        setTimeout(() => {
-            if (!uiReady) return;
-
-            socket.emit("join", {
-                playerId,
-                name: savedName,
-                character: savedCharacter.name
-            });
-
-            state.name = savedName;
-            state.character = savedCharacter;
-
-            showWaitingScreen();
-        }, 100);
+        socket.emit("join", {
+            playerId,
+            name: savedName,
+            character: savedCharacter.name
+        });
 
         state.name = savedName;
         state.character = savedCharacter;
@@ -523,7 +513,6 @@ socket.on("characterList", (chars) => {
     });
 
     characterListReady = true;
-    uiReady = true;
 });
 
 // PLAYER LIST
