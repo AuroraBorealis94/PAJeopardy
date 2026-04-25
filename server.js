@@ -144,6 +144,7 @@ io.on("connection", (socket) => {
         // RECONNECT (even if marked disconnected)
         const RECONNECT_WINDOW = 10000;
 
+        /*
         if (existingPlayer && existingPlayer.disconnected) {
             const withinWindow =
                 Date.now() - existingPlayer.disconnectTime < RECONNECT_WINDOW;
@@ -173,6 +174,36 @@ io.on("connection", (socket) => {
 
             game.players = game.players.filter(p => p.playerId !== playerId);
         }
+        */
+
+        if (existingPlayer && existingPlayer.disconnected) {
+            const withinWindow =
+                Date.now() - existingPlayer.disconnectTime < RECONNECT_WINDOW;
+
+            if (withinWindow) {
+                // CRITICAL: cancel pending removal
+                if (existingPlayer.disconnectTimer) {
+                    clearTimeout(existingPlayer.disconnectTimer);
+                    existingPlayer.disconnectTimer = null;
+                }
+
+                existingPlayer.id = socket.id;
+                existingPlayer.disconnected = false;
+                existingPlayer.disconnectTime = null;
+
+                console.log(name + " reconnected and reclaimed slot");
+
+                io.emit("playerList", game.players);
+                io.emit("lockedCharacters", Array.from(lockedCharacters));
+
+                socket.emit("joinSuccess");
+                return;
+            }
+
+            // expired clean up
+            lockedCharacters.delete(existingPlayer.character.toLowerCase());
+            game.players = game.players.filter(p => p.playerId !== playerId);
+        }
 
         // CHARACTER TAKEN
         const characterOwnedBySomeoneElse = game.players.find(
@@ -198,7 +229,8 @@ io.on("connection", (socket) => {
             name,
             character,
             disconnected: false,
-            disconnectTime: null
+            disconnectTime: null,
+            disconnectTimer: null
         });
 
         console.log(name + " joined with " + character);
@@ -238,6 +270,7 @@ io.on("connection", (socket) => {
     });
 
     // DISCONNECT
+    /*
     socket.on("disconnect", () => {
         const player = game.players.find(p => p.id === socket.id);
 
@@ -262,6 +295,38 @@ io.on("connection", (socket) => {
                 io.emit("playerList", game.players);
                 io.emit("lockedCharacters", Array.from(lockedCharacters));
                 //socket.emit("forceReset");
+            }
+        }, 5000);
+    });
+    */
+
+    socket.on("disconnect", () => {
+        const player = game.players.find(p => p.id === socket.id);
+
+        if (!player) return;
+
+        console.log(player.name + " temporarily disconnected");
+
+        player.disconnected = true;
+        player.disconnectTime = Date.now();
+
+        // store timer on player
+        player.disconnectTimer = setTimeout(() => {
+            const stillGone = game.players.find(
+                p => p.playerId === player.playerId && p.disconnected
+            );
+
+            if (stillGone) {
+                console.log(player.name + " fully removed");
+
+                lockedCharacters.delete(player.character.toLowerCase());
+
+                game.players = game.players.filter(
+                    p => p.playerId !== player.playerId
+                );
+
+                io.emit("playerList", game.players);
+                io.emit("lockedCharacters", Array.from(lockedCharacters));
             }
         }, 5000);
     });
