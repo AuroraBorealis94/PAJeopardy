@@ -144,8 +144,9 @@ io.on("connection", (socket) => {
         // RECONNECT (even if marked disconnected)
         const RECONNECT_WINDOW = 10000;
 
-        if (existingPlayer && existingPlayer.disconnected) {
+        if (existingPlayer) {
             const withinWindow =
+                !existingPlayer.disconnectTime ||
                 Date.now() - existingPlayer.disconnectTime < RECONNECT_WINDOW;
 
             if (withinWindow) {
@@ -161,10 +162,6 @@ io.on("connection", (socket) => {
                 socket.emit("joinSuccess");
                 return;
             }
-
-            // expired clean up old player
-            lockedCharacters.delete(existingPlayer.character.toLowerCase());
-            game.players = game.players.filter(p => p.playerId !== playerId);
         }
 
         if (existingPlayer && existingPlayer.disconnected) {

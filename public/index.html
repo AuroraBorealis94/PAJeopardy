@@ -577,7 +577,6 @@ socket.on("disconnect", () => {
 });
 */
 
-/*
 socket.on("disconnect", () => {
     const player = game.players.find(p => p.id === socket.id);
     if (!player) return;
@@ -604,31 +603,6 @@ socket.on("disconnect", () => {
             io.emit("playerList", game.players);
             io.emit("lockedCharacters", Array.from(lockedCharacters));
         }
-    }, 5000);
-});
-*/
-
-socket.on("disconnect", () => {
-    console.log("Disconnected from server");
-
-    showReconnectOverlay();
-
-    // DO NOT clear anything immediately
-    disconnectTimer = setTimeout(() => {
-        console.log("Clearing local session");
-
-        localStorage.removeItem("hasJoined");
-        // keep playerId
-        localStorage.removeItem("name");
-        localStorage.removeItem("character");
-
-        state.name = "";
-        state.character = null;
-
-        document.querySelectorAll(".charCard")
-            .forEach(c => c.classList.remove("selected"));
-
-        updatePreview();
     }, 5000);
 });
 
