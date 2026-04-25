@@ -395,7 +395,20 @@ socket.on("roomCode", (code) => {
     document.getElementById("roomCode").textContent = code;
 });
 
-let hasReconnected = false;
+/*
+socket.on("connect", () => {
+    console.log("Connected:", socket.id);
+
+    // stop disconnect wipe timer
+    if (disconnectTimer) {
+        clearTimeout(disconnectTimer);
+        disconnectTimer = null;
+    }
+
+    // hide reconnect UI
+    hideReconnectOverlay();
+});
+*/
 
 socket.on("connect", () => {
     console.log("Connected:", socket.id);
@@ -406,8 +419,6 @@ socket.on("connect", () => {
     }
 
     hideReconnectOverlay();
-
-    if (hasReconnected) return;
 
     // RECONNECT HERE (ONLY HERE)
     const savedName = localStorage.getItem("name");
@@ -431,8 +442,6 @@ socket.on("connect", () => {
 
         state.name = savedName;
         state.character = savedCharacter;
-
-        hasReconnected = true;
     }
 });
 
@@ -508,6 +517,35 @@ socket.on("characterList", (chars) => {
             }
         }
     });
+    /*
+    const savedName = localStorage.getItem("name");
+    const savedCharacterRaw = localStorage.getItem("character");
+    const playerId = localStorage.getItem("playerId");
+
+    if (savedName && savedCharacterRaw && playerId) {
+
+        const savedCharacter = JSON.parse(savedCharacterRaw);
+
+        console.log("RECONNECT EMIT:", {
+            playerId,
+            name: savedName,
+            character: savedCharacter.name
+        });
+
+        socket.emit("join", {
+            playerId,
+            name: savedName,
+            character: savedCharacter.name
+        });
+
+        state.name = savedName;
+        state.character = savedCharacter;
+
+        setTimeout(() => {
+            showWaitingScreen();
+        }, 200);
+    }
+    */
 });
 
 // PLAYER LIST
@@ -552,7 +590,6 @@ socket.on("characterTaken", () => {
 
 let disconnectTimer = null;
 
-/*
 socket.on("disconnect", () => {
     console.log("Disconnected from server");
 
@@ -573,36 +610,6 @@ socket.on("disconnect", () => {
             .forEach(c => c.classList.remove("selected"));
 
         updatePreview();
-    }, 5000);
-});
-*/
-
-socket.on("disconnect", () => {
-    const player = game.players.find(p => p.id === socket.id);
-    if (!player) return;
-
-    console.log(player.name + " temporarily disconnected");
-
-    player.disconnected = true;
-    player.disconnectTime = Date.now();
-
-    const thisPlayerId = player.playerId;
-
-    setTimeout(() => {
-        const stillGone = game.players.find(
-            p => p.playerId === thisPlayerId && p.disconnected
-        );
-
-        if (stillGone) {
-            console.log(player.name + " fully removed");
-
-            lockedCharacters.delete(player.character.toLowerCase());
-
-            game.players = game.players.filter(p => p.playerId !== thisPlayerId);
-
-            io.emit("playerList", game.players);
-            io.emit("lockedCharacters", Array.from(lockedCharacters));
-        }
     }, 5000);
 });
 
@@ -638,7 +645,7 @@ socket.on("joinSuccess", () => {
 
     setTimeout(() => {
         showWaitingScreen();
-    }, 300);
+    }, 1200);
 });
 
 let currentSession = null;
@@ -657,6 +664,36 @@ socket.on("gameSession", (session) => {
         location.reload();
         return;
     }
+
+    // RECONNECT restore player
+    /*
+    const savedName = localStorage.getItem("name");
+    const savedCharacterRaw = localStorage.getItem("character");
+
+    if (savedName && savedCharacterRaw && hasJoined === "true") {
+        const savedCharacter = JSON.parse(savedCharacterRaw);
+
+        let playerId = localStorage.getItem("playerId");
+
+        if (!playerId) {
+            playerId = crypto.randomUUID();
+            localStorage.setItem("playerId", playerId);
+        }
+
+        socket.emit("join", {
+            playerId,
+            name: savedName,
+            character: savedCharacter.name
+        });
+
+        state.name = savedName;
+        state.character = savedCharacter;
+
+        setTimeout(() => {
+            showWaitingScreen();
+        }, 200);
+    }
+    */
 });
 
 socket.on("resetClientState", () => {
