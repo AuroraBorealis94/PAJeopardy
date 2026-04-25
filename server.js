@@ -142,8 +142,6 @@ io.on("connection", (socket) => {
         let existingPlayer = game.players.find(p => p.playerId === playerId);
 
         // RECONNECT (even if marked disconnected)
-        const RECONNECT_WINDOW = 5000;
-
         const RECONNECT_WINDOW = 10000;
 
         if (existingPlayer) {
