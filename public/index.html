@@ -3,6 +3,7 @@
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
+
 /* #region Fonts */
     @font-face {
         font-family: 'Gyparody';
@@ -400,30 +401,7 @@ socket.on("roomCode", (code) => {
 
 let hasReconnected = false;
 
-/*
-socket.on("connect", () => {
-    console.log("Socket connected:", socket.id);
-    console.trace("CONNECT STACK TRACE");
-
-    hideReconnectOverlay();
-
-    const playerId = localStorage.getItem("playerId");
-    const name = localStorage.getItem("name");
-    const characterRaw = localStorage.getItem("character");
-
-    if (!playerId || !name || !characterRaw) return;
-
-    const character = JSON.parse(characterRaw);
-
-    // IMPORTANT: always re-emit join ONLY ONCE PER SOCKET
-    socket.emit("join", {
-        playerId,
-        name,
-        character: character.name
-    });
-});
-*/
-
+// RECONNECT
 socket.on("connect", () => {
     console.log("connected:", socket.id);
 });
