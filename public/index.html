@@ -381,19 +381,12 @@
 <script src="/socket.io/socket.io.js"></script>
 <script>
 
-const socket = io({
-    transports: ["websocket"],
-    reconnection: true,
-    reconnectionAttempts: 5,
-    reconnectionDelay: 500
-});
+const socket = io();
 
 const state = {
     name: "",
     character: null
 };
-
-console.log("LOCAL PLAYER ID ON LOAD:", localStorage.getItem("playerId"));
 
 // ROOM CODE
 socket.on("roomCode", (code) => {
