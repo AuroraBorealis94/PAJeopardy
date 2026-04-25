@@ -388,6 +388,8 @@ const state = {
     character: null
 };
 
+console.log("LOCAL PLAYER ID ON LOAD:", localStorage.getItem("playerId"));
+
 // ROOM CODE
 socket.on("roomCode", (code) => {
     document.getElementById("roomCode").textContent = code;
@@ -485,7 +487,14 @@ socket.on("characterList", (chars) => {
     const playerId = localStorage.getItem("playerId");
 
     if (savedName && savedCharacterRaw && playerId) { //hasJoined === "true") {
-        const savedCharacter = JSON.parse(savedCharacterRaw);
+        
+    console.log("RECONNECT EMIT:", {
+        playerId,
+        name: savedName,
+        character: savedCharacter.name
+    });
+    
+    const savedCharacter = JSON.parse(savedCharacterRaw);
 
         let playerId = localStorage.getItem("playerId");
 
@@ -807,15 +816,6 @@ function joinGame() {
         alert("Please choose a character");
         return;
     }
-
-    /*
-    const joinBtn = document.getElementById("joinBtn");
-    joinBtn.disabled = true;
-    joinBtn.innerText = "Joining...";
-    joinBtn.style.opacity = "0.6";
-
-    confettiBurst();
-    */
 
     // PERSISTENT PLAYER ID
     let playerId = localStorage.getItem("playerId");
