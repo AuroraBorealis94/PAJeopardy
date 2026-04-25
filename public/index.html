@@ -410,6 +410,13 @@ let realCards = [];
 
 // CHARACTER LIST
 socket.on("characterList", (chars) => {
+    console.log("RECONNECT CHECK:", {
+        hasJoined: localStorage.getItem("hasJoined"),
+        name: localStorage.getItem("name"),
+        character: localStorage.getItem("character"),
+        playerId: localStorage.getItem("playerId")
+    });
+
     const container = document.getElementById("characters");
     container.innerHTML = "";
 
