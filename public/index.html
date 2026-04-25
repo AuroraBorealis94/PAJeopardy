@@ -393,7 +393,6 @@ socket.on("roomCode", (code) => {
     document.getElementById("roomCode").textContent = code;
 });
 
-let characterListReady = false;
 let hasReconnected = false;
 
 socket.on("connect", () => {
@@ -411,10 +410,8 @@ socket.on("connect", () => {
     // RECONNECT HERE (ONLY HERE)
     const savedName = localStorage.getItem("name");
     const savedCharacterRaw = localStorage.getItem("character");
-    const savedCharacter = characters.find(c => c.name === savedCharacterName);
     const playerId = localStorage.getItem("playerId");
 
-    if (!characterListReady) return;
     if (savedName && savedCharacterRaw && playerId) {
         const savedCharacter = JSON.parse(savedCharacterRaw);
 
@@ -511,8 +508,6 @@ socket.on("characterList", (chars) => {
             }
         }
     });
-
-    characterListReady = true;
 });
 
 // PLAYER LIST
@@ -670,8 +665,8 @@ function setSelectedCard(card) {
     card.classList.add("selected");
     state.character = card.__charData;
 
-    //localStorage.setItem("character", JSON.stringify(state.character));
-    localStorage.setItem("character", state.character.name);
+    localStorage.setItem("character", JSON.stringify(state.character));
+
     updatePreview();
 }
 
