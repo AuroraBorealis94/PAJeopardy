@@ -144,18 +144,28 @@ io.on("connection", (socket) => {
         // RECONNECT (even if marked disconnected)
         const RECONNECT_WINDOW = 5000;
 
-        if (existingPlayer && existingPlayer.disconnected && Date.now() - existingPlayer.disconnectTime < RECONNECT_WINDOW) {
-            existingPlayer.id = socket.id;
-            existingPlayer.disconnected = false;
+        const RECONNECT_WINDOW = 10000;
 
-            console.log(name + " reconnected and reclaimed slot");
+        if (existingPlayer) {
+            const withinWindow =
+                !existingPlayer.disconnectTime ||
+                Date.now() - existingPlayer.disconnectTime < RECONNECT_WINDOW;
 
-            io.emit("playerList", game.players);
-            io.emit("lockedCharacters", Array.from(lockedCharacters));
+            if (withinWindow) {
+                existingPlayer.id = socket.id;
+                existingPlayer.disconnected = false;
+                existingPlayer.disconnectTime = null;
 
-            socket.emit("joinSuccess");
-            return;
+                console.log(name + " reconnected and reclaimed slot");
+
+                io.emit("playerList", game.players);
+                io.emit("lockedCharacters", Array.from(lockedCharacters));
+
+                socket.emit("joinSuccess");
+                return;
+            }
         }
+
         if (existingPlayer && existingPlayer.disconnected) {
             // expired reconnect window treat as new join
             lockedCharacters.delete(existingPlayer.character.toLowerCase());
