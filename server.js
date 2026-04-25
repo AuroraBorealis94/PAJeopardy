@@ -125,6 +125,7 @@ app.get("/", (req, res) => {
 // NEW CONNECTION
 io.on("connection", (socket) => {
     console.log("Socket connected:", socket.id);
+    socket.data.joined = false;
     socket.isUnity = false;
     // SEND INFO TO WEB
     socket.emit("gameSession", GAME_SESSION);
@@ -138,6 +139,9 @@ io.on("connection", (socket) => {
 
     // JOIN LOBBY
     socket.on("join", ({ playerId, name, character }) => {
+        if (socket.data.joined) return;
+        socket.data.joined = true;
+
         console.log("JOIN ATTEMPT:", { playerId, name, character });
         const normalized = character.toLowerCase();
 
