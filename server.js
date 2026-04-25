@@ -114,21 +114,6 @@ function resetGameState() {
     GAME_SESSION = Date.now();
 }
 
-function sendFullState(socket, player) {
-    socket.emit("stateSync", {
-        state: game.state,
-        player: player
-            ? {
-                name: player.name,
-                character: player.character,
-                playerId: player.playerId
-            }
-            : null,
-        players: game.players,
-        locked: Array.from(lockedCharacters)
-    });
-}
-
 // ROOM CODE
 const ROOM_CODE = "PA26";
 console.log("Room code for players to join:", ROOM_CODE);
