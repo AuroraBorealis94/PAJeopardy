@@ -450,8 +450,7 @@ socket.on("characterList", (chars) => {
     characters = chars;
 
     if (localStorage.getItem("hasJoined") === "true") {
-        //document.getElementById("lobbyUI").style.display = "none";
-        return;
+        document.getElementById("lobbyUI").style.display = "none";
     }
 
     console.log("RECONNECT CHECK:", {
