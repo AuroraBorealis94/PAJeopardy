@@ -229,8 +229,8 @@ io.on("connection", (socket) => {
             name,
             character,
             disconnected: false,
-            disconnectTime: null,
-            disconnectTimer: null
+            disconnectTime: null
+            //disconnectTimer: null
         });
 
         console.log(name + " joined with " + character);
