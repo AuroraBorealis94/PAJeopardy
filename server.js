@@ -114,21 +114,6 @@ function resetGameState() {
     GAME_SESSION = Date.now();
 }
 
-function sendFullState(socket, player) {
-    socket.emit("stateSync", {
-        state: game.state,
-        player: player
-            ? {
-                name: player.name,
-                character: player.character,
-                playerId: player.playerId
-            }
-            : null,
-        players: game.players,
-        locked: Array.from(lockedCharacters)
-    });
-}
-
 // ROOM CODE
 const ROOM_CODE = "PA26";
 console.log("Room code for players to join:", ROOM_CODE);
@@ -141,34 +126,17 @@ app.get("/", (req, res) => {
 // NEW CONNECTION
 io.on("connection", (socket) => {
     console.log("Socket connected:", socket.id);
-
+    socket.data.joined = false;
+    socket.isUnity = false;
+    // SEND INFO TO WEB
     socket.emit("gameSession", GAME_SESSION);
     socket.emit("roomCode", ROOM_CODE);
     socket.emit("characterList", characters);
 
-    // Identify returning player
-    socket.on("identify", ({ playerId }) => {
-        const player = game.players.find(p => p.playerId === playerId);
+    socket.emit("playerList", game.players);
+    socket.emit("lockedCharacters", Array.from(lockedCharacters));
 
-        if (player) {
-            player.id = socket.id;
-            player.disconnected = false;
-            player.disconnectTime = null;
-
-            // cancel disconnect timer
-            const timer = disconnectTimers.get(playerId);
-            if (timer) {
-                clearTimeout(timer);
-                disconnectTimers.delete(playerId);
-            }
-
-            console.log(player.name + " reattached via identify");
-
-            sendFullState(socket, player);
-        } else {
-            sendFullState(socket, null);
-        }
-    });
+    console.log("A player connected:", socket.id);
 
     // JOIN LOBBY
     socket.on("join", ({ playerId, name, character }) => {
@@ -250,8 +218,6 @@ io.on("connection", (socket) => {
         io.emit("lockedCharacters", Array.from(lockedCharacters));
 
         socket.emit("joinSuccess");
-
-        sendFullState(socket, game.players.find(p => p.playerId === playerId));
 
         broadcastToUnity({
             type: "playerList",
