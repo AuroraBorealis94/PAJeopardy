@@ -381,12 +381,7 @@
 <script src="/socket.io/socket.io.js"></script>
 <script>
 
-const socket = io({
-    transports: ["websocket"],
-    reconnection: true,
-    reconnectionAttempts: 5,
-    reconnectionDelay: 500
-});
+const socket = io();
 
 const state = {
     name: "",
@@ -436,8 +431,6 @@ socket.on("connect", () => {
 
         state.name = savedName;
         state.character = savedCharacter;
-
-        showWaitingScreen();
 
         hasReconnected = true;
     }
@@ -614,7 +607,7 @@ socket.on("disconnect", () => {
     }, 5000);
 });
 */
-/*
+
 socket.on("disconnect", () => {
     console.log("Disconnected from server");
 
@@ -636,39 +629,6 @@ socket.on("disconnect", () => {
             .forEach(c => c.classList.remove("selected"));
 
         updatePreview();
-    }, 5000);
-});
-*/
-
-socket.on("disconnect", () => {
-    const player = game.players.find(p => p.id === socket.id);
-
-    if (!player) return;
-
-    console.log(player.name + " temporarily disconnected");
-
-    player.disconnected = true;
-    player.disconnectTime = Date.now();
-
-    const thisPlayerId = player.playerId;
-
-    setTimeout(() => {
-        const stillGone = game.players.find(
-            p => p.playerId === thisPlayerId && p.disconnected
-        );
-
-        if (stillGone) {
-            console.log(player.name + " fully removed");
-
-            lockedCharacters.delete(player.character.toLowerCase());
-
-            game.players = game.players.filter(
-                p => p.playerId !== thisPlayerId
-            );
-
-            io.emit("playerList", game.players);
-            io.emit("lockedCharacters", Array.from(lockedCharacters));
-        }
     }, 5000);
 });
 

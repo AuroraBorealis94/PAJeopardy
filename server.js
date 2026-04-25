@@ -7,7 +7,7 @@ app.use("/fonts", express.static("fonts"));
 app.use("/backgrounds", express.static("backgrounds"));
 app.use("/sprites", express.static("sprites"));
 app.use("/confetti", express.static("public/confetti"));
-
+console.log("SCRIPT LOADED");
 let GAME_SESSION = Date.now();
 
 // BRIDGE FROM SOCKET.IO TO WEBSOCKET
