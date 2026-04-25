@@ -395,7 +395,6 @@ socket.on("roomCode", (code) => {
     document.getElementById("roomCode").textContent = code;
 });
 
-/*
 socket.on("connect", () => {
     console.log("Connected:", socket.id);
 
@@ -407,42 +406,6 @@ socket.on("connect", () => {
 
     // hide reconnect UI
     hideReconnectOverlay();
-});
-*/
-
-socket.on("connect", () => {
-    console.log("Connected:", socket.id);
-
-    if (disconnectTimer) {
-        clearTimeout(disconnectTimer);
-        disconnectTimer = null;
-    }
-
-    hideReconnectOverlay();
-
-    // RECONNECT HERE (ONLY HERE)
-    const savedName = localStorage.getItem("name");
-    const savedCharacterRaw = localStorage.getItem("character");
-    const playerId = localStorage.getItem("playerId");
-
-    if (savedName && savedCharacterRaw && playerId) {
-        const savedCharacter = JSON.parse(savedCharacterRaw);
-
-        console.log("RECONNECT EMIT:", {
-            playerId,
-            name: savedName,
-            character: savedCharacter.name
-        });
-
-        socket.emit("join", {
-            playerId,
-            name: savedName,
-            character: savedCharacter.name
-        });
-
-        state.name = savedName;
-        state.character = savedCharacter;
-    }
 });
 
 let realCards = [];
@@ -517,7 +480,7 @@ socket.on("characterList", (chars) => {
             }
         }
     });
-    /*
+
     const savedName = localStorage.getItem("name");
     const savedCharacterRaw = localStorage.getItem("character");
     const playerId = localStorage.getItem("playerId");
@@ -545,7 +508,6 @@ socket.on("characterList", (chars) => {
             showWaitingScreen();
         }, 200);
     }
-    */
 });
 
 // PLAYER LIST
