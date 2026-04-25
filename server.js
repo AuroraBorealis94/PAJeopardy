@@ -15,6 +15,7 @@ const WebSocket = require("ws");
 const wss = new WebSocket.Server({ server: http });
 
 wss.on("connection", (ws) => {
+    ws.isUnity = true;
     console.log("Unity connected via WebSocket");
 });
 
@@ -123,7 +124,8 @@ app.get("/", (req, res) => {
 
 // NEW CONNECTION
 io.on("connection", (socket) => {
-    //socket.emit("resetClientState");
+    console.log("Socket connected:", socket.id);
+    socket.isUnity = false;
     // SEND INFO TO WEB
     socket.emit("gameSession", GAME_SESSION);
     socket.emit("roomCode", ROOM_CODE);
