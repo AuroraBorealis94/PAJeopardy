@@ -393,49 +393,6 @@ socket.on("roomCode", (code) => {
     document.getElementById("roomCode").textContent = code;
 });
 
-/*
-// AUTO REJOIN ON RECONNECT
-socket.on("connect", () => {
-    console.log("Connected:", socket.id);
-
-    if (disconnectTimer) {
-        clearTimeout(disconnectTimer);
-        disconnectTimer = null;
-    }
-
-    hideReconnectOverlay();
-
-    const savedName = localStorage.getItem("name");
-    const savedCharacterRaw = localStorage.getItem("character");
-    const hasJoined = localStorage.getItem("hasJoined");
-    const savedSession = localStorage.getItem("gameSession");
-
-    if (savedName && savedCharacterRaw && hasJoined === "true" && savedSession === currentSession) {
-        const savedCharacter = JSON.parse(savedCharacterRaw);
-
-        let playerId = localStorage.getItem("playerId");
-
-        if (!playerId) {
-            playerId = crypto.randomUUID();
-            localStorage.setItem("playerId", playerId);
-        }
-
-        socket.emit("join", {
-            playerId,
-            name: savedName,
-            character: savedCharacter.name
-        });
-
-        state.name = savedName;
-        state.character = savedCharacter;
-
-        setTimeout(() => {
-            showWaitingScreen();
-        }, 300);
-    }
-});
-*/
-
 socket.on("connect", () => {
     console.log("Connected:", socket.id);
 
@@ -514,6 +471,35 @@ socket.on("characterList", (chars) => {
             }
         }
     });
+
+    // RECONNECT HERE INSTEAD
+    const savedName = localStorage.getItem("name");
+    const savedCharacterRaw = localStorage.getItem("character");
+    const hasJoined = localStorage.getItem("hasJoined");
+
+    if (savedName && savedCharacterRaw && hasJoined === "true") {
+        const savedCharacter = JSON.parse(savedCharacterRaw);
+
+        let playerId = localStorage.getItem("playerId");
+
+        if (!playerId) {
+            playerId = crypto.randomUUID();
+            localStorage.setItem("playerId", playerId);
+        }
+
+        socket.emit("join", {
+            playerId,
+            name: savedName,
+            character: savedCharacter.name
+        });
+
+        state.name = savedName;
+        state.character = savedCharacter;
+
+        setTimeout(() => {
+            showWaitingScreen();
+        }, 200);
+    }
 });
 
 // PLAYER LIST
@@ -618,30 +604,6 @@ socket.on("joinSuccess", () => {
 
 let currentSession = null;
 
-/*
-socket.on("gameSession", (session) => {
-    const savedSession = localStorage.getItem("gameSession");
-    const hasJoined = localStorage.getItem("hasJoined");
-
-    currentSession = session;
-
-    if (hasJoined === "true" && savedSession && savedSession !== session) {
-        console.log("Server restarted - clearing session");
-
-        localStorage.removeItem("hasJoined");
-        localStorage.removeItem("name");
-        localStorage.removeItem("character");
-        //localStorage.removeItem("playerId");
-        localStorage.removeItem("gameSession");
-
-        state.name = "";
-        state.character = null;
-
-        location.reload();
-    }
-});
-*/
-
 socket.on("gameSession", (session) => {
     const savedSession = localStorage.getItem("gameSession");
     const hasJoined = localStorage.getItem("hasJoined");
@@ -658,6 +620,7 @@ socket.on("gameSession", (session) => {
     }
 
     // RECONNECT restore player
+    /*
     const savedName = localStorage.getItem("name");
     const savedCharacterRaw = localStorage.getItem("character");
 
@@ -684,6 +647,7 @@ socket.on("gameSession", (session) => {
             showWaitingScreen();
         }, 200);
     }
+    */
 });
 
 socket.on("resetClientState", () => {

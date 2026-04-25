@@ -19,7 +19,6 @@ wss.on("connection", (ws) => {
 });
 
 // SOCKET.IO
-//const io = require("socket.io")(http);
 const io = require("socket.io")(http, {
     cors: {
         origin: "*"
