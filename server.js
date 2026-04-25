@@ -269,5 +269,9 @@ console.log("NEW SERVER SESSION:", GAME_SESSION);
 
 // START SERVER
 http.listen(PORT, "0.0.0.0", () => {
-    console.log("Server running on port " + PORT);
+    console.log("================================");
+    console.log("PA Jeopardy SERVER LIVE");
+    console.log("Port:", PORT);
+    console.log("Session:", GAME_SESSION);
+    console.log("================================");
 });
