@@ -397,6 +397,7 @@ socket.on("roomCode", (code) => {
 
 let hasReconnected = false;
 
+/*
 socket.on("connect", () => {
     console.log("Socket connected:", socket.id);
     console.trace("CONNECT STACK TRACE");
@@ -417,6 +418,10 @@ socket.on("connect", () => {
         name,
         character: character.name
     });
+});
+*/
+socket.on("connect", () => {
+    console.log("connected:", socket.id);
 });
 
 let realCards = [];
@@ -787,16 +792,7 @@ function joinGame() {
         name: state.name,
         character: state.character.name
     });
-
-    /*
-    // LOCK UI
-    document.getElementById("name").disabled = true;
-    document.getElementById("enterBtn").disabled = true;
-    document.querySelectorAll("#characters button").forEach(b => {
-        b.disabled = true;
-        b.style.pointerEvents = "none";
-    });
-    */
+    console.log("joinGame ran");
 }
 
 // CONFETTI
