@@ -8,6 +8,7 @@ app.use("/backgrounds", express.static("backgrounds"));
 app.use("/sprites", express.static("sprites"));
 app.use("/confetti", express.static("public/confetti"));
 
+let hostConnected = false;
 let GAME_SESSION = Date.now();
 const disconnectTimers = new Map();
 
@@ -132,6 +133,7 @@ io.on("connection", (socket) => {
     socket.emit("gameSession", GAME_SESSION);
     socket.emit("roomCode", ROOM_CODE);
     socket.emit("characterList", characters);
+    socket.emit("hostStatus", hostConnected);
 
     socket.emit("playerList", game.players);
     socket.emit("lockedCharacters", Array.from(lockedCharacters));
@@ -141,16 +143,18 @@ io.on("connection", (socket) => {
     // JOIN LOBBY
     socket.on("join", ({ playerId, name, character, isHost }) => {
         if (isHost) {
-            const existingHost = game.players.find(p => p.isHost);
-            if (existingHost) {
-                socket.emit("characterTaken");
+            if (hostConnected) {
+                socket.emit("hostTaken");
                 return;
             }
-            console.log("HOST CONNECTED");
 
-            game.hostId = socket.id;
+            hostConnected = true;
+            socket.isHost = true;
 
-            socket.emit("joinSuccess", { role: "host" });
+            io.emit("hostStatus", true);
+            socket.emit("joinSuccess");
+            console.log("Host connected");
+
             return;
         }
 
@@ -302,6 +306,13 @@ io.on("connection", (socket) => {
 
     // DISCONNECT
     socket.on("disconnect", () => {
+        if (socket.isHost) {
+            hostConnected = false;
+            io.emit("hostStatus", false);
+
+            console.log("Host disconnected");
+        }
+    
         const player = game.players.find(p => p.id === socket.id);
 
         if (!player) return;
