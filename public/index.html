@@ -449,9 +449,8 @@ console.log("LOCAL PLAYER ID ON LOAD:", localStorage.getItem("playerId"));
 
 let isHost = false;
 
-// HOST JOIN
-//window.addEventListener("load", () => {
-window.onload = () => {
+window.addEventListener("load", () => {
+    // HOST JOIN
     const isHost = localStorage.getItem("isHost");
     const hostSession = localStorage.getItem("hostSession");
 
@@ -459,6 +458,18 @@ window.onload = () => {
         const btn = document.getElementById("hostBtn");
         if (btn) btn.style.display = "none";
     }
+
+    // CAROUSEL 
+    const container = document.getElementById("characters");
+
+    // ARROW CONTROLS
+    document.getElementById("nextBtn").onclick = () => scrollByCard(1);
+    document.getElementById("prevBtn").onclick = () => scrollByCard(-1);
+
+    // SCROLL LISTENER
+    container.addEventListener("scroll", () => {
+        updateCenterCard();
+    });
 });
 
 // ROOM CODE
@@ -569,7 +580,7 @@ socket.on("playerList", (players) => {
 });
 
 // CAROUSEL MANAGER
-//window.addEventListener("load", () => {
+/*
 window.onload = () => {
     const container = document.getElementById("characters");
 
@@ -582,6 +593,7 @@ window.onload = () => {
         updateCenterCard();
     });
 };
+*/
 
 // LOCKED CARDS
 let lockedSet = new Set();
