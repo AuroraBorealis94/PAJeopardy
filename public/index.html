@@ -405,12 +405,12 @@ const state = {
 
 console.log("LOCAL PLAYER ID ON LOAD:", localStorage.getItem("playerId"));
 
-//const params = new URLSearchParams(window.location.search);
-//const isHost = params.get("host") === "true";
-
 // HOST JOIN
 window.addEventListener("load", () => {
-    if (localStorage.getItem("isHost") === "true") {
+    const isHost = localStorage.getItem("isHost");
+    const hostSession = localStorage.getItem("hostSession");
+
+    if (isHost === "true" && hostSession === currentSession) {
         const btn = document.getElementById("hostBtn");
         if (btn) btn.style.display = "none";
     }
@@ -624,15 +624,28 @@ socket.on("gameSession", (session) => {
     const savedSession = localStorage.getItem("gameSession");
     const hasJoined = localStorage.getItem("hasJoined");
 
+    const hostSession = localStorage.getItem("hostSession");
+    const isHost = localStorage.getItem("isHost");
+
     currentSession = session;
 
-    // SERVER RESTART wipe
+    // PLAYER RESET
     if (hasJoined === "true" && savedSession && savedSession !== session) {
-        console.log("Server restarted - clearing session");
+        console.log("Server restarted - clearing player session");
 
         localStorage.clear();
         location.reload();
         return;
+    }
+
+    // HOST RESET
+    if (isHost === "true" && hostSession && hostSession !== session) {
+        console.log("Server restarted - clearing host session");
+
+        localStorage.removeItem("isHost");
+        localStorage.removeItem("hostSession");
+
+        location.reload();
     }
 });
 
@@ -896,9 +909,9 @@ function joinAsHost() {
     socket.emit("join", { isHost: true });
 
     localStorage.setItem("isHost", "true");
+    localStorage.setItem("hostSession", currentSession);
 
-    const btn = document.getElementById("hostBtn");
-    if (btn) btn.style.display = "none";
+    document.getElementById("hostBtn").style.display = "none";
 
     document.body.innerHTML = `
         <h2>Host Controller</h2>
