@@ -568,7 +568,8 @@ socket.on("playerList", (players) => {
 });
 
 // CAROUSEL MANAGER
-window.onload = () => {
+window.addEventListener("load", () => {
+    //window.onload = () => {
     const container = document.getElementById("characters");
 
     // ARROW CONTROLS
@@ -691,10 +692,18 @@ socket.on("gameSession", (session) => {
     // SHOW OR HIDE HOST BUTTON
     if (isHost && hostSession === session) {
         if (hostBtn) hostBtn.style.display = "none";
-        document.getElementById("hostControls").style.display = "block";
+
+        showHostControls();
     } else {
         if (hostBtn) hostBtn.style.display = "block";
-        document.getElementById("hostControls").style.display = "none";
+
+        const controls = document.getElementById("hostControls");
+
+        controls.classList.remove("show");
+
+        setTimeout(() => {
+            controls.classList.add("hidden");
+        }, 400);
     }
 
     // PLAYER RESET
@@ -976,8 +985,6 @@ function joinAsHost() {
 
     localStorage.setItem("isHost", "true");
     localStorage.setItem("hostSession", currentSession);
-
-    showHostControls();
 }
 
 // HOST FUNCTIONS
