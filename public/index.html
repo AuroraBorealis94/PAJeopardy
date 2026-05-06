@@ -294,28 +294,6 @@
         opacity: 1;
     }
 
-    #reconnectOverlay {
-        position: fixed;
-        inset: 0;
-        background: black;
-        color: white;
-
-        display: flex;
-        justify-content: center;
-        align-items: center;
-
-        z-index: 9999;
-
-        opacity: 0;
-        pointer-events: none;
-        transition: opacity 0.3s ease;
-    }
-
-    #reconnectOverlay.show {
-        opacity: 1;
-        pointer-events: auto;
-    }
-
     #hostControls {
         position: fixed;
         inset: 0;
@@ -419,9 +397,34 @@
 </div>
 
 <!-- RECONNECTING SCREEN -->
+<!--
 <div id="reconnectOverlay" class="hidden">
     <h2>Reconnecting...</h2>
 </div>
+
+// Place these back in css if using
+#reconnectOverlay {
+        position: fixed;
+        inset: 0;
+        background: black;
+        color: white;
+
+        display: flex;
+        justify-content: center;
+        align-items: center;
+
+        z-index: 9999;
+
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.3s ease;
+    }
+
+    #reconnectOverlay.show {
+        opacity: 1;
+        pointer-events: auto;
+    }
+-->
 
 <!-- HOST CONTROLS -->
 <div id="hostControls" class="hidden">
@@ -946,6 +949,7 @@ function showWaitingScreen() {
     });
 }
 
+/*
 function showReconnectOverlay() {
     const el = document.getElementById("reconnectOverlay");
     el.classList.remove("hidden");
@@ -963,7 +967,7 @@ function hideReconnectOverlay() {
         el.classList.add("hidden");
     }, 300);
 }
-
+*/
 // HOST JOIN
 function joinAsHost() {
     isHost = true;
@@ -972,6 +976,8 @@ function joinAsHost() {
 
     localStorage.setItem("isHost", "true");
     localStorage.setItem("hostSession", currentSession);
+
+    showHostControls();
 }
 
 // HOST FUNCTIONS
