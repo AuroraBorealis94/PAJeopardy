@@ -405,6 +405,8 @@ const state = {
 
 console.log("LOCAL PLAYER ID ON LOAD:", localStorage.getItem("playerId"));
 
+let isHost = false;
+
 // HOST JOIN
 window.addEventListener("load", () => {
     const isHost = localStorage.getItem("isHost");
@@ -593,6 +595,7 @@ socket.on("forceReset", () => {
 socket.on("joinSuccess", () => {
     if (isHost) {
         document.getElementById("hostControls").style.display = "block";
+        return;
     }
 
     localStorage.setItem("hasJoined", "true");
@@ -625,26 +628,35 @@ socket.on("gameSession", (session) => {
     const hasJoined = localStorage.getItem("hasJoined");
 
     const hostSession = localStorage.getItem("hostSession");
-    const isHost = localStorage.getItem("isHost");
+    const storedIsHost = localStorage.getItem("isHost");
 
     currentSession = session;
 
+    // restore isHost variable
+    isHost = storedIsHost === "true";
+
+    const hostBtn = document.getElementById("hostBtn");
+
+    // SHOW OR HIDE HOST BUTTON
+    if (isHost && hostSession === session) {
+        if (hostBtn) hostBtn.style.display = "none";
+        document.getElementById("hostControls").style.display = "block";
+    } else {
+        if (hostBtn) hostBtn.style.display = "block";
+        document.getElementById("hostControls").style.display = "none";
+    }
+
     // PLAYER RESET
     if (hasJoined === "true" && savedSession && savedSession !== session) {
-        console.log("Server restarted - clearing player session");
-
         localStorage.clear();
         location.reload();
         return;
     }
 
     // HOST RESET
-    if (isHost === "true" && hostSession && hostSession !== session) {
-        console.log("Server restarted - clearing host session");
-
+    if (isHost && hostSession && hostSession !== session) {
         localStorage.removeItem("isHost");
         localStorage.removeItem("hostSession");
-
         location.reload();
     }
 });
@@ -812,7 +824,7 @@ function joinGame() {
         playerId,
         name: state.name,
         character: state.character.name,
-        isHost
+        isHost: false
     });
     console.log("joinGame ran");
 }
@@ -906,17 +918,12 @@ function hideReconnectOverlay() {
 
 // HOST JOIN
 function joinAsHost() {
-    socket.emit("join", { isHost: true });
+    isHost = true;
 
     localStorage.setItem("isHost", "true");
     localStorage.setItem("hostSession", currentSession);
-
     document.getElementById("hostBtn").style.display = "none";
-
-    document.body.innerHTML = `
-        <h2>Host Controller</h2>
-        <button onclick="startGame()">Start Game</button>
-    `;
+    document.getElementById("hostControls").style.display = "block";
 }
 
 // HOST FUNCTIONS
