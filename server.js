@@ -139,7 +139,22 @@ io.on("connection", (socket) => {
     console.log("A player connected:", socket.id);
 
     // JOIN LOBBY
-    socket.on("join", ({ playerId, name, character }) => {
+    socket.on("join", ({ playerId, name, character, isHost }) => {
+        if (isHost) {
+            const existingHost = game.players.find(p => p.isHost);
+            if (existingHost) {
+                socket.emit("characterTaken");
+                return;
+            }
+            console.log("HOST CONNECTED");
+
+            game.hostId = socket.id;
+
+            socket.emit("joinSuccess", { role: "host" });
+            return;
+        }
+
+
         if (socket.data.joined) return;
         socket.data.joined = true;
 
@@ -208,6 +223,7 @@ io.on("connection", (socket) => {
             playerId,
             name,
             character,
+            isHost: !!isHost,
             disconnected: false,
             disconnectTime: null
         });
@@ -227,6 +243,42 @@ io.on("connection", (socket) => {
                 characterId: p.character.toLowerCase()
             }))
         });
+    });
+
+    // HOST CONTROLS
+    socket.on("hostAction", (data) => {
+        const player = game.players.find(p => p.id === socket.id);
+
+        if (!player || !player.isHost) return; // BLOCK non-hosts
+
+        console.log("HOST ACTION:", data);
+
+        switch (data.type) {
+            case "startLobby":
+                io.emit("showLobby");
+                break;
+
+            case "showInstructions":
+                io.emit("showInstructions");
+                break;
+
+            case "startGame":
+                generateBoard();
+                io.emit("gameStarted", game.board);
+                break;
+
+            case "selectClue":
+                io.emit("clueSelected", data.payload);
+                break;
+
+            case "revealAnswer":
+                io.emit("revealAnswer");
+                break;
+
+            case "resumeBuzzing":
+                io.emit("resumeBuzzing");
+                break;
+        }
     });
 
     // START GAME

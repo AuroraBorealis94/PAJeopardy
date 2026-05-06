@@ -362,6 +362,8 @@
 
     <!-- JOIN - LOCK IN PLAYER -->
     <button id="joinBtn" onclick="joinGame()">Join Game</button>
+    <!-- HOST JOIN Maybe? -->
+    <button onclick="joinAsHost()">Host Game</button>
 </div>
 
 <!-- WAITING SCREEN -->
@@ -381,6 +383,14 @@
     <h2>Reconnecting...</h2>
 </div>
 
+<!-- HOST CONTROLS -->
+<div id="hostControls" style="display:none;">
+    <button onclick="hostStartGame()">Start Game</button>
+    <button onclick="hostShowInstructions()">Instructions</button>
+    <button onclick="hostReveal()">Reveal Answer</button>
+    <button onclick="hostResume()">Resume Buzzers</button>
+</div>
+
 <!-- JS -->
 <script src="/socket.io/socket.io.js"></script>
 <script>
@@ -393,6 +403,9 @@ const state = {
 };
 
 console.log("LOCAL PLAYER ID ON LOAD:", localStorage.getItem("playerId"));
+
+const params = new URLSearchParams(window.location.search);
+const isHost = params.get("host") === "true";
 
 // ROOM CODE
 socket.on("roomCode", (code) => {
@@ -569,6 +582,10 @@ socket.on("forceReset", () => {
 });
 
 socket.on("joinSuccess", () => {
+    if (isHost) {
+        document.getElementById("hostControls").style.display = "block";
+    }
+
     localStorage.setItem("hasJoined", "true");
     localStorage.setItem("gameSession", currentSession);
 
@@ -772,7 +789,8 @@ function joinGame() {
     socket.emit("join", {
         playerId,
         name: state.name,
-        character: state.character.name
+        character: state.character.name,
+        isHost
     });
     console.log("joinGame ran");
 }
@@ -862,6 +880,35 @@ function hideReconnectOverlay() {
     setTimeout(() => {
         el.classList.add("hidden");
     }, 300);
+}
+
+// Maybe?
+function joinAsHost() {
+    socket.emit("join", {
+        isHost: true
+    });
+
+    document.body.innerHTML = `
+        <h2>Host Controller</h2>
+        <button onclick="startGame()">Start Game</button>
+    `;
+}
+
+// HOST FUNCTIONS
+function hostStartGame() {
+    socket.emit("hostAction", { type: "startGame" });
+}
+
+function hostShowInstructions() {
+    socket.emit("hostAction", { type: "showInstructions" });
+}
+
+function hostReveal() {
+    socket.emit("hostAction", { type: "revealAnswer" });
+}
+
+function hostResume() {
+    socket.emit("hostAction", { type: "resumeBuzzing" });
 }
 
 </script>
