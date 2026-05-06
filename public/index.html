@@ -409,12 +409,14 @@ console.log("LOCAL PLAYER ID ON LOAD:", localStorage.getItem("playerId"));
 //const isHost = params.get("host") === "true";
 
 // HOST JOIN
+/*
 window.addEventListener("load", () => {
     if (localStorage.getItem("isHost") === "true") {
         const btn = document.getElementById("hostBtn");
         if (btn) btn.style.display = "none";
     }
 });
+*/
 
 // ROOM CODE
 socket.on("roomCode", (code) => {
@@ -893,17 +895,13 @@ function hideReconnectOverlay() {
 
 // HOST JOIN
 function joinAsHost() {
-    socket.emit("join", {
-        isHost: true
-    });
+    socket.emit("join", { isHost: true });
 
-    // HIDE BUTTON
-    document.getElementById("hostBtn").style.display = "none";
-
-    // SAVE STATE (so it stays hidden on refresh)
     localStorage.setItem("isHost", "true");
 
-    // Swap UI
+    const btn = document.getElementById("hostBtn");
+    if (btn) btn.style.display = "none";
+
     document.body.innerHTML = `
         <h2>Host Controller</h2>
         <button onclick="startGame()">Start Game</button>
