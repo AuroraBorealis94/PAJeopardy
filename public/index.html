@@ -450,7 +450,8 @@ console.log("LOCAL PLAYER ID ON LOAD:", localStorage.getItem("playerId"));
 let isHost = false;
 
 // HOST JOIN
-window.addEventListener("load", () => {
+//window.addEventListener("load", () => {
+window.onload = () => {
     const isHost = localStorage.getItem("isHost");
     const hostSession = localStorage.getItem("hostSession");
 
