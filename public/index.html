@@ -331,6 +331,9 @@
     <h1 id="h11">PA Jeopardy</h1>
     <h1 id="h12">2026 Edition</h1>
 
+    <!-- HOST JOIN -->
+    <button id="hostBtn" onclick="joinAsHost()">Host Game</button>
+
     <!-- PREVIEW -->
     <div id="preview">
         <p id="teamLabel" style="display:none;"><b>Team </b><span id="previewName">---</span></p>
@@ -362,8 +365,6 @@
 
     <!-- JOIN - LOCK IN PLAYER -->
     <button id="joinBtn" onclick="joinGame()">Join Game</button>
-    <!-- HOST JOIN Maybe? -->
-    <button onclick="joinAsHost()">Host Game</button>
 </div>
 
 <!-- WAITING SCREEN -->
@@ -404,8 +405,16 @@ const state = {
 
 console.log("LOCAL PLAYER ID ON LOAD:", localStorage.getItem("playerId"));
 
-const params = new URLSearchParams(window.location.search);
-const isHost = params.get("host") === "true";
+//const params = new URLSearchParams(window.location.search);
+//const isHost = params.get("host") === "true";
+
+// HOST JOIN
+window.addEventListener("load", () => {
+    if (localStorage.getItem("isHost") === "true") {
+        const btn = document.getElementById("hostBtn");
+        if (btn) btn.style.display = "none";
+    }
+});
 
 // ROOM CODE
 socket.on("roomCode", (code) => {
@@ -882,12 +891,19 @@ function hideReconnectOverlay() {
     }, 300);
 }
 
-// Maybe?
+// HOST JOIN
 function joinAsHost() {
     socket.emit("join", {
         isHost: true
     });
 
+    // HIDE BUTTON
+    document.getElementById("hostBtn").style.display = "none";
+
+    // SAVE STATE (so it stays hidden on refresh)
+    localStorage.setItem("isHost", "true");
+
+    // Swap UI
     document.body.innerHTML = `
         <h2>Host Controller</h2>
         <button onclick="startGame()">Start Game</button>
