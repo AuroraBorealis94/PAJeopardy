@@ -409,14 +409,12 @@ console.log("LOCAL PLAYER ID ON LOAD:", localStorage.getItem("playerId"));
 //const isHost = params.get("host") === "true";
 
 // HOST JOIN
-/*
 window.addEventListener("load", () => {
     if (localStorage.getItem("isHost") === "true") {
         const btn = document.getElementById("hostBtn");
         if (btn) btn.style.display = "none";
     }
 });
-*/
 
 // ROOM CODE
 socket.on("roomCode", (code) => {
