@@ -450,7 +450,7 @@ console.log("LOCAL PLAYER ID ON LOAD:", localStorage.getItem("playerId"));
 let isHost = false;
 
 window.addEventListener("load", () => {
-    // HOST JOIN
+    // HOST JOIN //
     const isHost = localStorage.getItem("isHost");
     const hostSession = localStorage.getItem("hostSession");
 
@@ -459,20 +459,18 @@ window.addEventListener("load", () => {
         if (btn) btn.style.display = "none";
     }
 
-    // CAROUSEL 
+    // CAROUSEL //
     const container = document.getElementById("characters");
 
-    // ARROW CONTROLS
     document.getElementById("nextBtn").onclick = () => scrollByCard(1);
     document.getElementById("prevBtn").onclick = () => scrollByCard(-1);
 
-    // SCROLL LISTENER
     container.addEventListener("scroll", () => {
         updateCenterCard();
     });
 });
 
-// ROOM CODE
+// ROOM CODE -- Not functioning
 socket.on("roomCode", (code) => {
     document.getElementById("roomCode").textContent = code;
 });
@@ -579,22 +577,6 @@ socket.on("playerList", (players) => {
         players.length + " players joined";
 });
 
-// CAROUSEL MANAGER
-/*
-window.onload = () => {
-    const container = document.getElementById("characters");
-
-    // ARROW CONTROLS
-    document.getElementById("nextBtn").onclick = () => scrollByCard(1);
-    document.getElementById("prevBtn").onclick = () => scrollByCard(-1);
-
-    // SCROLL LISTENER
-    container.addEventListener("scroll", () => {
-        updateCenterCard();
-    });
-};
-*/
-
 // LOCKED CARDS
 let lockedSet = new Set();
 socket.on("lockedCharacters", (locked) => {
@@ -615,8 +597,8 @@ socket.on("characterTaken", () => {
     joinBtn.style.opacity = "1";
 });
 
+// DISCONNECT
 let disconnectTimer = null;
-
 socket.on("disconnect", () => {
     const player = game.players.find(p => p.id === socket.id);
     if (!player) return;
@@ -646,6 +628,7 @@ socket.on("disconnect", () => {
     }, 5000);
 });
 
+// RESET SERVER ?
 socket.on("forceReset", () => {
     console.log("Session expired, resetting");
 
@@ -657,6 +640,7 @@ socket.on("forceReset", () => {
     location.reload();
 });
 
+// PLAYER JOINED
 socket.on("joinSuccess", () => {
     if (isHost) {
         showHostControls();
@@ -686,8 +670,8 @@ socket.on("joinSuccess", () => {
     }, 300);
 });
 
+// SET CURRENT SESSION
 let currentSession = null;
-
 socket.on("gameSession", (session) => {
     const savedSession = localStorage.getItem("gameSession");
     const hasJoined = localStorage.getItem("hasJoined");
@@ -734,6 +718,7 @@ socket.on("gameSession", (session) => {
     }
 });
 
+// RESET SERVER ?
 socket.on("resetClientState", () => {
     localStorage.removeItem("hasJoined");
     localStorage.removeItem("character");
@@ -741,7 +726,7 @@ socket.on("resetClientState", () => {
     localStorage.removeItem("gameSession");
 });
 
-// SET NAME
+// TEAM NAME INPUT
 function setName() {
     const nameInput = document.getElementById("name");
     state.name = nameInput.value.trim();
@@ -755,6 +740,7 @@ function setName() {
     nameInput.value = "";
 }
 
+// CAROUSEL AND CHARACTER SELECT
 function setSelectedCard(card) {
     document.querySelectorAll(".charCard")
         .forEach(c => c.classList.remove("selected"));
@@ -870,7 +856,6 @@ function updatePreview() {
         img.style.display = "none";
     }
 }
-
 updatePreview();
 
 // JOIN GAME - LOCK IN PLAYER
@@ -972,6 +957,7 @@ function showWaitingScreen() {
 }
 
 /*
+// RECONNECT
 function showReconnectOverlay() {
     const el = document.getElementById("reconnectOverlay");
     el.classList.remove("hidden");
@@ -990,6 +976,7 @@ function hideReconnectOverlay() {
     }, 300);
 }
 */
+
 // HOST JOIN
 function joinAsHost() {
     isHost = true;
@@ -998,6 +985,18 @@ function joinAsHost() {
 
     localStorage.setItem("isHost", "true");
     localStorage.setItem("hostSession", currentSession);
+}
+
+function showHostControls() {
+    document.getElementById("lobbyUI").style.display = "none";
+
+    const controls = document.getElementById("hostControls");
+
+    controls.classList.remove("hidden");
+
+    requestAnimationFrame(() => {
+        controls.classList.add("show");
+    });
 }
 
 // HOST FUNCTIONS
@@ -1017,19 +1016,6 @@ function hostResume() {
     socket.emit("hostAction", { type: "resumeBuzzing" });
 }
 
-function showHostControls() {
-    document.getElementById("lobbyUI").style.display = "none";
-
-    const controls = document.getElementById("hostControls");
-
-    controls.classList.remove("hidden");
-
-    requestAnimationFrame(() => {
-        controls.classList.add("show");
-    });
-}
-
 </script>
-
 </body>
 </html>
