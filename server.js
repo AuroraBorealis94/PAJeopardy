@@ -250,6 +250,7 @@ io.on("connection", (socket) => {
     });
 
     // HOST CONTROLS
+    /*
     socket.on("hostAction", (data) => {
         const player = game.players.find(p => p.id === socket.id);
 
@@ -273,6 +274,45 @@ io.on("connection", (socket) => {
 
             case "selectClue":
                 io.emit("clueSelected", data.payload);
+                break;
+
+            case "revealAnswer":
+                io.emit("revealAnswer");
+                break;
+
+            case "resumeBuzzing":
+                io.emit("resumeBuzzing");
+                break;
+        }
+    });
+    */
+
+    socket.on("hostAction", (data) => {
+
+        // ONLY ALLOW HOST SOCKET
+        if (!socket.isHost) return;
+
+        console.log("HOST ACTION:", data);
+
+        // SEND TO UNITY
+        broadcastToUnity({
+            type: data.type,
+            payload: data.payload || null
+        });
+
+        // OPTIONAL WEB EVENTS
+        switch (data.type) {
+
+            case "showInstructions":
+                io.emit("showInstructions");
+                break;
+
+            case "showBoard":
+                io.emit("showBoard");
+                break;
+
+            case "selectClue":
+                io.emit("selectClue");
                 break;
 
             case "revealAnswer":

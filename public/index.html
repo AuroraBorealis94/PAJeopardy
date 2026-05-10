@@ -57,7 +57,7 @@
     }
 /* #endregion */
 
-/* #region Join Page */
+/* #region Join Screen */
     #h11 {
         background: linear-gradient(
             45deg,
@@ -252,7 +252,7 @@
     }
 /* #endregion */
 
-/* #region Waiting & Host Pages */
+/* #region Waiting Screen */
     #waitingScreen {
         position: fixed;
         inset: 0;
@@ -293,12 +293,14 @@
         transform: scale(1);
         opacity: 1;
     }
+/* #endregion */
 
+/* #region Host Screen */
     #hostControls {
         position: fixed;
         inset: 0;
 
-        background: black;
+        background: 52878A;
         color: white;
 
         display: flex;
@@ -323,6 +325,7 @@
     #hostControls button {
         font-family: 'Korinna';
         font-size: 24px;
+        font-color: white;
 
         padding: 14px 28px;
 
@@ -427,11 +430,39 @@
 -->
 
 <!-- HOST CONTROLS -->
+<!--
 <div id="hostControls" class="hidden">
     <button onclick="hostStartGame()">Start Game</button>
     <button onclick="hostShowInstructions()">Instructions</button>
     <button onclick="hostReveal()">Reveal Answer</button>
     <button onclick="hostResume()">Resume Buzzers</button>
+</div>
+-->
+
+<div id="hostControls" class="hidden">
+    <button id="startGameBtn" onclick="hostStartGame()">
+        Start Game 
+    </button>
+
+    <button id="instructionsBtn" onclick="hostShowInstructions()" style="display:none;">
+        Show Instructions
+    </button>
+
+    <button id="showBoardBtn" onclick="hostShowBoard()" style="display:none;">
+        Show Game Board
+    </button>
+
+    <button id="selectClueBtn" onclick="hostSelectClue()" style="display:none;">
+        SelectClue
+    </button>
+
+    <button id="revealAnswerBtn" onclick="hostReveal()" style="display:none;">
+        Reveal Answer
+    </button>
+
+    <button id="enableBuzzerBtn" onclick="hostEnableBuzzer()" style="display:none;">
+        Resume Buzzers
+    </button>
 </div>
 
 <!-- JS -->
@@ -1002,17 +1033,40 @@ function showHostControls() {
 // HOST FUNCTIONS
 function hostStartGame() {
     socket.emit("hostAction", { type: "startGame" });
+
+    document.getElementById("startGameBtn").style.display = "none";
+    document.getElementById("instructionsBtn").style.display = "block";
 }
 
 function hostShowInstructions() {
     socket.emit("hostAction", { type: "showInstructions" });
+    
+    document.getElementById("instructionsBtn").style.display = "none";
+    document.getElementById("showBoardBtn").style.display = "block";
+}
+
+function hostShowBoard() {
+    socket.emit("hostAction", { type: "showBoard" });
+    
+    document.getElementById("showBoardBtn").style.display = "none";
+    document.getElementById("selectClueBtn").style.display = "block";
+}
+
+function hostSelectClue() {
+    socket.emit("hostAction", { type: "selectClue" });
+    
+    document.getElementById("selectClueBtn").style.display = "none";
+    document.getElementById("revealAnswerBtn").style.display = "block";
 }
 
 function hostReveal() {
     socket.emit("hostAction", { type: "revealAnswer" });
+    
+    document.getElementById("revealAnswerBtn").style.display = "none";
+    document.getElementById("enableBuzzerBtn").style.display = "block";
 }
 
-function hostResume() {
+function hostEnableBuzzer() {
     socket.emit("hostAction", { type: "resumeBuzzing" });
 }
 
