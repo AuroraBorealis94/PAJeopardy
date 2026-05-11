@@ -68,7 +68,7 @@ function broadcastToUnity(data) {
 // LOCKED CHARACTERS
 const lockedCharacters = new Set();
 // LOAD CATEGORY FILES
-const loadCategories = require("./loadCategories");
+//const loadCategories = require("./loadCategories");
 
 // GENERATE BOARD
 function generateBoard() {
