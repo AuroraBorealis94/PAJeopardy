@@ -9,9 +9,16 @@ app.use("/backgrounds", express.static("backgrounds"));
 app.use("/sprites", express.static("sprites"));
 app.use("/confetti", express.static("public/confetti"));
 
+// HOST NOT CONNECTED
 let hostConnected = false;
+// CURRENT SESSION
 let GAME_SESSION = Date.now();
+// DISCONNECT TIMER
 const disconnectTimers = new Map();
+// USED CLUES
+const usedClueIds = new Set();
+// LOCKED CHARACTERS
+const lockedCharacters = new Set();
 
 // BRIDGE FROM SOCKET.IO TO WEBSOCKET
 const WebSocket = require("ws");
@@ -64,11 +71,6 @@ function broadcastToUnity(data) {
         }
     });
 }
-
-// LOCKED CHARACTERS
-const lockedCharacters = new Set();
-// LOAD CATEGORY FILES
-//const loadCategories = require("./loadCategories");
 
 // GENERATE BOARD
 function generateBoard() {
