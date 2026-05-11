@@ -187,7 +187,7 @@
         font-family: 'Korinna';
         font-size: 18px;
         text-transform: uppercase;
-        min-height: 300px;
+        min-height: 240px;
     }
 
     #previewCharacterBox {
@@ -207,7 +207,6 @@
 
     #joinBtn {
         font-family: 'Korinna', serif;
-
         font-size: 24px;
         padding: 10px 35px;
 
@@ -218,9 +217,7 @@
         border-radius: 12px;
 
         cursor: pointer;
-
         box-shadow: 0 0 15px rgba(255, 140, 0, 0.6);
-
         transition: all 0.2s ease;
     }
 
@@ -364,6 +361,11 @@
 
     <br>
 
+    <!-- ENTER NAME -->
+    <h2 style="padding-top: 20px;">Choose Your Team Name</h2>
+    <input id="name" placeholder="Enter group name">
+    <button id="enterBtn" onclick="setName()">Enter</button>
+
     <!-- ENTER CHARACTER -->
     <h2>Choose Your Team Representative</h2>
 
@@ -374,11 +376,6 @@
 
         <button id="nextBtn">&#8594;</button>
     </div>
-
-    <!-- ENTER NAME -->
-    <h2 style="padding-top: 20px;">Choose Your Team Name</h2>
-    <input id="name" placeholder="Enter group name">
-    <button id="enterBtn" onclick="setName()">Enter</button>
 
     <br><br>
 
