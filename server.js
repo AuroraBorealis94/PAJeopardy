@@ -304,10 +304,20 @@ io.on("connection", (socket) => {
         if (data.type === "startGame") {
             generateBoard();
 
+            // FIRST tell Unity to load lobby scene
             broadcastToUnity({
-                type: "boardData",
-                board: convertBoardForUnity(game.board)
+                type: "startGame"
             });
+
+            // THEN send board data
+            setTimeout(() => {
+
+                broadcastToUnity({
+                    type: "boardData",
+                    board: convertBoardForUnity(game.board)
+                });
+
+            }, 1000);
         }
         else {
 
