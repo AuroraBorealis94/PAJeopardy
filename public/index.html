@@ -195,8 +195,8 @@
     #previewCharacterBox {
         display: flex;
         flex-direction: column;
-        align-items: bottom-center;
-        justify-content: center;
+        align-items: center;
+        justify-content: bottom-center;
         margin: 0 auto;
     }
 
@@ -356,7 +356,7 @@
     <button id="hostBtn" onclick="joinAsHost()">Host Game</button>
 
     <!-- PREVIEW -->
-    <div style="padding-bottom: 0px;" id="preview">
+    <div id="preview">
         <p id="teamLabel" style="display:none;"><b>Team </b><span id="previewName">---</span></p>
 
         <div id="previewCharacterBox">
@@ -367,7 +367,7 @@
     <br>
 
     <!-- ENTER CHARACTER -->
-    <h2 style="padding-top: 0px;">Choose Your Team Representative</h2>
+    <h2>Choose Your Team Representative</h2>
 
     <div style="display:flex; justify-content:center; gap:18px; align-items:center;">
         <button id="prevBtn">&#8592;</button>
