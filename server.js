@@ -141,6 +141,31 @@ app.get("/", (req, res) => {
     res.sendFile(__dirname + "/public/index.html");
 });
 
+// FLATTEN BOARD FOR UNITY
+function convertBoardForUnity(board) {
+    const categories = [];
+
+    for (const categoryName in board) {
+
+        const category = {
+            categoryName,
+            clues: []
+        };
+
+        for (const value in board[categoryName]) {
+
+            category.clues.push({
+                value,
+                clueData: board[categoryName][value]
+            });
+        }
+
+        categories.push(category);
+    }
+
+    return { categories };
+}
+
 // NEW CONNECTION
 io.on("connection", (socket) => {
     console.log("Socket connected:", socket.id);
@@ -279,7 +304,7 @@ io.on("connection", (socket) => {
 
             broadcastToUnity({
                 type: "boardData",
-                board: game.board
+                board: convertBoardForUnity(game.board)
             });
         }
         else {

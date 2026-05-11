@@ -3,7 +3,7 @@ const path = require("path");
 
 function loadCategories() {
 
-    const categoriesPath = path.join(__dirname, "../data/categories");
+    const categoriesPath = path.join(__dirname, "data/categories");
 
     const files = fs.readdirSync(categoriesPath);
 
