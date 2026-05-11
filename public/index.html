@@ -99,7 +99,7 @@
         gap: 18px;
         padding: 30px 0;
         padding-bottom: 20px;
-        min-height: 260px;
+        min-height: 220px;
         max-width: 100%;
         align-items: center;
     }
@@ -193,6 +193,7 @@
     }
 
     #previewCharacterBox {
+        display: flex;
         flex-direction: column;
         align-items: center;
         justify-content: center;
@@ -327,7 +328,7 @@
         font-size: 24px;
         font-color: white;
 
-        padding: 14px 28px;
+        
 
         border-radius: 12px;
         border: none;
@@ -335,6 +336,12 @@
         background: linear-gradient(135deg, #ffcc00, #ff6600);
 
         cursor: pointer;
+
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto;
     }
 /* #endregion */
 
@@ -366,7 +373,7 @@
     <br>
 
     <!-- ENTER CHARACTER -->
-    <h2>Choose Your Team Representative</h2>
+    <h2 style="padding-top: 20px;">Choose Your Team Representative</h2>
 
     <div style="display:flex; justify-content:center; gap:18px; align-items:center;">
         <button id="prevBtn">&#8592;</button>
