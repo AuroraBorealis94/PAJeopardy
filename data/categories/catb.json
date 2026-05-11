@@ -1,0 +1,70 @@
+{
+  "category": "B",
+
+  "clues": {
+    "200": [
+      {
+        "id": "B_200_1",
+        "clue": "200.1 Clue",
+        "answer": "200.1 Answer"
+      },
+      {
+        "id": "B_200_2",
+        "clue": "200.2 Clue",
+        "answer": "200.2 Answer"
+      }
+    ],
+
+    "400": [
+      {
+        "id": "B_400_1",
+        "clue": "400.1 Clue",
+        "answer": "400.1 Answer"
+      },
+      {
+        "id": "B_400_2",
+        "clue": "400.2 Clue",
+        "answer": "400.2 Answer"
+      }
+    ]
+
+    "600": [
+      {
+        "id": "B_600_1",
+        "clue": "600.1 Clue",
+        "answer": "600.1 Answer"
+      },
+      {
+        "id": "B_600_2",
+        "clue": "600.2 Clue",
+        "answer": "600.2 Answer"
+      }
+    ]
+
+    "800": [
+      {
+        "id": "B_800_1",
+        "clue": "800.1 Clue",
+        "answer": "800.1 Answer"
+      },
+      {
+        "id": "B_800_2",
+        "clue": "800.2 Clue",
+        "answer": "800.2 Answer"
+      }
+    ]
+
+    "1000": [
+      {
+        "id": "B_1000_1",
+        "clue": "1000.1 Clue",
+        "answer": "1000.1 Answer"
+      },
+      {
+        "id": "B_1000_2",
+        "clue": "1000.2 Clue",
+        "answer": "1000.2 Answer"
+      }
+    ]
+  }
+}

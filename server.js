@@ -1,6 +1,7 @@
 const express = require("express");
 const app = express();
 const http = require("http").createServer(app);
+const loadCategories = require("./loadCategories");
 
 app.use("/characters", express.static("characters"));
 app.use("/fonts", express.static("fonts"));
@@ -53,27 +54,6 @@ const characters = [
     { name: "The Guitarist", front: "/characters/theguitaristfront.png", back: "/characters/theguitaristback.png" }
 ];
 
-// LOCKED CHARACTERS
-const lockedCharacters = new Set();
-
-// CLUE STORAGE (filled when game starts)
-const cluePool = {
-    "Category A": {
-        200: [
-            { clue: "A small land animal known for burrowing", answer: "rabbit" },
-            { clue: "A fast desert mammal", answer: "hare" }
-        ],
-        400: [
-            { clue: "This planet is closest to the sun", answer: "mercury" }
-        ]
-    },
-    "Category B": {
-        200: [
-            { clue: "Water freezes at temperature in Celsius", answer: "0" }
-        ]
-    }
-};
-
 // WEBSOCKET TO UNITY
 function broadcastToUnity(data) {
     const message = JSON.stringify(data);
@@ -85,25 +65,62 @@ function broadcastToUnity(data) {
     });
 }
 
+// LOCKED CHARACTERS
+const lockedCharacters = new Set();
+// LOAD CATEGORY FILES
+const loadCategories = require("./loadCategories");
+
 // GENERATE BOARD
 function generateBoard() {
+
+    const allCategories = loadCategories();
+
+    // RANDOMIZE CATEGORY ORDER
+    const shuffled = allCategories.sort(() => Math.random() - 0.5);
+
+    // PICK 6 CATEGORIES
+    const selectedCategories = shuffled.slice(0, 6);
+
     game.board = {};
 
-    for (let category in cluePool) {
-        game.board[category] = {};
+    selectedCategories.forEach(categoryData => {
 
-        for (let value in cluePool[category]) {
-            const options = cluePool[category][value];
+        const categoryName = categoryData.category;
 
-            const random = options[Math.floor(Math.random() * options.length)];
+        game.board[categoryName] = {};
 
-            game.board[category][value] = {
-                clue: random.clue,
-                answer: random.answer,
+        for (const value in categoryData.clues) {
+
+            const options = categoryData.clues[value];
+
+            // REMOVE USED CLUES
+            const available = options.filter(
+                clue => !usedClueIds.has(clue.id)
+            );
+
+            if (available.length === 0) {
+                console.log("No clues left for:", categoryName, value);
+                continue;
+            }
+
+            // PICK RANDOM CLUE
+            const chosen =
+                available[Math.floor(Math.random() * available.length)];
+
+            // MARK GLOBALLY USED
+            usedClueIds.add(chosen.id);
+
+            game.board[categoryName][value] = {
+                id: chosen.id,
+                clue: chosen.clue,
+                answer: chosen.answer,
                 used: false
             };
         }
-    }
+    });
+
+    console.log("Generated board:");
+    console.log(game.board);
 }
 
 function resetGameState() {
@@ -250,55 +267,28 @@ io.on("connection", (socket) => {
     });
 
     // HOST CONTROLS
-    /*
     socket.on("hostAction", (data) => {
-        const player = game.players.find(p => p.id === socket.id);
-
-        if (!player || !player.isHost) return; // BLOCK non-hosts
-
-        console.log("HOST ACTION:", data);
-
-        switch (data.type) {
-            case "startLobby":
-                io.emit("showLobby");
-                break;
-
-            case "showInstructions":
-                io.emit("showInstructions");
-                break;
-
-            case "startGame":
-                generateBoard();
-                io.emit("gameStarted", game.board);
-                break;
-
-            case "selectClue":
-                io.emit("clueSelected", data.payload);
-                break;
-
-            case "revealAnswer":
-                io.emit("revealAnswer");
-                break;
-
-            case "resumeBuzzing":
-                io.emit("resumeBuzzing");
-                break;
-        }
-    });
-    */
-
-    socket.on("hostAction", (data) => {
-
         // ONLY ALLOW HOST SOCKET
         if (!socket.isHost) return;
 
         console.log("HOST ACTION:", data);
 
         // SEND TO UNITY
-        broadcastToUnity({
-            type: data.type,
-            payload: data.payload || null
-        });
+        if (data.type === "startGame") {
+            generateBoard();
+
+            broadcastToUnity({
+                type: "boardData",
+                board: game.board
+            });
+        }
+        else {
+
+            broadcastToUnity({
+                type: data.type,
+                payload: data.payload || null
+            });
+        }
 
         // OPTIONAL WEB EVENTS
         switch (data.type) {
