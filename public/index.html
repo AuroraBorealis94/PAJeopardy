@@ -187,7 +187,7 @@
         font-family: 'Korinna';
         font-size: 18px;
         text-transform: uppercase;
-        min-height: 220px;
+        height: 220px;
     }
 
     #previewCharacterBox {
@@ -203,6 +203,14 @@
         aspect-ratio: 3 / 4;
         object-fit: cover;
         display: none;
+    }
+
+    .previewHidden {
+        visibility: hidden;
+    }
+
+    .previewVisible {
+        visibility: visible;
     }
 
     #joinBtn {
@@ -352,11 +360,9 @@
 
     <!-- PREVIEW -->
     <div id="preview">
-        <p id="teamLabel" style="display:none;"><b>Team </b><span id="previewName">---</span></p>
+        <p id="teamLabel" class="previewHidden"><b>Team </b><span id="previewName">---</span></p>
 
-        <div id="previewCharacterBox">
-            <img id="previewImage" src="" />
-        </div>
+        <div id="previewCharacterBox"><img id="previewImage" src="" /></div>
     </div>
 
     <!-- ENTER NAME -->
@@ -758,7 +764,9 @@ function setName() {
 
     localStorage.setItem("name", state.name);
 
-    document.getElementById("teamLabel").style.display = "block";
+    //document.getElementById("teamLabel").style.display = "block";
+    document.getElementById("teamLabel")
+        .classList.replace("previewHidden", "previewVisible");
 
     updatePreview();
 
