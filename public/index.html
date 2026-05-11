@@ -98,7 +98,9 @@
         overflow-x: auto;
         gap: 18px;
         padding: 20px 0;
+        width: 100%;
         max-width: 100%;
+        min-height: 180px;
         align-items: center;
     }
 
@@ -181,6 +183,16 @@
 
     .charCard.selected {
         animation: bounceSelect 0.3s ease;
+    }
+
+    .carouselNav {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 18px;
+
+        width: 100%;
+        min-height: 80px;
     }
 
     #preview {
@@ -373,7 +385,7 @@
     <!-- ENTER CHARACTER -->
     <h2>Choose Your Team Representative</h2>
 
-    <div style="display:flex; justify-content:center; gap:18px; align-items:center;">
+    <div class="carouselNav">
         <button id="prevBtn">&#8592;</button>
 
         <div id="characters"></div>
