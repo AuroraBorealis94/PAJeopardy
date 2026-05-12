@@ -384,7 +384,7 @@
     }
 
     #hostBoard {
-        display: grid;
+        display: none;
         grid-template-columns: repeat(6, 1fr);
         gap: 10px;
 
@@ -549,9 +549,11 @@
 
     <div id="hostBoard"></div>
 
+    <!--
     <button id="selectClueBtn" onclick="hostSelectClue()" style="display:none;">
         SelectClue
     </button>
+    -->
 
     <button id="revealAnswerBtn" onclick="hostReveal()" style="display:none;">
         Reveal Answer
@@ -1153,7 +1155,7 @@ function hostShowBoard() {
     socket.emit("hostAction", { type: "showBoard" });
     
     document.getElementById("showBoardBtn").style.display = "none";
-    document.getElementById("selectClueBtn").style.display = "block";
+    document.getElementById("hostBoard").style.display = "grid";
 }
 
 function buildHostBoard(board)
@@ -1193,6 +1195,8 @@ function buildHostBoard(board)
 
                     tile.classList.add("used");
 
+                    document.getElementById("revealAnswerBtn").style.display = "block";
+
                     socket.emit("hostAction", {
                         type: "selectClue",
                         payload: {
@@ -1209,12 +1213,14 @@ function buildHostBoard(board)
     });
 }
 
+/*
 function hostSelectClue() {
     socket.emit("hostAction", { type: "selectClue" });
     
     document.getElementById("selectClueBtn").style.display = "none";
     document.getElementById("revealAnswerBtn").style.display = "block";
 }
+*/
 
 function hostReveal() {
     socket.emit("hostAction", { type: "revealAnswer" });
