@@ -29,6 +29,9 @@
     }
 
     body {
+        opacity: 0;
+        animation: fadeIn 0.2s forwards;
+
         font-family: 'Korinna';
         font-size: 16px;
         margin: 0;
@@ -54,6 +57,10 @@
         background-size: 
             100% auto,
             100% auto;
+    }
+
+    @keyframes fadeIn {
+        to { opacity: 1; }
     }
 /* #endregion */
 
