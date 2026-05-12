@@ -30,7 +30,7 @@
 
     body {
         opacity: 0;
-        animation: fadeIn 0.2s forwards;
+        animation: fadeIn 0.4s forwards;
 
         font-family: 'Korinna';
         font-size: 16px;
@@ -202,11 +202,34 @@
         min-height: 80px;
     }
 
+    #hostBtn {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        transform: translate(-50%, -50%);
+        z-index: 20;
+
+        font-family: 'Korinna';
+        font-size: 22px;
+        padding: 12px 28px;
+        border-radius: 12px;
+        border: none;
+        background: linear-gradient(135deg, #ffcc00, #ff6600);
+        cursor: pointer;
+    }
+
     #preview {
         font-family: 'Korinna';
         font-size: 18px;
         text-transform: uppercase;
         height: 220px;
+        
+        position: relative;
+
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
     }
 
     #previewCharacterBox {
@@ -374,15 +397,32 @@
     <h1 id="h11">PA Jeopardy</h1>
     <h1 id="h12">2026 Edition</h1>
 
-    <!-- HOST JOIN -->
-    <button id="hostBtn" onclick="joinAsHost()">Host Game</button>
+    <!-- HOST JOIN
+    <button id="hostBtn" onclick="joinAsHost()">Host Game</button> -->
 
     <!-- PREVIEW -->
+    <div id="preview">
+
+        <!-- HOST JOIN -->
+        <button id="hostBtn" onclick="joinAsHost()">
+            Host Game
+        </button>
+
+        <p id="teamLabel" style="display:none;">
+            <b>Team </b><span id="previewName">---</span>
+        </p>
+
+        <div id="previewCharacterBox">
+            <img id="previewImage" src="" />
+        </div>
+    </div>
+    <!--
     <div id="preview">
         <p id="teamLabel" class="previewHidden"><b>Team </b><span id="previewName">---</span></p>
 
         <div id="previewCharacterBox"><img id="previewImage" src="" /></div>
     </div>
+    -->
 
     <!-- ENTER NAME -->
     <h2>Choose Your Team Name</h2>
