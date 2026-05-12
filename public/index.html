@@ -420,6 +420,89 @@
     }
 /* #endregion */
 
+/* #region Clue Overlay */
+    #clueOverlay {
+        position: fixed;
+        inset: 0;
+
+        background: rgba(0,0,0,0.92);
+
+        display: flex;
+        justify-content: center;
+        align-items: center;
+
+        z-index: 99999;
+
+        opacity: 0;
+        pointer-events: none;
+
+        transition: opacity 0.35s ease;
+    }
+
+    #clueOverlay.show {
+        opacity: 1;
+        pointer-events: auto;
+    }
+
+    #clueCard {
+        width: 80vw;
+        max-width: 700px;
+
+        background: #0b1c7a;
+        border: 4px solid gold;
+        border-radius: 24px;
+
+        padding: 40px 30px;
+
+        transform: scale(0.6);
+        opacity: 0;
+
+        transition:
+            transform 0.45s cubic-bezier(.2,.9,.2,1),
+            opacity 0.35s ease;
+    }
+
+    #clueOverlay.show #clueCard {
+        transform: scale(1);
+        opacity: 1;
+    }
+
+    #clueValue {
+        font-size: 48px;
+        color: gold;
+        margin-bottom: 24px;
+    }
+
+    #clueText {
+        font-size: 30px;
+        line-height: 1.4;
+        color: white;
+    }
+    /* FLIP */
+    .hostTile {
+        position: relative;
+        transform-style: preserve-3d;
+        transition:
+            transform 0.6s ease,
+            opacity 0.3s ease;
+    }
+
+    .hostTile.flipping {
+        transform: rotateY(180deg);
+    }
+    /* ZOOM */
+    .hostTile.zooming {
+        z-index: 9999;
+
+        transform:
+            scale(3)
+            translateY(120px);
+
+        transition:
+            transform 0.5s cubic-bezier(.2,.9,.2,1);
+    }
+/* #endregion */
+
 </style>
 
 <!-- HTML -->
@@ -555,6 +638,21 @@
     </button>
     -->
 
+    <!-- CLUE OVERLAY -->
+    <div id="clueOverlay" class="hidden">
+
+        <div id="clueCard">
+
+            <div id="clueValue">$200</div>
+
+            <div id="clueText">
+                Sample clue text
+            </div>
+
+        </div>
+
+    </div>
+
     <button id="revealAnswerBtn" onclick="hostReveal()" style="display:none;">
         Reveal Answer
     </button>
@@ -578,6 +676,7 @@ const state = {
 console.log("LOCAL PLAYER ID ON LOAD:", localStorage.getItem("playerId"));
 
 let isHost = false;
+let activeTile = null;
 
 window.addEventListener("load", () => {
     // HOST JOIN //
@@ -1193,7 +1292,28 @@ function buildHostBoard(board)
 
                 tile.onclick = () => {
 
+                    if (tile.classList.contains("used")) return;
+
+                    activeTile = tile;
+
                     tile.classList.add("used");
+
+                    // FLIP FIRST
+                    tile.classList.add("flipping");
+
+                    setTimeout(() => {
+
+                        // THEN ZOOM
+                        tile.classList.add("zooming");
+
+                    }, 350);
+
+                    // SHOW CLUE UI
+                    setTimeout(() => {
+
+                        showClueOverlay(clue, value);
+
+                    }, 700);
 
                     document.getElementById("revealAnswerBtn").style.display = "block";
 
@@ -1213,6 +1333,23 @@ function buildHostBoard(board)
     });
 }
 
+function showClueOverlay(clue, value) {
+
+    document.getElementById("clueValue").textContent =
+        "$" + value;
+
+    document.getElementById("clueText").textContent =
+        clue.clueData.clue;
+
+    const overlay = document.getElementById("clueOverlay");
+
+    overlay.classList.remove("hidden");
+
+    requestAnimationFrame(() => {
+        overlay.classList.add("show");
+    });
+}
+
 /*
 function hostSelectClue() {
     socket.emit("hostAction", { type: "selectClue" });
@@ -1227,6 +1364,18 @@ function hostReveal() {
     
     document.getElementById("revealAnswerBtn").style.display = "none";
     document.getElementById("enableBuzzerBtn").style.display = "block";
+
+    const overlay = document.getElementById("clueOverlay");
+    overlay.classList.remove("show");
+
+    setTimeout(() => {
+        overlay.classList.add("hidden");
+    }, 350);
+
+    // RESET TILE SCALE
+    if (activeTile) {
+        activeTile.classList.remove("zooming");
+    }
 }
 
 function hostEnableBuzzer() {

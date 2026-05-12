@@ -340,7 +340,12 @@ io.on("connection", (socket) => {
                 break;
 
             case "selectClue":
-                io.emit("selectClue");
+                io.emit("selectClue", data.payload);
+
+                broadcastToUnity({
+                    type: "selectClue",
+                    payload: data.payload
+                });
                 break;
 
             case "revealAnswer":
