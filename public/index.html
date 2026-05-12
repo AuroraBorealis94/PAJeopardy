@@ -341,7 +341,7 @@
     }
 /* #endregion */
 
-/* #region Host Screen */
+/* #region Host Controls */
     #hostControls {
         position: fixed;
         inset: 0;
@@ -381,6 +381,42 @@
         background: linear-gradient(135deg, #ffcc00, #ff6600);
 
         cursor: pointer;
+    }
+
+    #hostBoard {
+        display: grid;
+        grid-template-columns: repeat(6, 1fr);
+        gap: 10px;
+
+        width: 100%;
+        margin-top: 20px;
+    }
+
+    .hostCategory {
+        display: contents;
+    }
+
+    .hostHeader {
+        background: #0b1c7a;
+        color: white;
+        font-weight: bold;
+        padding: 10px;
+        text-align: center;
+    }
+
+    .hostTile {
+        background: #1d39c4;
+        color: gold;
+        font-size: 2rem;
+        padding: 20px;
+        text-align: center;
+        cursor: pointer;
+        border-radius: 8px;
+    }
+
+    .hostTile.used {
+        opacity: 0.3;
+        pointer-events: none;
     }
 /* #endregion */
 
@@ -510,6 +546,8 @@
     <button id="showBoardBtn" onclick="hostShowBoard()" style="display:none;">
         Show Game Board
     </button>
+
+    <div id="hostBoard"></div>
 
     <button id="selectClueBtn" onclick="hostSelectClue()" style="display:none;">
         SelectClue
@@ -685,6 +723,11 @@ socket.on("characterTaken", () => {
     joinBtn.disabled = false;
     joinBtn.innerText = "Join Game";
     joinBtn.style.opacity = "1";
+});
+
+// BOARD DATA
+socket.on("boardData", (board) => {
+    buildHostBoard(board);
 });
 
 // DISCONNECT
@@ -1111,6 +1154,59 @@ function hostShowBoard() {
     
     document.getElementById("showBoardBtn").style.display = "none";
     document.getElementById("selectClueBtn").style.display = "block";
+}
+
+function buildHostBoard(board)
+{
+    const hostBoard = document.getElementById("hostBoard");
+
+    hostBoard.innerHTML = "";
+
+    // HEADERS
+    board.categories.forEach(category => {
+
+        const header = document.createElement("div");
+        header.className = "hostHeader";
+        header.innerText = category.categoryName;
+
+        hostBoard.appendChild(header);
+    });
+
+    // VALUES
+    const values = ["200", "400", "600", "800", "1000"];
+
+    values.forEach(value => {
+
+        board.categories.forEach(category => {
+
+            const clue = category.clues.find(c => c.value === value);
+
+            const tile = document.createElement("div");
+
+            tile.className = "hostTile";
+
+            if (clue)
+            {
+                tile.innerText = "$" + value;
+
+                tile.onclick = () => {
+
+                    tile.classList.add("used");
+
+                    socket.emit("hostAction", {
+                        type: "selectClue",
+                        payload: {
+                            category: category.categoryName,
+                            value,
+                            clueData: clue.clueData
+                        }
+                    });
+                };
+            }
+
+            hostBoard.appendChild(tile);
+        });
+    });
 }
 
 function hostSelectClue() {

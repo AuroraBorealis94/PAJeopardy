@@ -316,6 +316,7 @@ io.on("connection", (socket) => {
                     type: "boardData",
                     board: convertBoardForUnity(game.board)
                 });
+                io.emit("boardData", convertBoardForUnity(game.board));
 
             }, 1000);
         }
