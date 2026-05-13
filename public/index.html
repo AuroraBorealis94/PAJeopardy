@@ -346,7 +346,7 @@
         position: fixed;
         inset: 0;
 
-        background: 52878A;
+        background: #52878a;
         color: white;
 
         display: flex;
@@ -442,12 +442,16 @@
 
         background: rgba(0,0,0,0.85);
 
-        display: flex;
+        display: none;
         flex-direction: column;
         justify-content: center;
         align-items: center;
 
         z-index: 9999;
+    }
+
+    #hostClueOverlay.show {
+        display: flex;
     }
 
     #hostClueCard {
@@ -1121,11 +1125,10 @@ updatePreview();
 
 // CLUE FLIP LISTENER
 document.addEventListener("click", (e) => {
-
     const overlay =
         document.getElementById("hostClueOverlay");
 
-    if (overlay.classList.contains("hidden"))
+    if (!overlay.classList.contains("show"))
         return;
 
     const card =
@@ -1344,70 +1347,12 @@ function buildHostBoard(board)
                             clueData: clue.clueData
                         }
                     });
-                    /*
-                    if (tile.classList.contains("used")) return;
-                    activeTile = tile;
-
-                    //tile.classList.add("used");
-
-                    // FLIP FIRST
-                    tile.classList.add("flipping");
-
-                    setTimeout(() => {
-                        // THEN ZOOM
-                        tile.classList.add("zooming");
-                    }, 350);
-
-                    // SHOW CLUE UI
-                    setTimeout(() => {
-                        showClueOverlay(clue, value);
-                    }, 700);
-
-                    document.getElementById("revealAnswerBtn").style.display = "block";
-
-                    socket.emit("hostAction", {
-                        type: "selectClue",
-                        payload: {
-                            category: category.categoryName,
-                            value,
-                            clueData: clue.clueData
-                        }
-                    });
-                    */
                 };
             }
-
             hostBoard.appendChild(tile);
         });
     });
 }
-
-/*
-function showClueOverlay(clue, value) {
-
-    document.getElementById("clueValue").textContent =
-        "$" + value;
-
-    document.getElementById("clueText").textContent =
-        clue.clueData.clue;
-
-    const overlay = document.getElementById("clueOverlay");
-
-    overlay.classList.remove("hidden");
-
-    requestAnimationFrame(() => {
-        overlay.classList.add("show");
-    });
-}
-*/
-/*
-function hostSelectClue() {
-    socket.emit("hostAction", { type: "selectClue" });
-    
-    document.getElementById("selectClueBtn").style.display = "none";
-    document.getElementById("revealAnswerBtn").style.display = "block";
-}
-*/
 
 function showHostClue(clue)
 {
@@ -1420,7 +1365,7 @@ function showHostClue(clue)
         clue.clueData.answer;
 
     document.getElementById("hostClueOverlay")
-        .classList.remove("hidden");
+        .classList.add("show");
 
     document.getElementById("hostJudgementButtons")
         .classList.add("hidden");
@@ -1485,34 +1430,13 @@ function hostContinue()
 function closeHostClue()
 {
     document.getElementById("hostClueOverlay")
-        .classList.add("hidden");
+        .classList.remove("show");
 
     if (currentHostTile)
     {
         currentHostTile.classList.add("used");
     }
 }
-
-/*
-function hostReveal() {
-    socket.emit("hostAction", { type: "revealAnswer" });
-    
-    document.getElementById("revealAnswerBtn").style.display = "none";
-    document.getElementById("enableBuzzerBtn").style.display = "block";
-
-    const overlay = document.getElementById("clueOverlay");
-    overlay.classList.remove("show");
-
-    setTimeout(() => {
-        overlay.classList.add("hidden");
-    }, 350);
-
-    // RESET TILE SCALE
-    if (activeTile) {
-        activeTile.classList.remove("zooming");
-    }
-}
-*/
 
 function hostEnableBuzzer() {
     socket.emit("hostAction", { type: "resumeBuzzing" });
