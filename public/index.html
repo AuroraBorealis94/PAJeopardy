@@ -385,7 +385,6 @@
 
     #hostBoard {
         display: none;
-        /*grid-template-columns: repeat(6, minmax(70px, 1fr));*/
         grid-template-columns: repeat(6, minmax(0, 1fr));
         gap: 4px;
 
@@ -415,7 +414,6 @@
         background: #52878a;
         color: gold;
 
-        /*font-size: 2rem;*/
         padding: 10px;
         text-align: center;
         cursor: pointer;
@@ -723,288 +721,247 @@ window.addEventListener("load", () => {
     });
 });
 
-// ROOM CODE -- Not functioning
-socket.on("roomCode", (code) => {
-    document.getElementById("roomCode").textContent = code;
-});
-
-let hasReconnected = false;
-
-// RECONNECT
-socket.on("connect", () => {
-    console.log("connected:", socket.id);
-});
-
-let realCards = [];
-
-// HOST SPOT FILLED
-socket.on("hostStatus", (taken) => {
-    const btn = document.getElementById("hostBtn");
-
-    if (!btn) return;
-
-    btn.style.display = taken ? "none" : "block";
-});
-
-// CHARACTER LIST
-socket.on("characterList", (chars) => {
-    characters = chars;
-
-    if (localStorage.getItem("hasJoined") === "true") {
-        document.getElementById("lobbyUI").style.display = "none";
-    }
-
-    console.log("RECONNECT CHECK:", {
-        hasJoined: localStorage.getItem("hasJoined"),
-        name: localStorage.getItem("name"),
-        character: localStorage.getItem("character"),
-        playerId: localStorage.getItem("playerId")
+/* #region SOCKETS */
+    // ROOM CODE -- Not functioning
+    socket.on("roomCode", (code) => {
+        document.getElementById("roomCode").textContent = code;
     });
 
-    const container = document.getElementById("characters");
-    container.innerHTML = "";
-
-    realCards = chars.map((char, index) => {
-        const btn = document.createElement("button");
-        btn.classList.add("charCard");
-        btn.style.animation = "cardPopIn 0.5s ease";
-
-        const inner = document.createElement("div");
-        inner.classList.add("cardInner");
-
-        const front = document.createElement("div");
-        front.classList.add("cardFront");
-
-        const back = document.createElement("div");
-        back.classList.add("cardBack");
-
-        const imgFront = document.createElement("img");
-        imgFront.src = char.front;
-
-        const imgBack = document.createElement("img");
-        imgBack.src = char.back;
-
-        front.appendChild(imgFront);
-        back.appendChild(imgBack);
-        inner.appendChild(front);
-        inner.appendChild(back);
-        btn.appendChild(inner);
-
-        btn.__charData = char;
-        btn.__index = index;
-
-        btn.onclick = () => {
-            if (lockedSet.has(char.name.toLowerCase())) return;
-
-            setSelectedCard(btn);
-            currentIndex = index;
-            centerOnCard(btn);
-        };
-
-        container.appendChild(btn);
-        return btn;
+    let hasReconnected = false;
+    // RECONNECT
+    socket.on("connect", () => {
+        console.log("connected:", socket.id);
     });
 
-    currentIndex = 0;
+    let realCards = [];
 
-    requestAnimationFrame(() => {
-        updateCenterCard();
-        updateLockedUI();
+    // HOST SPOT FILLED
+    socket.on("hostStatus", (taken) => {
+        const btn = document.getElementById("hostBtn");
 
-        if (state.character && localStorage.getItem("hasJoined") === "true") {
-            const match = realCards.find(
-                c => c.__charData.name === state.character.name
-            );
+        if (!btn) return;
 
-            if (match) {
-                setSelectedCard(match);
-                centerOnCard(match);
+        btn.style.display = taken ? "none" : "block";
+    });
+
+    // CHARACTER LIST
+    socket.on("characterList", (chars) => {
+        characters = chars;
+
+        if (localStorage.getItem("hasJoined") === "true") {
+            document.getElementById("lobbyUI").style.display = "none";
+        }
+
+        console.log("RECONNECT CHECK:", {
+            hasJoined: localStorage.getItem("hasJoined"),
+            name: localStorage.getItem("name"),
+            character: localStorage.getItem("character"),
+            playerId: localStorage.getItem("playerId")
+        });
+
+        const container = document.getElementById("characters");
+        container.innerHTML = "";
+
+        realCards = chars.map((char, index) => {
+            const btn = document.createElement("button");
+            btn.classList.add("charCard");
+            btn.style.animation = "cardPopIn 0.5s ease";
+
+            const inner = document.createElement("div");
+            inner.classList.add("cardInner");
+
+            const front = document.createElement("div");
+            front.classList.add("cardFront");
+
+            const back = document.createElement("div");
+            back.classList.add("cardBack");
+
+            const imgFront = document.createElement("img");
+            imgFront.src = char.front;
+
+            const imgBack = document.createElement("img");
+            imgBack.src = char.back;
+
+            front.appendChild(imgFront);
+            back.appendChild(imgBack);
+            inner.appendChild(front);
+            inner.appendChild(back);
+            btn.appendChild(inner);
+
+            btn.__charData = char;
+            btn.__index = index;
+
+            btn.onclick = () => {
+                if (lockedSet.has(char.name.toLowerCase())) return;
+
+                setSelectedCard(btn);
+                currentIndex = index;
+                centerOnCard(btn);
+            };
+
+            container.appendChild(btn);
+            return btn;
+        });
+
+        currentIndex = 0;
+
+        requestAnimationFrame(() => {
+            updateCenterCard();
+            updateLockedUI();
+
+            if (state.character && localStorage.getItem("hasJoined") === "true") {
+                const match = realCards.find(
+                    c => c.__charData.name === state.character.name
+                );
+
+                if (match) {
+                    setSelectedCard(match);
+                    centerOnCard(match);
+                }
             }
+        });
+    });
+
+    // PLAYER LIST
+    socket.on("playerList", (players) => {
+        document.getElementById("playerCount").textContent =
+            players.length + " players joined";
+    });
+
+    // LOCKED CARDS
+    let lockedSet = new Set();
+    socket.on("lockedCharacters", (locked) => {
+        lockedSet = new Set(locked.map(c => c.toLowerCase()));
+
+        requestAnimationFrame(() => {
+            updateLockedUI();
+        });
+    });
+
+    // CHARACTER TAKEN
+    socket.on("characterTaken", () => {
+        alert("That character was just taken. Please choose another.");
+
+        const joinBtn = document.getElementById("joinBtn");
+        joinBtn.disabled = false;
+        joinBtn.innerText = "Join Game";
+        joinBtn.style.opacity = "1";
+    });
+
+    // BOARD DATA
+    socket.on("boardData", (board) => {
+        buildHostBoard(board);
+    });
+
+    // RESET SERVER
+    socket.on("forceReset", () => {
+        console.log("Session expired, resetting");
+
+        localStorage.removeItem("hasJoined");
+        localStorage.removeItem("playerId");
+        localStorage.removeItem("name");
+        localStorage.removeItem("character");
+
+        location.reload();
+    });
+
+    // PLAYER JOINED
+    socket.on("joinSuccess", () => {
+        if (isHost) {
+            showHostControls();
+            return;
         }
-    });
-});
 
-// PLAYER LIST
-socket.on("playerList", (players) => {
-    document.getElementById("playerCount").textContent =
-        players.length + " players joined";
-});
+        localStorage.setItem("hasJoined", "true");
+        localStorage.setItem("gameSession", currentSession);
 
-// LOCKED CARDS
-let lockedSet = new Set();
-socket.on("lockedCharacters", (locked) => {
-    lockedSet = new Set(locked.map(c => c.toLowerCase()));
+        const joinBtn = document.getElementById("joinBtn");
+        joinBtn.disabled = true;
+        joinBtn.innerText = "Joined";
+        joinBtn.style.opacity = "0.6";
 
-    requestAnimationFrame(() => {
-        updateLockedUI();
-    });
-});
+        confettiBurst();
 
-// CHARACTER TAKEN
-socket.on("characterTaken", () => {
-    alert("That character was just taken. Please choose another.");
+        document.getElementById("name").disabled = true;
+        document.getElementById("enterBtn").disabled = true;
 
-    const joinBtn = document.getElementById("joinBtn");
-    joinBtn.disabled = false;
-    joinBtn.innerText = "Join Game";
-    joinBtn.style.opacity = "1";
-});
-
-// BOARD DATA
-socket.on("boardData", (board) => {
-    buildHostBoard(board);
-});
-
-// DISCONNECT
-/*
-let disconnectTimer = null;
-socket.on("disconnect", () => {
-    const player = game.players.find(p => p.id === socket.id);
-    if (!player) return;
-
-    console.log(player.name + " temporarily disconnected");
-
-    player.disconnected = true;
-    player.disconnectTime = Date.now();
-
-    const thisPlayerId = player.playerId;
-
-    setTimeout(() => {
-        const stillGone = game.players.find(
-            p => p.playerId === thisPlayerId && p.disconnected
-        );
-
-        if (stillGone) {
-            console.log(player.name + " fully removed");
-
-            lockedCharacters.delete(player.character.toLowerCase());
-
-            game.players = game.players.filter(p => p.playerId !== thisPlayerId);
-
-            io.emit("playerList", game.players);
-            io.emit("lockedCharacters", Array.from(lockedCharacters));
-        }
-    }, 5000);
-});
-*/
-
-// RESET SERVER ?
-socket.on("forceReset", () => {
-    console.log("Session expired, resetting");
-
-    localStorage.removeItem("hasJoined");
-    localStorage.removeItem("playerId");
-    localStorage.removeItem("name");
-    localStorage.removeItem("character");
-
-    location.reload();
-});
-
-// PLAYER JOINED
-socket.on("joinSuccess", () => {
-    if (isHost) {
-        showHostControls();
-        return;
-    }
-
-    localStorage.setItem("hasJoined", "true");
-    localStorage.setItem("gameSession", currentSession);
-
-    const joinBtn = document.getElementById("joinBtn");
-    joinBtn.disabled = true;
-    joinBtn.innerText = "Joined";
-    joinBtn.style.opacity = "0.6";
-
-    confettiBurst();
-
-    document.getElementById("name").disabled = true;
-    document.getElementById("enterBtn").disabled = true;
-
-    document.querySelectorAll("#characters button").forEach(b => {
-        b.disabled = true;
-        b.style.pointerEvents = "none";
-    });
-
-    setTimeout(() => {
-        showWaitingScreen();
-    }, 300);
-});
-
-// SET CURRENT SESSION
-let currentSession = null;
-socket.on("gameSession", (session) => {
-    const savedSession = localStorage.getItem("gameSession");
-    const hasJoined = localStorage.getItem("hasJoined");
-
-    const hostSession = localStorage.getItem("hostSession");
-    const storedIsHost = localStorage.getItem("isHost");
-
-    currentSession = session;
-
-    // restore isHost variable
-    isHost = storedIsHost === "true";
-
-    const hostBtn = document.getElementById("hostBtn");
-
-    // SHOW OR HIDE HOST BUTTON
-    if (isHost && hostSession === session) {
-        if (hostBtn) hostBtn.style.display = "none";
-
-        showHostControls();
-    } else {
-        if (hostBtn) hostBtn.style.display = "block";
-
-        const controls = document.getElementById("hostControls");
-
-        controls.classList.remove("show");
+        document.querySelectorAll("#characters button").forEach(b => {
+            b.disabled = true;
+            b.style.pointerEvents = "none";
+        });
 
         setTimeout(() => {
-            controls.classList.add("hidden");
-        }, 400);
+            showWaitingScreen();
+        }, 300);
+    });
+
+    // SET CURRENT SESSION
+    let currentSession = null;
+    socket.on("gameSession", (session) => {
+        const savedSession = localStorage.getItem("gameSession");
+        const hasJoined = localStorage.getItem("hasJoined");
+
+        const hostSession = localStorage.getItem("hostSession");
+        const storedIsHost = localStorage.getItem("isHost");
+
+        currentSession = session;
+
+        // restore isHost variable
+        isHost = storedIsHost === "true";
+
+        const hostBtn = document.getElementById("hostBtn");
+
+        // SHOW OR HIDE HOST BUTTON
+        if (isHost && hostSession === session) {
+            if (hostBtn) hostBtn.style.display = "none";
+
+            showHostControls();
+        } else {
+            if (hostBtn) hostBtn.style.display = "block";
+
+            const controls = document.getElementById("hostControls");
+
+            controls.classList.remove("show");
+
+            setTimeout(() => {
+                controls.classList.add("hidden");
+            }, 400);
+        }
+
+        // PLAYER RESET
+        if (hasJoined === "true" && savedSession && savedSession !== session) {
+            localStorage.clear();
+            location.reload();
+            return;
+        }
+
+        // HOST RESET
+        if (isHost && hostSession && hostSession !== session) {
+            localStorage.removeItem("isHost");
+            localStorage.removeItem("hostSession");
+            location.reload();
+        }
+    });
+/* #endregion */
+
+/* #region JOIN FUNCTIONS */
+    // TEAM NAME INPUT
+    function setName() {
+        const nameInput = document.getElementById("name");
+        state.name = nameInput.value.trim();
+
+        localStorage.setItem("name", state.name);
+
+        //document.getElementById("teamLabel").style.display = "block";
+        document.getElementById("teamLabel")
+            .classList.replace("previewHidden", "previewVisible");
+
+        updatePreview();
+
+        nameInput.value = "";
     }
 
-    // PLAYER RESET
-    if (hasJoined === "true" && savedSession && savedSession !== session) {
-        localStorage.clear();
-        location.reload();
-        return;
-    }
-
-    // HOST RESET
-    if (isHost && hostSession && hostSession !== session) {
-        localStorage.removeItem("isHost");
-        localStorage.removeItem("hostSession");
-        location.reload();
-    }
-});
-
-/*
-// RESET SERVER  ?
-socket.on("resetClientState", () => {
-    localStorage.removeItem("hasJoined");
-    localStorage.removeItem("character");
-    localStorage.removeItem("name");
-    localStorage.removeItem("gameSession");
-});
-*/
-
-// TEAM NAME INPUT
-function setName() {
-    const nameInput = document.getElementById("name");
-    state.name = nameInput.value.trim();
-
-    localStorage.setItem("name", state.name);
-
-    //document.getElementById("teamLabel").style.display = "block";
-    document.getElementById("teamLabel")
-        .classList.replace("previewHidden", "previewVisible");
-
-    updatePreview();
-
-    nameInput.value = "";
-}
-
-/* #region CAROUSEL AND CHARACTER SELECT */
+    // CAROUSEL AND CHARACTER SELECT
     function setSelectedCard(card) {
         document.querySelectorAll(".charCard")
             .forEach(c => c.classList.remove("selected"));
@@ -1102,106 +1059,106 @@ function setName() {
             }
         });
     }
+
+    // PREVIEW UPDATE
+    function updatePreview() {
+        document.getElementById("previewName").textContent =
+            state.name || "---";
+
+        const img = document.getElementById("previewImage");
+        //const text = document.getElementById("previewCharacterText");
+
+        if (state.character) {
+            img.src = state.character.front;
+            img.style.display = "block";
+
+            //text.textContent = state.character.name;
+        } else {
+            img.style.display = "none";
+        }
+    }
+    updatePreview();
+
+    // JOIN GAME - LOCK IN PLAYER
+    function joinGame() {
+        if (!state.name) {
+            alert("Please enter your team name first");
+            return;
+        }
+
+        if (!state.character) {
+            alert("Please choose a character");
+            return;
+        }
+
+        // PERSISTENT PLAYER ID
+        let playerId = localStorage.getItem("playerId");
+
+        if (!playerId) {
+            playerId = crypto.randomUUID();
+            localStorage.setItem("playerId", playerId);
+        }
+
+        socket.emit("join", {
+            playerId,
+            name: state.name,
+            character: state.character.name,
+            isHost: false
+        });
+        console.log("joinGame ran");
+    }
+
+    // CONFETTI
+    function confettiBurst() {
+        const images = [
+            "/confetti/confetti1.png",
+            "/confetti/confetti2.png"
+        ];
+
+        for (let i = 0; i < 50; i++) {
+            const confetti = document.createElement("img");
+
+            confetti.src = images[Math.floor(Math.random() * images.length)];
+
+            confetti.style.position = "fixed";
+            confetti.style.left = "50%";
+            confetti.style.top = "40%";
+
+            confetti.style.width = "36px";
+            confetti.style.height = "36px";
+
+            confetti.style.zIndex = "9999";
+            confetti.style.pointerEvents = "none";
+
+            // rainbow tint
+            const hue = Math.floor(Math.random() * 360);
+            confetti.style.filter = `hue-rotate(${hue}deg)`;
+
+            document.body.appendChild(confetti);
+
+            const angle = Math.random() * Math.PI * 2;
+            const velocity = 2 + Math.random() * 5;
+
+            let x = 0;
+            let y = 0;
+            let gravity = 0;
+
+            const interval = setInterval(() => {
+                gravity += 0.15;
+
+                x += Math.cos(angle) * velocity;
+                y += Math.sin(angle) * velocity + gravity;
+
+                confetti.style.transform = `translate(${x}px, ${y}px) rotate(${x * 2}deg)`;
+
+                if (y > window.innerHeight) {
+                    clearInterval(interval);
+                    confetti.remove();
+                }
+            }, 16);
+        }
+    }
 /* #endregion */
-
-// PREVIEW UPDATE
-function updatePreview() {
-    document.getElementById("previewName").textContent =
-        state.name || "---";
-
-    const img = document.getElementById("previewImage");
-    //const text = document.getElementById("previewCharacterText");
-
-    if (state.character) {
-        img.src = state.character.front;
-        img.style.display = "block";
-
-        //text.textContent = state.character.name;
-    } else {
-        img.style.display = "none";
-    }
-}
-updatePreview();
-
-// JOIN GAME - LOCK IN PLAYER
-function joinGame() {
-    if (!state.name) {
-        alert("Please enter your team name first");
-        return;
-    }
-
-    if (!state.character) {
-        alert("Please choose a character");
-        return;
-    }
-
-    // PERSISTENT PLAYER ID
-    let playerId = localStorage.getItem("playerId");
-
-    if (!playerId) {
-        playerId = crypto.randomUUID();
-        localStorage.setItem("playerId", playerId);
-    }
-
-    socket.emit("join", {
-        playerId,
-        name: state.name,
-        character: state.character.name,
-        isHost: false
-    });
-    console.log("joinGame ran");
-}
-
-// CONFETTI
-function confettiBurst() {
-    const images = [
-        "/confetti/confetti1.png",
-        "/confetti/confetti2.png"
-    ];
-
-    for (let i = 0; i < 50; i++) {
-        const confetti = document.createElement("img");
-
-        confetti.src = images[Math.floor(Math.random() * images.length)];
-
-        confetti.style.position = "fixed";
-        confetti.style.left = "50%";
-        confetti.style.top = "40%";
-
-        confetti.style.width = "36px";
-        confetti.style.height = "36px";
-
-        confetti.style.zIndex = "9999";
-        confetti.style.pointerEvents = "none";
-
-        // rainbow tint
-        const hue = Math.floor(Math.random() * 360);
-        confetti.style.filter = `hue-rotate(${hue}deg)`;
-
-        document.body.appendChild(confetti);
-
-        const angle = Math.random() * Math.PI * 2;
-        const velocity = 2 + Math.random() * 5;
-
-        let x = 0;
-        let y = 0;
-        let gravity = 0;
-
-        const interval = setInterval(() => {
-            gravity += 0.15;
-
-            x += Math.cos(angle) * velocity;
-            y += Math.sin(angle) * velocity + gravity;
-
-            confetti.style.transform = `translate(${x}px, ${y}px) rotate(${x * 2}deg)`;
-
-            if (y > window.innerHeight) {
-                clearInterval(interval);
-                confetti.remove();
-            }
-        }, 16);
-    }
-}
 
 // WAITING SCREEN (P2)
 function showWaitingScreen() {
