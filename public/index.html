@@ -385,12 +385,13 @@
 
     #hostBoard {
         display: none;
-        grid-template-columns: repeat(6, minmax(70px, 1fr));
-        gap: 6px;
+        /*grid-template-columns: repeat(6, minmax(70px, 1fr));*/
+        grid-template-columns: repeat(6, minmax(0, 1fr));
+        gap: 4px;
 
         width: 100%;
         max-width: 100vw;
-        padding: 8px;
+        padding: 4px;
         box-sizing: border-box;
         margin-top: 20px;
     }
@@ -415,16 +416,16 @@
         color: gold;
 
         /*font-size: 2rem;*/
-        padding: 20px;
+        padding: 10px;
         text-align: center;
         cursor: pointer;
-        border-radius: 8px;
+        border-radius: 6px;
 
         aspect-ratio: 1 / 1;
         display: flex;
         justify-content: center;
         align-items: center;
-        font-size: clamp(0.8rem, 3vw, 1.8rem);
+        font-size: clamp(0.55rem, 2.6vw, 1.5rem);
         /*font-weight: bold;*/
         overflow: hidden;
     }
@@ -661,13 +662,6 @@
             </div>
         </div>
 
-        <!--
-        <div id="hostJudgementButtons" class="hidden">
-            <button onclick="hostAnswerCorrect()">YES</button>
-            <button onclick="hostAnswerWrong()">NO</button>
-            <button onclick="hostContinue()">CONTINUE</button>
-        </div>
-        -->
         <div id="hostJudgementArea">
             <div id="hostJudgementQuestion">
                 Did nobody answer correctly?
@@ -862,6 +856,7 @@ socket.on("boardData", (board) => {
 });
 
 // DISCONNECT
+/*
 let disconnectTimer = null;
 socket.on("disconnect", () => {
     const player = game.players.find(p => p.id === socket.id);
@@ -891,6 +886,7 @@ socket.on("disconnect", () => {
         }
     }, 5000);
 });
+*/
 
 // RESET SERVER ?
 socket.on("forceReset", () => {
@@ -982,6 +978,7 @@ socket.on("gameSession", (session) => {
     }
 });
 
+/*
 // RESET SERVER  ?
 socket.on("resetClientState", () => {
     localStorage.removeItem("hasJoined");
@@ -989,6 +986,7 @@ socket.on("resetClientState", () => {
     localStorage.removeItem("name");
     localStorage.removeItem("gameSession");
 });
+*/
 
 // TEAM NAME INPUT
 function setName() {
@@ -1006,104 +1004,105 @@ function setName() {
     nameInput.value = "";
 }
 
-// CAROUSEL AND CHARACTER SELECT
-function setSelectedCard(card) {
-    document.querySelectorAll(".charCard")
-        .forEach(c => c.classList.remove("selected"));
+/* #region CAROUSEL AND CHARACTER SELECT */
+    function setSelectedCard(card) {
+        document.querySelectorAll(".charCard")
+            .forEach(c => c.classList.remove("selected"));
 
-    card.classList.add("selected");
-    state.character = card.__charData;
+        card.classList.add("selected");
+        state.character = card.__charData;
 
-    localStorage.setItem("character", JSON.stringify(state.character));
+        localStorage.setItem("character", JSON.stringify(state.character));
 
-    updatePreview();
-}
+        updatePreview();
+    }
 
-function centerOnCard(card) {
-    const container = document.getElementById("characters");
+    function centerOnCard(card) {
+        const container = document.getElementById("characters");
 
-    const containerRect = container.getBoundingClientRect();
-    const cardRect = card.getBoundingClientRect();
+        const containerRect = container.getBoundingClientRect();
+        const cardRect = card.getBoundingClientRect();
 
-    const offset =
-        (cardRect.left + cardRect.width / 2) -
-        (containerRect.left + containerRect.width / 2);
+        const offset =
+            (cardRect.left + cardRect.width / 2) -
+            (containerRect.left + containerRect.width / 2);
 
-    container.scrollBy({
-        left: offset,
-        behavior: "smooth"
-    });
-}
+        container.scrollBy({
+            left: offset,
+            behavior: "smooth"
+        });
+    }
 
-function updateCenterCard() {
-    const container = document.getElementById("characters");
-    const cards = container.querySelectorAll(".charCard");
+    function updateCenterCard() {
+        const container = document.getElementById("characters");
+        const cards = container.querySelectorAll(".charCard");
 
-    if (!cards.length) return;
+        if (!cards.length) return;
 
-    const containerCenter =
-        container.getBoundingClientRect().left +
-        container.offsetWidth / 2;
+        const containerCenter =
+            container.getBoundingClientRect().left +
+            container.offsetWidth / 2;
 
-    let closest = null;
-    let closestDistance = Infinity;
+        let closest = null;
+        let closestDistance = Infinity;
     
-    cards.forEach(card => {
-        const rect = card.getBoundingClientRect();
-        const center = rect.left + rect.width / 2;
+        cards.forEach(card => {
+            const rect = card.getBoundingClientRect();
+            const center = rect.left + rect.width / 2;
 
-        const distance = Math.abs(center - containerCenter);
+            const distance = Math.abs(center - containerCenter);
 
-        if (distance < closestDistance) {
-            closestDistance = distance;
-            closest = card;
+            if (distance < closestDistance) {
+                closestDistance = distance;
+                closest = card;
+            }
+        });
+
+        cards.forEach(c => c.classList.remove("center"));
+
+        if (closest) {
+            closest.classList.add("center");
+            currentIndex = realCards.indexOf(closest);
         }
-    });
-
-    cards.forEach(c => c.classList.remove("center"));
-
-    if (closest) {
-        closest.classList.add("center");
-        currentIndex = realCards.indexOf(closest);
-    }
-}
-
-function scrollByCard(direction) {
-    if (!realCards.length) return;
-
-    currentIndex += direction;
-
-    if (currentIndex < 0) {
-        currentIndex = realCards.length - 1;
     }
 
-    if (currentIndex >= realCards.length) {
-        currentIndex = 0;
-    }
+    function scrollByCard(direction) {
+        if (!realCards.length) return;
 
-    const card = realCards[currentIndex];
-    if (!card) return;
+        currentIndex += direction;
 
-    centerOnCard(card);
-}
-
-function updateLockedUI() {
-    document.querySelectorAll(".charCard").forEach(card => {
-        const name = card.__charData.name.toLowerCase();
-
-        if (lockedSet.has(name)) {
-            card.classList.add("locked");
-            card.style.opacity = "0.3";
-            card.style.pointerEvents = "none";
-            card.style.filter = "grayscale(1)";
-        } else {
-            card.classList.remove("locked");
-            card.style.opacity = "";
-            card.style.pointerEvents = "";
-            card.style.filter = "";
+        if (currentIndex < 0) {
+            currentIndex = realCards.length - 1;
         }
-    });
-}
+
+        if (currentIndex >= realCards.length) {
+            currentIndex = 0;
+        }
+
+        const card = realCards[currentIndex];
+        if (!card) return;
+
+        centerOnCard(card);
+    }
+
+    function updateLockedUI() {
+        document.querySelectorAll(".charCard").forEach(card => {
+            const name = card.__charData.name.toLowerCase();
+
+            if (lockedSet.has(name)) {
+                card.classList.add("locked");
+                card.style.opacity = "0.3";
+                card.style.pointerEvents = "none";
+                card.style.filter = "grayscale(1)";
+            } else {
+                card.classList.remove("locked");
+                card.style.opacity = "";
+                card.style.pointerEvents = "";
+                card.style.filter = "";
+            }
+        });
+    }
+/* #endregion */
 
 // PREVIEW UPDATE
 function updatePreview() {
@@ -1123,23 +1122,6 @@ function updatePreview() {
     }
 }
 updatePreview();
-
-// CLUE FLIP LISTENER
-document.addEventListener("click", (e) => {
-    const overlay =
-        document.getElementById("hostClueOverlay");
-
-    if (!overlay.classList.contains("show"))
-        return;
-
-    const card =
-        document.getElementById("hostClueCard");
-
-    if (!card.contains(e.target))
-        return;
-
-    flipHostCard();
-});
 
 // JOIN GAME - LOCK IN PLAYER
 function joinGame() {
@@ -1239,260 +1221,221 @@ function showWaitingScreen() {
     });
 }
 
-// HOST JOIN
-function joinAsHost() {
-    isHost = true;
+/* #region HOST FUNCTIONS */
+    // CLUE FLIP LISTENER
+    document.addEventListener("click", (e) => {
+        const overlay =
+            document.getElementById("hostClueOverlay");
 
-    socket.emit("join", { isHost: true });
+        if (!overlay.classList.contains("show"))
+            return;
 
-    localStorage.setItem("isHost", "true");
-    localStorage.setItem("hostSession", currentSession);
-}
+        const card =
+            document.getElementById("hostClueCard");
 
-function showHostControls() {
-    document.getElementById("lobbyUI").style.display = "none";
+        if (!card.contains(e.target))
+            return;
 
-    const controls = document.getElementById("hostControls");
-
-    controls.classList.remove("hidden");
-
-    requestAnimationFrame(() => {
-        controls.classList.add("show");
-    });
-}
-
-// HOST FUNCTIONS
-function hostStartGame() {
-    socket.emit("hostAction", { type: "startGame" });
-
-    document.getElementById("startGameBtn").style.display = "none";
-    document.getElementById("instructionsBtn").style.display = "block";
-}
-
-function hostShowInstructions() {
-    socket.emit("hostAction", { type: "showInstructions" });
-    
-    document.getElementById("instructionsBtn").style.display = "none";
-    document.getElementById("showBoardBtn").style.display = "block";
-}
-
-function hostShowBoard() {
-    socket.emit("hostAction", { type: "showBoard" });
-    
-    document.getElementById("showBoardBtn").style.display = "none";
-    document.getElementById("hostBoard").style.display = "grid";
-}
-
-function buildHostBoard(board)
-{
-    const hostBoard = document.getElementById("hostBoard");
-    hostBoard.innerHTML = "";
-
-    // HEADERS
-    board.categories.forEach(category => {
-        const header = document.createElement("div");
-        header.className = "hostHeader";
-        header.innerText = category.categoryName;
-
-        hostBoard.appendChild(header);
+        flipHostCard();
     });
 
-    // VALUES
-    const values = ["200", "400", "600", "800", "1000"];
+    // HOST JOIN
+    function joinAsHost() {
+        isHost = true;
 
-    values.forEach(value => {
-        board.categories.forEach(category => {
-            const clue = category.clues.find(c => c.value === value);
+        socket.emit("join", { isHost: true });
 
-            const tile = document.createElement("div");
+        localStorage.setItem("isHost", "true");
+        localStorage.setItem("hostSession", currentSession);
+    }
 
-            tile.className = "hostTile";
+    function showHostControls() {
+        document.getElementById("lobbyUI").style.display = "none";
 
-            if (clue)
-            {
-                tile.innerText = "$" + value;
+        const controls = document.getElementById("hostControls");
 
-                tile.onclick = () => {
-                    currentHostClue = clue;
-                    currentHostTile = tile;
+        controls.classList.remove("hidden");
 
-                    showHostClue(clue);
-
-                    socket.emit("hostAction", {
-                        type: "selectClue",
-                        payload: {
-                            value,
-                            clueData: clue.clueData
-                        }
-                    });
-                };
-            }
-            hostBoard.appendChild(tile);
+        requestAnimationFrame(() => {
+            controls.classList.add("show");
         });
-    });
-}
-
-/*
-function showHostClue(clue)
-{
-    hostAnswerShowing = false;
-
-    document.getElementById("hostClueText").textContent =
-        clue.clueData.clue;
-
-    document.getElementById("hostAnswerText").textContent =
-        clue.clueData.answer;
-
-    document.getElementById("hostClueOverlay")
-        .classList.add("show");
-
-    document.getElementById("hostJudgementButtons")
-        .classList.add("hidden");
-
-    document.getElementById("hostClueInner")
-        .classList.remove("flipped");
-}
-
-function flipHostCard()
-{
-    const inner = document.getElementById("hostClueInner");
-
-    hostAnswerShowing = !hostAnswerShowing;
-
-    inner.classList.toggle("flipped");
-
-    const buttons =
-        document.getElementById("hostJudgementButtons");
-
-    if (hostAnswerShowing)
-    {
-        buttons.classList.remove("hidden");
     }
-    else
-    {
-        buttons.classList.add("hidden");
+
+    function hostStartGame() {
+        socket.emit("hostAction", { type: "startGame" });
+
+        document.getElementById("startGameBtn").style.display = "none";
+        document.getElementById("instructionsBtn").style.display = "block";
     }
-}
-*/
 
-function showHostClue(clue)
-{
-    hostAnswerShowing = false;
-
-    document.getElementById("hostClueText").textContent =
-        clue.clueData.clue;
-
-    document.getElementById("hostAnswerText").textContent =
-        clue.clueData.answer;
-
-    const overlay =
-        document.getElementById("hostClueOverlay");
-
-    overlay.classList.add("show");
-
-    document.getElementById("hostClueInner")
-        .classList.remove("flipped");
-
-    document.getElementById("hostJudgementArea")
-        .classList.remove("show");
-}
-
-function flipHostCard()
-{
-    const inner =
-        document.getElementById("hostClueInner");
-
-    const judgement =
-        document.getElementById("hostJudgementArea");
-
-    hostAnswerShowing = !hostAnswerShowing;
-
-    inner.classList.toggle("flipped");
-
-    if (hostAnswerShowing)
-    {
-        setTimeout(() => {
-
-            const playerName =
-                window.lastBuzzedPlayerName || "___";
-
-            document.getElementById("hostJudgementQuestion")
-                .textContent =
-                `Did ${playerName} answer correctly?`;
-
-            judgement.classList.add("show");
-
-        }, 450);
+    function hostShowInstructions() {
+        socket.emit("hostAction", { type: "showInstructions" });
+    
+        document.getElementById("instructionsBtn").style.display = "none";
+        document.getElementById("showBoardBtn").style.display = "block";
     }
-    else
-    {
-        judgement.classList.remove("show");
+
+    function hostShowBoard() {
+        socket.emit("hostAction", { type: "showBoard" });
+    
+        document.getElementById("showBoardBtn").style.display = "none";
+        document.getElementById("hostBoard").style.display = "grid";
     }
-}
 
-function hostReveal()
-{
-    flipHostCard();
-}
-
-function hostAnswerCorrect()
-{
-    console.log("ANSWER CORRECT");
-
-    closeHostClue();
-}
-
-function hostAnswerWrong()
-{
-    console.log("ANSWER WRONG");
-
-    document.getElementById("hostClueInner")
-        .classList.remove("flipped");
-
-    document.getElementById("hostJudgementButtons")
-        .classList.add("hidden");
-
-    hostAnswerShowing = false;
-}
-
-function hostContinue()
-{
-    console.log("CONTINUE");
-
-    closeHostClue();
-}
-
-/*
-function closeHostClue()
-{
-    document.getElementById("hostClueOverlay")
-        .classList.remove("show");
-
-    if (currentHostTile)
+    function buildHostBoard(board)
     {
-        currentHostTile.classList.add("used");
+        const hostBoard = document.getElementById("hostBoard");
+        hostBoard.innerHTML = "";
+
+        // HEADERS
+        board.categories.forEach(category => {
+            const header = document.createElement("div");
+            header.className = "hostHeader";
+            header.innerText = category.categoryName;
+
+            hostBoard.appendChild(header);
+        });
+
+        // VALUES
+        const values = ["200", "400", "600", "800", "1000"];
+
+        values.forEach(value => {
+            board.categories.forEach(category => {
+                const clue = category.clues.find(c => c.value === value);
+
+                const tile = document.createElement("div");
+
+                tile.className = "hostTile";
+
+                if (clue)
+                {
+                    tile.innerText = "$" + value;
+
+                    tile.onclick = () => {
+                        currentHostClue = clue;
+                        currentHostTile = tile;
+
+                        showHostClue(clue);
+
+                        socket.emit("hostAction", {
+                            type: "selectClue",
+                            payload: {
+                                value,
+                                clueData: clue.clueData
+                            }
+                        });
+                    };
+                }
+                hostBoard.appendChild(tile);
+            });
+        });
     }
-}
-*/
 
-function closeHostClue()
-{
-    document.getElementById("hostClueOverlay")
-        .classList.remove("show");
-
-    document.getElementById("hostJudgementArea")
-        .classList.remove("show");
-
-    if (currentHostTile)
+    function showHostClue(clue)
     {
-        currentHostTile.classList.add("used");
+        hostAnswerShowing = false;
+
+        document.getElementById("hostClueText").textContent =
+            clue.clueData.clue;
+
+        document.getElementById("hostAnswerText").textContent =
+            clue.clueData.answer;
+
+        const overlay =
+            document.getElementById("hostClueOverlay");
+
+        overlay.classList.add("show");
+
+        document.getElementById("hostClueInner")
+            .classList.remove("flipped");
+
+        document.getElementById("hostJudgementArea")
+            .classList.remove("show");
     }
-}
 
-function hostEnableBuzzer() {
-    socket.emit("hostAction", { type: "resumeBuzzing" });
-}
+    function flipHostCard()
+    {
+        const inner =
+            document.getElementById("hostClueInner");
 
+        const judgement =
+            document.getElementById("hostJudgementArea");
+
+        hostAnswerShowing = !hostAnswerShowing;
+
+        inner.classList.toggle("flipped");
+
+        if (hostAnswerShowing)
+        {
+            setTimeout(() => {
+
+                const playerName =
+                    window.lastBuzzedPlayerName || "___";
+
+                document.getElementById("hostJudgementQuestion")
+                    .textContent =
+                    `Did ${playerName} answer correctly?`;
+
+                judgement.classList.add("show");
+
+            }, 450);
+        }
+        else
+        {
+            judgement.classList.remove("show");
+        }
+    }
+
+    function hostReveal()
+    {
+        flipHostCard();
+    }
+
+    function hostAnswerCorrect()
+    {
+        console.log("ANSWER CORRECT");
+
+        closeHostClue();
+    }
+
+    function hostAnswerWrong()
+    {
+        console.log("ANSWER WRONG");
+
+        document.getElementById("hostClueInner")
+            .classList.remove("flipped");
+
+        document.getElementById("hostJudgementButtons")
+            .classList.add("hidden");
+
+        hostAnswerShowing = false;
+    }
+
+    function hostContinue()
+    {
+        console.log("CONTINUE");
+
+        closeHostClue();
+    }
+
+    function closeHostClue()
+    {
+        document.getElementById("hostClueOverlay")
+            .classList.remove("show");
+
+        document.getElementById("hostJudgementArea")
+            .classList.remove("show");
+
+        if (currentHostTile)
+        {
+            currentHostTile.classList.add("used");
+        }
+    }
+
+    function hostEnableBuzzer() {
+        socket.emit("hostAction", { type: "resumeBuzzing" });
+    }
+/* #endregion */
 </script>
 </body>
 </html>
