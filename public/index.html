@@ -375,6 +375,7 @@
 
         padding: 14px 28px;
         overflow-y: auto;
+        overflow-x: hidden;
         border-radius: 12px;
         border: none;
 
@@ -385,11 +386,11 @@
     #hostBoard {
         display: none;
         grid-template-columns: repeat(6, minmax(70px, 1fr));
-        gap: 10px;
+        gap: 6px;
 
         width: 100%;
         max-width: 100vw;
-        padding: 10px;
+        padding: 8px;
         box-sizing: border-box;
         margin-top: 20px;
     }
@@ -402,18 +403,30 @@
         background: #0b1c7a;
         color: white;
         font-weight: bold;
-        padding: 10px;
+        padding: 6px;
         text-align: center;
+
+        font-size: clamp(0.55rem, 2vw, 1rem);
+        overflow-wrap: break-word;
     }
 
     .hostTile {
-        background: #1d39c4;
+        background: #52878a;
         color: gold;
-        font-size: 2rem;
+
+        /*font-size: 2rem;*/
         padding: 20px;
         text-align: center;
         cursor: pointer;
         border-radius: 8px;
+
+        aspect-ratio: 1 / 1;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-size: clamp(0.8rem, 3vw, 1.8rem);
+        /*font-weight: bold;*/
+        overflow: hidden;
     }
 
     .hostTile.used {
@@ -423,85 +436,79 @@
 /* #endregion */
 
 /* #region Clue Overlay */
-    #clueOverlay {
+    #hostClueOverlay {
         position: fixed;
         inset: 0;
 
-        background: rgba(0,0,0,0.92);
+        background: rgba(0,0,0,0.85);
+
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+
+        z-index: 9999;
+    }
+
+    #hostClueCard {
+        width: min(90vw, 700px);
+        height: min(60vh, 450px);
+
+        perspective: 1200px;
+    }
+
+    #hostClueInner {
+        width: 100%;
+        height: 100%;
+
+        position: relative;
+
+        transform-style: preserve-3d;
+        transition: transform 0.6s ease;
+    }
+
+    #hostClueInner.flipped {
+        transform: rotateY(180deg);
+    }
+
+    .hostClueFace {
+        position: absolute;
+        inset: 0;
+
+        backface-visibility: hidden;
+
+        background: #132c9c;
+
+        border: 4px solid gold;
+        border-radius: 18px;
 
         display: flex;
         justify-content: center;
         align-items: center;
 
-        z-index: 99999;
+        padding: 30px;
+        box-sizing: border-box;
 
-        opacity: 0;
-        pointer-events: none;
+        text-align: center;
 
-        transition: opacity 0.35s ease;
-    }
-
-    #clueOverlay.show {
-        opacity: 1;
-        pointer-events: auto;
-    }
-
-    #clueCard {
-        width: 80vw;
-        max-width: 700px;
-
-        background: #0b1c7a;
-        border: 4px solid gold;
-        border-radius: 24px;
-
-        padding: 40px 30px;
-
-        transform: scale(0.6);
-        opacity: 0;
-
-        transition:
-            transform 0.45s cubic-bezier(.2,.9,.2,1),
-            opacity 0.35s ease;
-    }
-
-    #clueOverlay.show #clueCard {
-        transform: scale(1);
-        opacity: 1;
-    }
-
-    #clueValue {
-        font-size: 48px;
-        color: gold;
-        margin-bottom: 24px;
-    }
-
-    #clueText {
-        font-size: 30px;
-        line-height: 1.4;
         color: white;
-    }
-    /* FLIP */
-    .hostTile {
-        position: relative;
-        transform-style: preserve-3d;
-        transition:
-            transform 0.6s ease,
-            opacity 0.3s ease;
+        font-size: clamp(24px, 4vw, 42px);
     }
 
-    .hostTile.flipping {
+    #hostClueBack {
         transform: rotateY(180deg);
     }
-    /* ZOOM */
-    .hostTile.zooming {
-        z-index: 9999;
 
-        transform:
-            scale(3)
-            translateY(120px);
+    #hostJudgementButtons {
+        margin-top: 25px;
 
-        transition:
-            transform 0.5s cubic-bezier(.2,.9,.2,1);
+        display: flex;
+        gap: 16px;
+    }
+
+    #hostJudgementButtons button {
+        font-size: 22px;
+        padding: 12px 26px;
     }
 /* #endregion */
 
@@ -634,30 +641,43 @@
 
     <div id="hostBoard"></div>
 
-    <!--
-    <button id="selectClueBtn" onclick="hostSelectClue()" style="display:none;">
-        SelectClue
-    </button>
-    -->
-
-    <!-- CLUE OVERLAY -->
+    <!-- CLUE OVERLAY 
     <div id="clueOverlay" class="hidden">
-
         <div id="clueCard">
-
             <div id="clueValue">$200</div>
 
             <div id="clueText">
                 Sample clue text
             </div>
+        </div>
+    </div>
+    -->
 
+    <div id="hostClueOverlay" class="hidden">
+        <div id="hostClueCard">
+            <div id="hostClueInner">
+                <div id="hostClueFront" class="hostClueFace">
+                    <p id="hostClueText"></p>
+                </div>
+
+                <div id="hostClueBack" class="hostClueFace">
+                    <p id="hostAnswerText"></p>
+                </div>
+            </div>
         </div>
 
+        <div id="hostJudgementButtons" class="hidden">
+            <button onclick="hostAnswerCorrect()">YES</button>
+            <button onclick="hostAnswerWrong()">NO</button>
+            <button onclick="hostContinue()">CONTINUE</button>
+        </div>
     </div>
 
+    <!--
     <button id="revealAnswerBtn" onclick="hostReveal()" style="display:none;">
         Reveal Answer
     </button>
+    -->
 
     <button id="enableBuzzerBtn" onclick="hostEnableBuzzer()" style="display:none;">
         Resume Buzzers
@@ -678,7 +698,10 @@ const state = {
 console.log("LOCAL PLAYER ID ON LOAD:", localStorage.getItem("playerId"));
 
 let isHost = false;
-let activeTile = null;
+//let activeTile = null;
+let currentHostClue = null;
+let currentHostTile = null;
+let hostAnswerShowing = false;
 
 window.addEventListener("load", () => {
     // HOST JOIN //
@@ -1096,6 +1119,24 @@ function updatePreview() {
 }
 updatePreview();
 
+// CLUE FLIP LISTENER
+document.addEventListener("click", (e) => {
+
+    const overlay =
+        document.getElementById("hostClueOverlay");
+
+    if (overlay.classList.contains("hidden"))
+        return;
+
+    const card =
+        document.getElementById("hostClueCard");
+
+    if (!card.contains(e.target))
+        return;
+
+    flipHostCard();
+});
+
 // JOIN GAME - LOCK IN PLAYER
 function joinGame() {
     if (!state.name) {
@@ -1279,9 +1320,7 @@ function buildHostBoard(board)
     const values = ["200", "400", "600", "800", "1000"];
 
     values.forEach(value => {
-
         board.categories.forEach(category => {
-
             const clue = category.clues.find(c => c.value === value);
 
             const tile = document.createElement("div");
@@ -1293,28 +1332,35 @@ function buildHostBoard(board)
                 tile.innerText = "$" + value;
 
                 tile.onclick = () => {
+                    currentHostClue = clue;
+                    currentHostTile = tile;
 
+                    showHostClue(clue);
+
+                    socket.emit("hostAction", {
+                        type: "selectClue",
+                        payload: {
+                            value,
+                            clueData: clue.clueData
+                        }
+                    });
+                    /*
                     if (tile.classList.contains("used")) return;
-
                     activeTile = tile;
 
-                    tile.classList.add("used");
+                    //tile.classList.add("used");
 
                     // FLIP FIRST
                     tile.classList.add("flipping");
 
                     setTimeout(() => {
-
                         // THEN ZOOM
                         tile.classList.add("zooming");
-
                     }, 350);
 
                     // SHOW CLUE UI
                     setTimeout(() => {
-
                         showClueOverlay(clue, value);
-
                     }, 700);
 
                     document.getElementById("revealAnswerBtn").style.display = "block";
@@ -1327,6 +1373,7 @@ function buildHostBoard(board)
                             clueData: clue.clueData
                         }
                     });
+                    */
                 };
             }
 
@@ -1335,6 +1382,7 @@ function buildHostBoard(board)
     });
 }
 
+/*
 function showClueOverlay(clue, value) {
 
     document.getElementById("clueValue").textContent =
@@ -1351,7 +1399,7 @@ function showClueOverlay(clue, value) {
         overlay.classList.add("show");
     });
 }
-
+*/
 /*
 function hostSelectClue() {
     socket.emit("hostAction", { type: "selectClue" });
@@ -1361,6 +1409,91 @@ function hostSelectClue() {
 }
 */
 
+function showHostClue(clue)
+{
+    hostAnswerShowing = false;
+
+    document.getElementById("hostClueText").textContent =
+        clue.clueData.clue;
+
+    document.getElementById("hostAnswerText").textContent =
+        clue.clueData.answer;
+
+    document.getElementById("hostClueOverlay")
+        .classList.remove("hidden");
+
+    document.getElementById("hostJudgementButtons")
+        .classList.add("hidden");
+
+    document.getElementById("hostClueInner")
+        .classList.remove("flipped");
+}
+
+function flipHostCard()
+{
+    const inner = document.getElementById("hostClueInner");
+
+    hostAnswerShowing = !hostAnswerShowing;
+
+    inner.classList.toggle("flipped");
+
+    const buttons =
+        document.getElementById("hostJudgementButtons");
+
+    if (hostAnswerShowing)
+    {
+        buttons.classList.remove("hidden");
+    }
+    else
+    {
+        buttons.classList.add("hidden");
+    }
+}
+
+function hostReveal()
+{
+    flipHostCard();
+}
+
+function hostAnswerCorrect()
+{
+    console.log("ANSWER CORRECT");
+
+    closeHostClue();
+}
+
+function hostAnswerWrong()
+{
+    console.log("ANSWER WRONG");
+
+    document.getElementById("hostClueInner")
+        .classList.remove("flipped");
+
+    document.getElementById("hostJudgementButtons")
+        .classList.add("hidden");
+
+    hostAnswerShowing = false;
+}
+
+function hostContinue()
+{
+    console.log("CONTINUE");
+
+    closeHostClue();
+}
+
+function closeHostClue()
+{
+    document.getElementById("hostClueOverlay")
+        .classList.add("hidden");
+
+    if (currentHostTile)
+    {
+        currentHostTile.classList.add("used");
+    }
+}
+
+/*
 function hostReveal() {
     socket.emit("hostAction", { type: "revealAnswer" });
     
@@ -1379,6 +1512,7 @@ function hostReveal() {
         activeTile.classList.remove("zooming");
     }
 }
+*/
 
 function hostEnableBuzzer() {
     socket.emit("hostAction", { type: "resumeBuzzing" });
