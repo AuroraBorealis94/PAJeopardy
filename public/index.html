@@ -529,12 +529,8 @@
     <h1 id="h11">PA Jeopardy</h1>
     <h1 id="h12">2026 Edition</h1>
 
-    <!-- HOST JOIN
-    <button id="hostBtn" onclick="joinAsHost()">Host Game</button> -->
-
     <!-- PREVIEW -->
     <div id="preview">
-
         <!-- HOST JOIN -->
         <button id="hostBtn" onclick="joinAsHost()">
             Host Game
@@ -548,13 +544,6 @@
             <img id="previewImage" src="" />
         </div>
     </div>
-    <!--
-    <div id="preview">
-        <p id="teamLabel" class="previewHidden"><b>Team </b><span id="previewName">---</span></p>
-
-        <div id="previewCharacterBox"><img id="previewImage" src="" /></div>
-    </div>
-    -->
 
     <!-- ENTER NAME -->
     <h2>Choose Your Team Name</h2>
@@ -590,46 +579,7 @@
     <p id="playerCount">0 players joined</p>
 </div>
 
-<!-- RECONNECTING SCREEN -->
-<!--
-<div id="reconnectOverlay" class="hidden">
-    <h2>Reconnecting...</h2>
-</div>
-
-// Place these back in css if using
-#reconnectOverlay {
-        position: fixed;
-        inset: 0;
-        background: black;
-        color: white;
-
-        display: flex;
-        justify-content: center;
-        align-items: center;
-
-        z-index: 9999;
-
-        opacity: 0;
-        pointer-events: none;
-        transition: opacity 0.3s ease;
-    }
-
-    #reconnectOverlay.show {
-        opacity: 1;
-        pointer-events: auto;
-    }
--->
-
 <!-- HOST CONTROLS -->
-<!--
-<div id="hostControls" class="hidden">
-    <button onclick="hostStartGame()">Start Game</button>
-    <button onclick="hostShowInstructions()">Instructions</button>
-    <button onclick="hostReveal()">Reveal Answer</button>
-    <button onclick="hostResume()">Resume Buzzers</button>
-</div>
--->
-
 <div id="hostControls" class="hidden">
     <button id="startGameBtn" onclick="hostStartGame()">
         Start Game 
@@ -644,18 +594,6 @@
     </button>
 
     <div id="hostBoard"></div>
-
-    <!-- CLUE OVERLAY 
-    <div id="clueOverlay" class="hidden">
-        <div id="clueCard">
-            <div id="clueValue">$200</div>
-
-            <div id="clueText">
-                Sample clue text
-            </div>
-        </div>
-    </div>
-    -->
 
     <div id="hostClueOverlay" class="hidden">
         <div id="hostClueCard">
@@ -677,12 +615,6 @@
         </div>
     </div>
 
-    <!--
-    <button id="revealAnswerBtn" onclick="hostReveal()" style="display:none;">
-        Reveal Answer
-    </button>
-    -->
-
     <button id="enableBuzzerBtn" onclick="hostEnableBuzzer()" style="display:none;">
         Resume Buzzers
     </button>
@@ -702,7 +634,6 @@ const state = {
 console.log("LOCAL PLAYER ID ON LOAD:", localStorage.getItem("playerId"));
 
 let isHost = false;
-//let activeTile = null;
 let currentHostClue = null;
 let currentHostTile = null;
 let hostAnswerShowing = false;
@@ -981,7 +912,7 @@ socket.on("gameSession", (session) => {
     }
 });
 
-// RESET SERVER ?
+// RESET SERVER  ?
 socket.on("resetClientState", () => {
     localStorage.removeItem("hasJoined");
     localStorage.removeItem("character");
@@ -1238,27 +1169,6 @@ function showWaitingScreen() {
     });
 }
 
-/*
-// RECONNECT
-function showReconnectOverlay() {
-    const el = document.getElementById("reconnectOverlay");
-    el.classList.remove("hidden");
-
-    requestAnimationFrame(() => {
-        el.classList.add("show");
-    });
-}
-
-function hideReconnectOverlay() {
-    const el = document.getElementById("reconnectOverlay");
-    el.classList.remove("show");
-
-    setTimeout(() => {
-        el.classList.add("hidden");
-    }, 300);
-}
-*/
-
 // HOST JOIN
 function joinAsHost() {
     isHost = true;
@@ -1306,12 +1216,10 @@ function hostShowBoard() {
 function buildHostBoard(board)
 {
     const hostBoard = document.getElementById("hostBoard");
-
     hostBoard.innerHTML = "";
 
     // HEADERS
     board.categories.forEach(category => {
-
         const header = document.createElement("div");
         header.className = "hostHeader";
         header.innerText = category.categoryName;
