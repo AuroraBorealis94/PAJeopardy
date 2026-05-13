@@ -439,26 +439,47 @@
     #hostClueOverlay {
         position: fixed;
         inset: 0;
-
         background: rgba(0,0,0,0.85);
 
-        display: none;
+        /*display: none;*/
         flex-direction: column;
         justify-content: center;
         align-items: center;
-
         z-index: 9999;
+
+        display: flex;
+        opacity: 0;
+        pointer-events: none;
+
+        transition:
+            background 0.35s ease,
+            opacity 0.35s ease;
     }
 
     #hostClueOverlay.show {
-        display: flex;
+        /*display: flex;*/
+        opacity: 1;
+        pointer-events: auto;
+
+        background: rgba(0,0,0,0.85);
     }
 
     #hostClueCard {
         width: min(90vw, 700px);
         height: min(60vh, 450px);
-
         perspective: 1200px;
+
+        transform: scale(0.65);
+        opacity: 0;
+
+        transition:
+            transform 0.45s cubic-bezier(.2,.9,.2,1),
+            opacity 0.35s ease;
+    }
+
+    #hostClueOverlay.show #hostClueCard {
+        transform: scale(1);
+        opacity: 1;
     }
 
     #hostClueInner {
@@ -481,7 +502,7 @@
 
         backface-visibility: hidden;
 
-        background: #132c9c;
+        background: #52878a;
 
         border: 4px solid gold;
         border-radius: 18px;
@@ -503,13 +524,45 @@
         transform: rotateY(180deg);
     }
 
+    #hostJudgementArea {
+        margin-top: 22px;
+
+        opacity: 0;
+        transform: translateY(10px);
+
+        pointer-events: none;
+
+        transition:
+            opacity 0.25s ease,
+            transform 0.25s ease;
+    }
+
+    #hostJudgementArea.show {
+        opacity: 1;
+        transform: translateY(0);
+
+        pointer-events: auto;
+    }
+
+    #hostJudgementQuestion {
+        font-size: 24px;
+        margin-bottom: 14px;
+    }
+
+    #hostJudgementButtons {
+        display: flex;
+        gap: 16px;
+        justify-content: center;
+    }
+
+    /*
     #hostJudgementButtons {
         margin-top: 25px;
 
         display: flex;
         gap: 16px;
     }
-
+    */
     #hostJudgementButtons button {
         font-size: 22px;
         padding: 12px 26px;
@@ -608,10 +661,23 @@
             </div>
         </div>
 
+        <!--
         <div id="hostJudgementButtons" class="hidden">
             <button onclick="hostAnswerCorrect()">YES</button>
             <button onclick="hostAnswerWrong()">NO</button>
             <button onclick="hostContinue()">CONTINUE</button>
+        </div>
+        -->
+        <div id="hostJudgementArea">
+            <div id="hostJudgementQuestion">
+                Did nobody answer correctly?
+            </div>
+
+            <div id="hostJudgementButtons">
+                <button onclick="hostAnswerCorrect()">YES</button>
+                <button onclick="hostAnswerWrong()">NO</button>
+                <button onclick="hostContinue()">CONTINUE</button>
+            </div>
         </div>
     </div>
 
@@ -620,9 +686,13 @@
     </button>
 </div>
 
-<!-- JS -->
 <script src="/socket.io/socket.io.js"></script>
 <script>
+
+// -- JS -- //
+
+// TEMP - REMOVE WHEN WE HAVE UPDATED BUZZER SYSTEM !!
+window.lastBuzzedPlayerName = "Team Rocket";
 
 const socket = io();
 
@@ -1262,6 +1332,7 @@ function buildHostBoard(board)
     });
 }
 
+/*
 function showHostClue(clue)
 {
     hostAnswerShowing = false;
@@ -1302,6 +1373,62 @@ function flipHostCard()
         buttons.classList.add("hidden");
     }
 }
+*/
+
+function showHostClue(clue)
+{
+    hostAnswerShowing = false;
+
+    document.getElementById("hostClueText").textContent =
+        clue.clueData.clue;
+
+    document.getElementById("hostAnswerText").textContent =
+        clue.clueData.answer;
+
+    const overlay =
+        document.getElementById("hostClueOverlay");
+
+    overlay.classList.add("show");
+
+    document.getElementById("hostClueInner")
+        .classList.remove("flipped");
+
+    document.getElementById("hostJudgementArea")
+        .classList.remove("show");
+}
+
+function flipHostCard()
+{
+    const inner =
+        document.getElementById("hostClueInner");
+
+    const judgement =
+        document.getElementById("hostJudgementArea");
+
+    hostAnswerShowing = !hostAnswerShowing;
+
+    inner.classList.toggle("flipped");
+
+    if (hostAnswerShowing)
+    {
+        setTimeout(() => {
+
+            const playerName =
+                window.lastBuzzedPlayerName || "___";
+
+            document.getElementById("hostJudgementQuestion")
+                .textContent =
+                `Did ${playerName} answer correctly?`;
+
+            judgement.classList.add("show");
+
+        }, 450);
+    }
+    else
+    {
+        judgement.classList.remove("show");
+    }
+}
 
 function hostReveal()
 {
@@ -1335,9 +1462,25 @@ function hostContinue()
     closeHostClue();
 }
 
+/*
 function closeHostClue()
 {
     document.getElementById("hostClueOverlay")
+        .classList.remove("show");
+
+    if (currentHostTile)
+    {
+        currentHostTile.classList.add("used");
+    }
+}
+*/
+
+function closeHostClue()
+{
+    document.getElementById("hostClueOverlay")
+        .classList.remove("show");
+
+    document.getElementById("hostJudgementArea")
         .classList.remove("show");
 
     if (currentHostTile)
