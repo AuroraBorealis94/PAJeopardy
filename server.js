@@ -203,8 +203,8 @@ io.on("connection", (socket) => {
         }
 
 
-        if (socket.data.joined) return;
-        socket.data.joined = true;
+        //if (socket.data.joined) return;
+        //socket.data.joined = true;
 
         console.log("JOIN ATTEMPT:", { playerId, name, character });
         const normalized = character.toLowerCase();
@@ -411,7 +411,7 @@ io.on("connection", (socket) => {
             io.emit("lockedCharacters", Array.from(lockedCharacters));
 
             disconnectTimers.delete(player.playerId);
-        }, 5000);
+        }, 10000);
 
         disconnectTimers.set(player.playerId, timer);
     });

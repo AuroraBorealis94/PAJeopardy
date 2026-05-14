@@ -315,7 +315,7 @@
         color: black;
 
         border: 1px solid #fff;
-        border-radius: 12px;
+        border-radius: 4px;
     }
 
     .charCard.locked {
@@ -733,6 +733,23 @@ let currentHostTile = null;
 let hostAnswerShowing = false;
 
 window.addEventListener("load", () => {
+    // RESTORE SAVED PLAYER STATE
+    const savedName = localStorage.getItem("name");
+    const savedCharacter = localStorage.getItem("character");
+
+    if (savedName) {
+        state.name = savedName;
+
+        document.getElementById("teamLabel")
+            .classList.replace("previewHidden", "previewVisible");
+    }
+
+    if (savedCharacter) {
+        state.character = JSON.parse(savedCharacter);
+    }
+
+    //updatePreview();
+
     // HOST JOIN //
     const isHost = localStorage.getItem("isHost");
     const hostSession = localStorage.getItem("hostSession");
@@ -763,6 +780,26 @@ window.addEventListener("load", () => {
     // RECONNECT
     socket.on("connect", () => {
         console.log("connected:", socket.id);
+
+        const hasJoined = localStorage.getItem("hasJoined");
+        const playerId = localStorage.getItem("playerId");
+
+        if (
+            hasJoined === "true" &&
+            playerId &&
+            state.name &&
+            state.character
+        ) {
+            console.log("Attempting reconnect...");
+
+            socket.emit("join", {
+                playerId,
+                name: state.name,
+                character: state.character.name,
+                isHost: false
+            });
+        }
+    });
     });
 
     let realCards = [];
@@ -889,10 +926,13 @@ window.addEventListener("load", () => {
     socket.on("forceReset", () => {
         console.log("Session expired, resetting");
 
+        /*
         localStorage.removeItem("hasJoined");
         localStorage.removeItem("playerId");
         localStorage.removeItem("name");
         localStorage.removeItem("character");
+        */
+        localStorage.clear();
 
         location.reload();
     });
@@ -912,8 +952,6 @@ window.addEventListener("load", () => {
         joinBtn.innerText = "Joined";
         joinBtn.style.opacity = "0.6";
 
-        confettiBurst();
-
         document.getElementById("name").disabled = true;
         document.getElementById("enterBtn").disabled = true;
 
@@ -922,9 +960,26 @@ window.addEventListener("load", () => {
             b.style.pointerEvents = "none";
         });
 
+        /*
+        confettiBurst();
         setTimeout(() => {
             showWaitingScreen();
         }, 300);
+        */
+
+        const alreadyJoined =
+            document.getElementById("waitingScreen")
+                .classList.contains("show");
+
+        if (!alreadyJoined) {
+            confettiBurst();
+
+            setTimeout(() => {
+                showWaitingScreen();
+            }, 300);
+        } else {
+            showWaitingScreen();
+        }
     });
 
     // SET CURRENT SESSION
@@ -1080,14 +1135,18 @@ window.addEventListener("load", () => {
 
             if (lockedSet.has(name)) {
                 card.classList.add("locked");
+                /*
                 card.style.opacity = "0.3";
                 card.style.pointerEvents = "none";
                 card.style.filter = "grayscale(1)";
+                */
             } else {
                 card.classList.remove("locked");
+                /*
                 card.style.opacity = "";
                 card.style.pointerEvents = "";
                 card.style.filter = "";
+                */
             }
         });
     }
