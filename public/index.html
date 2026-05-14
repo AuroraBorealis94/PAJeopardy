@@ -818,6 +818,17 @@ window.addEventListener("load", () => {
     socket.on("characterList", (chars) => {
         characters = chars;
 
+        // RESTORE FULL CHARACTER OBJECT
+        if (state.character) {
+            const restored = chars.find(
+                c => c.name === state.character.name
+            );
+
+            if (restored) {
+                state.character = restored;
+            }
+        }
+
         if (localStorage.getItem("hasJoined") === "true") {
             document.getElementById("lobbyUI").style.display = "none";
         }
@@ -1260,7 +1271,10 @@ function showWaitingScreen() {
     document.getElementById("lobbyUI").style.display = "none";
 
     // populate player info
-    document.getElementById("waitingImage").src = state.character.front;
+    if (state.character?.front) {
+        document.getElementById("waitingImage").src =
+            state.character.front;
+    }
     document.getElementById("waitingName").textContent = state.name;
 
     screen.classList.remove("hidden");

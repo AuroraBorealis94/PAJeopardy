@@ -22,7 +22,10 @@ const lockedCharacters = new Set();
 
 // BRIDGE FROM SOCKET.IO TO WEBSOCKET
 const WebSocket = require("ws");
-const wss = new WebSocket.Server({ server: http });
+const wss = new WebSocket.Server({
+    server: http,
+    path: "/unity"
+});
 
 wss.on("connection", (ws) => {
     ws.isUnity = true;
