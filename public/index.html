@@ -780,6 +780,16 @@ window.addEventListener("load", () => {
 
     // RECONNECT
     socket.on("connect", () => {
+        setTimeout(() => {
+            if (localStorage.getItem("hasJoined") === "true") {
+                socket.emit("join", {
+                    playerId,
+                    name: savedName,
+                    character: JSON.parse(savedCharacter).name,
+                    isHost: false
+                });
+            }
+        }, 300);
         console.log("connected:", socket.id);
 
         const hasJoined = localStorage.getItem("hasJoined");

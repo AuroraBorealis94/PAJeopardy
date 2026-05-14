@@ -202,6 +202,11 @@ io.on("connection", (socket) => {
         const now = Date.now();
         const lastJoin = joinCooldown.get(socket.id) || 0;
 
+        if (existingPlayer && existingPlayer.socketId !== socket.id) {
+            console.log("Old socket, ignoring join");
+            return;
+        }
+
         // anti-spam join protection
         if (now - lastJoin < JOIN_COOLDOWN_MS) {
             console.log("Join blocked (spam):", socket.id);
@@ -473,7 +478,7 @@ io.on("connection", (socket) => {
 
         const player = game.players.find(p => p.socketId === socket.id);
         if (!player) return;
-
+        if (player.socketId !== socket.id) return;
         console.log(player.name + " temporarily disconnected");
 
         player.disconnected = true;
@@ -481,11 +486,9 @@ io.on("connection", (socket) => {
 
         const timer = setTimeout(() => {
 
-            const stillThere = game.players.find(
-                p => p.playerId === player.playerId
-            );
+            const stillThere = game.players.find(p => p.playerId === player.playerId);
 
-            if (!stillThere || !stillThere.disconnected) {
+            if (!stillThere || stillThere.socketId === socket.id) {
                 disconnectTimers.delete(player.playerId);
                 return;
             }
