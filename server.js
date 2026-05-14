@@ -223,7 +223,7 @@ io.on("connection", (socket) => {
                 Date.now() - existingPlayer.disconnectTime < RECONNECT_WINDOW;
 
             if (withinWindow) {
-                existingPlayer.id = socket.id;
+                existingPlayer.socketId = socket.id;
                 existingPlayer.disconnected = false;
                 existingPlayer.disconnectTime = null;
 
@@ -269,6 +269,16 @@ io.on("connection", (socket) => {
         lockedCharacters.add(normalized);
 
         game.players.push({
+            socketId: socket.id,
+            playerId,
+            name,
+            character,
+            isHost: !!isHost,
+            disconnected: false,
+            disconnectTime: null
+        });
+        /*
+        game.players.push({
             id: socket.id,
             playerId,
             name,
@@ -277,6 +287,7 @@ io.on("connection", (socket) => {
             disconnected: false,
             disconnectTime: null
         });
+        */
 
         console.log(name + " joined with " + character);
 
@@ -389,7 +400,7 @@ io.on("connection", (socket) => {
             console.log("Host disconnected");
         }
 
-        const player = game.players.find(p => p.id === socket.id);
+        const player = game.players.find(p => p.socketId === socket.id);
 
         if (!player) return;
 

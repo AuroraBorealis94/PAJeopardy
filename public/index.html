@@ -733,7 +733,7 @@ let currentHostTile = null;
 let hostAnswerShowing = false;
 let characters = [];
 let currentIndex = 0;
-let reconnectAttempted = false;
+let lastSocketId = null;
 
 window.addEventListener("load", () => {
     // RESTORE SAVED PLAYER STATE
@@ -781,9 +781,10 @@ window.addEventListener("load", () => {
 
     // RECONNECT
     socket.on("connect", () => {
-        console.log("connected:", socket.id);
+        if (socket.id === lastSocketId) return;
+        lastSocketId = socket.id;
 
-        if (reconnectAttempted) return;
+        console.log("connected:", socket.id);
 
         const hasJoined = localStorage.getItem("hasJoined");
         const playerId = localStorage.getItem("playerId");
@@ -796,8 +797,6 @@ window.addEventListener("load", () => {
             savedName &&
             savedCharacter
         ) {
-            reconnectAttempted = true;
-
             const parsedCharacter = JSON.parse(savedCharacter);
 
             console.log("Attempting reconnect...");
@@ -1023,6 +1022,27 @@ window.addEventListener("load", () => {
             }, 300);
         } else {
             showWaitingScreen();
+        }
+    });
+
+    // RECONNECT GAME STATE
+    socket.on("gameStateSync", (data) => {
+        console.log("SYNC STATE:", data);
+
+        if (data.state === "lobby") {
+            document.getElementById("lobbyUI").style.display = "block";
+            document.getElementById("waitingScreen").classList.remove("show");
+        }
+
+        if (data.state === "playing") {
+            document.getElementById("lobbyUI").style.display = "none";
+            showWaitingScreen(); // or better: showGameUI()
+        }
+
+        if (data.state === "buzzer") {
+            document.getElementById("lobbyUI").style.display = "none";
+            document.getElementById("waitingScreen").classList.add("show");
+            // OR redirect to buzzer UI here
         }
     });
 
@@ -1296,8 +1316,11 @@ window.addEventListener("load", () => {
 /* #endregion */
 
 // WAITING SCREEN (P2)
+
 function showWaitingScreen() {
     const screen = document.getElementById("waitingScreen");
+
+    if (screen.classList.contains("show")) return; // prevent flicker
 
     // hide lobby
     document.getElementById("lobbyUI").style.display = "none";
