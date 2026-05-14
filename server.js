@@ -202,6 +202,7 @@ io.on("connection", (socket) => {
         const now = Date.now();
         const lastJoin = joinCooldown.get(socket.id) || 0;
 
+        // anti-spam join protection
         if (now - lastJoin < JOIN_COOLDOWN_MS) {
             console.log("Join blocked (spam):", socket.id);
             return;
@@ -209,6 +210,7 @@ io.on("connection", (socket) => {
 
         joinCooldown.set(socket.id, now);
 
+        // ---------------- HOST LOGIC ----------------
         if (isHost) {
             if (hostConnected) {
                 socket.emit("hostTaken");
@@ -219,6 +221,7 @@ io.on("connection", (socket) => {
             socket.isHost = true;
 
             io.emit("hostStatus", true);
+
             socket.emit("joinSuccess");
 
             socket.emit("gameStateSync", {
@@ -226,27 +229,35 @@ io.on("connection", (socket) => {
                 players: game.players,
                 board: game.board
             });
+
             console.log("Host connected");
+            broadcastSession();
 
             return;
         }
 
+        // ---------------- PLAYER JOIN ----------------
         console.log("JOIN ATTEMPT:", { playerId, name, character });
+
         const normalized = character.toLowerCase();
 
-        if (existingPlayer) {
+        // find existing player
+        let existingPlayer = game.players.find(p => p.playerId === playerId);
 
+        // ---------------- SESSION DESYNC PROTECTION ----------------
+        if (existingPlayer) {
             const sessionMismatch =
                 existingPlayer.session !== GAME_SESSION;
 
             if (sessionMismatch) {
-                console.log("Session mismatch - forcing rejoin");
+                console.log("Session mismatch - forcing fresh join");
 
-                // treat as new join
                 game.players = game.players.filter(p => p.playerId !== playerId);
                 existingPlayer = null;
             }
+        }
 
+        // ---------------- RECONNECT LOGIC ----------------
         const RECONNECT_WINDOW = 10000;
 
         if (existingPlayer) {
@@ -255,11 +266,12 @@ io.on("connection", (socket) => {
                 Date.now() - existingPlayer.disconnectTime < RECONNECT_WINDOW;
 
             if (stillValid) {
-
                 existingPlayer.socketId = socket.id;
                 existingPlayer.disconnected = false;
                 existingPlayer.disconnectTime = null;
+                existingPlayer.session = GAME_SESSION;
 
+                // cancel pending removal
                 const timer = disconnectTimers.get(playerId);
                 if (timer) {
                     clearTimeout(timer);
@@ -267,8 +279,6 @@ io.on("connection", (socket) => {
                 }
 
                 console.log(name + " reconnected with " + character);
-                existingPlayer.session = GAME_SESSION;
-                broadcastSession();
 
                 io.emit("playerList", game.players.map(p => ({
                     playerId: p.playerId,
@@ -276,6 +286,7 @@ io.on("connection", (socket) => {
                     character: p.character,
                     disconnected: p.disconnected
                 })));
+
                 io.emit("lockedCharacters", Array.from(lockedCharacters));
 
                 socket.emit("joinSuccess");
@@ -286,19 +297,23 @@ io.on("connection", (socket) => {
                     board: game.board
                 });
 
+                broadcastSession();
+
                 return;
             }
         }
 
+        // ---------------- CLEANUP OLD DISCONNECTED ENTRY ----------------
         if (existingPlayer && existingPlayer.disconnected) {
             lockedCharacters.delete(existingPlayer.characterKey);
 
             game.players = game.players.filter(p => p.playerId !== playerId);
         }
 
-        // CHARACTER TAKEN
+        // ---------------- CHARACTER VALIDATION ----------------
         const characterOwnedBySomeoneElse = game.players.find(
-            p => p.character.toLowerCase() === normalized && p.playerId !== playerId
+            p => p.character.toLowerCase() === normalized &&
+                 p.playerId !== playerId
         );
 
         if (characterOwnedBySomeoneElse) {
@@ -311,7 +326,7 @@ io.on("connection", (socket) => {
             return;
         }
 
-        // VALID JOIN
+        // ---------------- NEW PLAYER JOIN ----------------
         lockedCharacters.add(normalized);
 
         game.players.push({
@@ -319,22 +334,23 @@ io.on("connection", (socket) => {
             playerId,
             name,
             character,
-            characterKey: character.toLowerCase(),
-            isHost: !!isHost,
+            characterKey: normalized,
+            isHost: false,
             disconnected: false,
             disconnectTime: null,
             session: GAME_SESSION
         });
 
         console.log(name + " joined with " + character);
-        broadcastSession();
 
+        // ---------------- BROADCAST UPDATES ----------------
         io.emit("playerList", game.players.map(p => ({
             playerId: p.playerId,
             name: p.name,
             character: p.character,
             disconnected: p.disconnected
         })));
+
         io.emit("lockedCharacters", Array.from(lockedCharacters));
 
         socket.emit("joinSuccess");
@@ -353,6 +369,8 @@ io.on("connection", (socket) => {
                 characterId: p.characterKey
             }))
         });
+
+        broadcastSession();
     });
 
     // HOST CONTROLS
