@@ -733,7 +733,6 @@ let currentHostTile = null;
 let hostAnswerShowing = false;
 let characters = [];
 let currentIndex = 0;
-let lastSocketId = null;
 
 window.addEventListener("load", () => {
     // RESTORE SAVED PLAYER STATE
@@ -781,9 +780,6 @@ window.addEventListener("load", () => {
 
     // RECONNECT
     socket.on("connect", () => {
-        if (socket.id === lastSocketId) return;
-        lastSocketId = socket.id;
-
         console.log("connected:", socket.id);
 
         const hasJoined = localStorage.getItem("hasJoined");
@@ -791,20 +787,19 @@ window.addEventListener("load", () => {
         const savedName = localStorage.getItem("name");
         const savedCharacter = localStorage.getItem("character");
 
+        // IMPORTANT: only auto-rejoin if we were already in-game
         if (
             hasJoined === "true" &&
             playerId &&
             savedName &&
             savedCharacter
         ) {
-            const parsedCharacter = JSON.parse(savedCharacter);
-
             console.log("Attempting reconnect...");
 
             socket.emit("join", {
                 playerId,
                 name: savedName,
-                character: parsedCharacter.name,
+                character: JSON.parse(savedCharacter).name,
                 isHost: false
             });
         }

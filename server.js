@@ -427,10 +427,9 @@ io.on("connection", (socket) => {
         player.disconnected = true;
         player.disconnectTime = Date.now();
 
-        // IMPORTANT:
-        // Don't create multiple timers
-        if (disconnectTimers.has(player.playerId)) {
-            return;
+        if (disconnectTimers.has(playerId)) {
+            clearTimeout(disconnectTimers.get(playerId));
+            disconnectTimers.delete(playerId);
         }
 
         const timer = setTimeout(() => {
