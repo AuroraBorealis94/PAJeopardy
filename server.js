@@ -202,18 +202,8 @@ io.on("connection", (socket) => {
         const now = Date.now();
         const lastJoin = joinCooldown.get(socket.id) || 0;
 
-        // ---------------- PLAYER JOIN ----------------
-        console.log("JOIN ATTEMPT:", { playerId, name, character });
-
-        const normalized = character.toLowerCase();
-
-        // MUST be declared FIRST
-        const existingPlayerIndex = game.players.findIndex(p => p.playerId === playerId);
-        const existingPlayer = existingPlayerIndex !== -1 ? game.players[existingPlayerIndex] : null;
-
-        // NOW safe to use
         if (existingPlayer && existingPlayer.socketId !== socket.id) {
-            console.log("Stale socket join ignored");
+            console.log("Old socket, ignoring join");
             return;
         }
 
@@ -250,6 +240,14 @@ io.on("connection", (socket) => {
 
             return;
         }
+
+        // ---------------- PLAYER JOIN ----------------
+        console.log("JOIN ATTEMPT:", { playerId, name, character });
+
+        const normalized = character.toLowerCase();
+
+        // find existing player
+        let existingPlayer = game.players.find(p => p.playerId === playerId);
 
         // ---------------- SESSION DESYNC PROTECTION ----------------
         if (existingPlayer) {
