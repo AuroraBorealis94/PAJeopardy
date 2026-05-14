@@ -9,12 +9,15 @@ app.use("/backgrounds", express.static("backgrounds"));
 app.use("/sprites", express.static("sprites"));
 app.use("/confetti", express.static("public/confetti"));
 
+// HOST NOT CONNECTED
 let hostConnected = false;
+// CURRENT SESSION
 let GAME_SESSION = Date.now();
+// DISCONNECT TIMER
 const disconnectTimers = new Map();
-const joinCooldown = new Map();
-const JOIN_COOLDOWN_MS = 2000;
+// USED CLUES
 const usedClueIds = new Set();
+// LOCKED CHARACTERS
 const lockedCharacters = new Set();
 
 // BRIDGE FROM SOCKET.IO TO WEBSOCKET
@@ -69,18 +72,6 @@ function broadcastToUnity(data) {
         if (client.readyState === WebSocket.OPEN) {
             client.send(message);
         }
-    });
-}
-
-function broadcastSession() {
-    io.emit("gameSession", {
-        type: "gameSession",
-        session: GAME_SESSION
-    });
-
-    broadcastToUnity({
-        type: "gameSession",
-        session: GAME_SESSION
     });
 }
 
@@ -143,7 +134,6 @@ function resetGameState() {
     game.board = {};
     lockedCharacters.clear();
 
-    broadcastSession();
     GAME_SESSION = Date.now();
 }
 
@@ -187,7 +177,7 @@ io.on("connection", (socket) => {
     socket.data.joined = false;
     socket.isUnity = false;
     // SEND INFO TO WEB
-    broadcastSession();
+    socket.emit("gameSession", GAME_SESSION);
     socket.emit("roomCode", ROOM_CODE);
     socket.emit("characterList", characters);
     socket.emit("hostStatus", hostConnected);
@@ -199,16 +189,6 @@ io.on("connection", (socket) => {
 
     // JOIN LOBBY
     socket.on("join", ({ playerId, name, character, isHost }) => {
-        const now = Date.now();
-        const lastJoin = joinCooldown.get(socket.id) || 0;
-
-        if (now - lastJoin < JOIN_COOLDOWN_MS) {
-            console.log("Join blocked (spam):", socket.id);
-            return;
-        }
-
-        joinCooldown.set(socket.id, now);
-
         if (isHost) {
             if (hostConnected) {
                 socket.emit("hostTaken");
@@ -231,21 +211,14 @@ io.on("connection", (socket) => {
             return;
         }
 
+
+        //if (socket.data.joined) return;
+        //socket.data.joined = true;
+
         console.log("JOIN ATTEMPT:", { playerId, name, character });
         const normalized = character.toLowerCase();
 
-        if (existingPlayer) {
-
-            const sessionMismatch =
-                existingPlayer.session !== GAME_SESSION;
-
-            if (sessionMismatch) {
-                console.log("Session mismatch - forcing rejoin");
-
-                // treat as new join
-                game.players = game.players.filter(p => p.playerId !== playerId);
-                existingPlayer = null;
-            }
+        let existingPlayer = game.players.find(p => p.playerId === playerId);
 
         const RECONNECT_WINDOW = 10000;
 
@@ -266,9 +239,7 @@ io.on("connection", (socket) => {
                     disconnectTimers.delete(playerId);
                 }
 
-                console.log(name + " reconnected with " + character);
-                existingPlayer.session = GAME_SESSION;
-                broadcastSession();
+                console.log(name + " reconnected");
 
                 io.emit("playerList", game.players.map(p => ({
                     playerId: p.playerId,
@@ -322,12 +293,10 @@ io.on("connection", (socket) => {
             characterKey: character.toLowerCase(),
             isHost: !!isHost,
             disconnected: false,
-            disconnectTime: null,
-            session: GAME_SESSION
+            disconnectTime: null
         });
 
         console.log(name + " joined with " + character);
-        broadcastSession();
 
         io.emit("playerList", game.players.map(p => ({
             playerId: p.playerId,
@@ -365,10 +334,6 @@ io.on("connection", (socket) => {
         // SEND TO UNITY
         if (data.type === "startGame") {
             generateBoard();
-
-            GAME_SESSION = Date.now(); // IMPORTANT
-
-            broadcastSession();
 
             // FIRST tell Unity to load lobby scene
             broadcastToUnity({
@@ -445,8 +410,6 @@ io.on("connection", (socket) => {
 
     // DISCONNECT
     socket.on("disconnect", () => {
-        joinCooldown.delete(socket.id);
-
         if (socket.isHost) {
             hostConnected = false;
             io.emit("hostStatus", false);
