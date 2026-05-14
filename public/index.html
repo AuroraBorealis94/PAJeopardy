@@ -733,6 +733,7 @@ let currentHostTile = null;
 let hostAnswerShowing = false;
 let characters = [];
 let currentIndex = 0;
+let reconnectAttempted = false;
 
 window.addEventListener("load", () => {
     // RESTORE SAVED PLAYER STATE
@@ -778,8 +779,39 @@ window.addEventListener("load", () => {
     //    document.getElementById("roomCode").textContent = code;
     //});
 
-    let hasReconnected = false;
     // RECONNECT
+    socket.on("connect", () => {
+        console.log("connected:", socket.id);
+
+        if (reconnectAttempted) return;
+
+        const hasJoined = localStorage.getItem("hasJoined");
+        const playerId = localStorage.getItem("playerId");
+        const savedName = localStorage.getItem("name");
+        const savedCharacter = localStorage.getItem("character");
+
+        if (
+            hasJoined === "true" &&
+            playerId &&
+            savedName &&
+            savedCharacter
+        ) {
+            reconnectAttempted = true;
+
+            const parsedCharacter = JSON.parse(savedCharacter);
+
+            console.log("Attempting reconnect...");
+
+            socket.emit("join", {
+                playerId,
+                name: savedName,
+                character: parsedCharacter.name,
+                isHost: false
+            });
+        }
+    });
+
+    /*
     socket.on("connect", () => {
         console.log("connected:", socket.id);
 
@@ -802,7 +834,7 @@ window.addEventListener("load", () => {
             });
         }
     });
-
+    */
     let realCards = [];
 
     // HOST SPOT FILLED
@@ -829,9 +861,9 @@ window.addEventListener("load", () => {
             }
         }
 
-        if (localStorage.getItem("hasJoined") === "true") {
-            document.getElementById("lobbyUI").style.display = "none";
-        }
+        //if (localStorage.getItem("hasJoined") === "true") {
+        //    document.getElementById("lobbyUI").style.display = "none";
+        //}
 
         console.log("RECONNECT CHECK:", {
             hasJoined: localStorage.getItem("hasJoined"),

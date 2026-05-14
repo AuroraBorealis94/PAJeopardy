@@ -228,9 +228,8 @@ io.on("connection", (socket) => {
                 existingPlayer.disconnectTime = null;
 
                 // CANCEL OLD DELETE TIMER
-                const timer = disconnectTimers.get(playerId);
-                if (timer) {
-                    clearTimeout(timer);
+                if (disconnectTimers.has(playerId)) {
+                    clearTimeout(disconnectTimers.get(playerId));
                     disconnectTimers.delete(playerId);
                 }
 
@@ -382,6 +381,66 @@ io.on("connection", (socket) => {
 
     // DISCONNECT
     socket.on("disconnect", () => {
+
+        if (socket.isHost) {
+            hostConnected = false;
+            io.emit("hostStatus", false);
+
+            console.log("Host disconnected");
+        }
+
+        const player = game.players.find(p => p.id === socket.id);
+
+        if (!player) return;
+
+        console.log(player.name + " temporarily disconnected");
+
+        player.disconnected = true;
+        player.disconnectTime = Date.now();
+
+        // IMPORTANT:
+        // Don't create multiple timers
+        if (disconnectTimers.has(player.playerId)) {
+            return;
+        }
+
+        const timer = setTimeout(() => {
+
+            const p = game.players.find(
+                p => p.playerId === player.playerId
+            );
+
+            // player already reconnected
+            if (!p || !p.disconnected) {
+
+                disconnectTimers.delete(player.playerId);
+                return;
+            }
+
+            console.log(player.name + " fully removed");
+
+            lockedCharacters.delete(
+                player.character.toLowerCase()
+            );
+
+            game.players = game.players.filter(
+                p => p.playerId !== player.playerId
+            );
+
+            io.emit("playerList", game.players);
+            io.emit("lockedCharacters",
+                Array.from(lockedCharacters)
+            );
+
+            disconnectTimers.delete(player.playerId);
+
+        }, 10000);
+
+        disconnectTimers.set(player.playerId, timer);
+    });
+
+    /*
+    socket.on("disconnect", () => {
         if (socket.isHost) {
             hostConnected = false;
             io.emit("hostStatus", false);
@@ -418,6 +477,7 @@ io.on("connection", (socket) => {
 
         disconnectTimers.set(player.playerId, timer);
     });
+    */
 });
 
 resetGameState();
