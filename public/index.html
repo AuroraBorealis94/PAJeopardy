@@ -796,6 +796,7 @@ window.addEventListener("load", () => {
         ) {
             console.log("Attempting reconnect...");
 
+            if (!playerId || !savedName || !savedCharacter) return;
             socket.emit("join", {
                 playerId,
                 name: savedName,
@@ -805,30 +806,6 @@ window.addEventListener("load", () => {
         }
     });
 
-    /*
-    socket.on("connect", () => {
-        console.log("connected:", socket.id);
-
-        const hasJoined = localStorage.getItem("hasJoined");
-        const playerId = localStorage.getItem("playerId");
-
-        if (
-            hasJoined === "true" &&
-            playerId &&
-            state.name &&
-            state.character
-        ) {
-            console.log("Attempting reconnect...");
-
-            socket.emit("join", {
-                playerId,
-                name: state.name,
-                character: state.character.name,
-                isHost: false
-            });
-        }
-    });
-    */
     let realCards = [];
 
     // HOST SPOT FILLED

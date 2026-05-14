@@ -220,28 +220,33 @@ io.on("connection", (socket) => {
 
         let existingPlayer = game.players.find(p => p.playerId === playerId);
 
-        // RECONNECT (even if marked disconnected)
         const RECONNECT_WINDOW = 10000;
 
         if (existingPlayer) {
-            const withinWindow =
+            const stillValid =
                 !existingPlayer.disconnectTime ||
                 Date.now() - existingPlayer.disconnectTime < RECONNECT_WINDOW;
 
-            if (withinWindow) {
+            if (stillValid) {
+
                 existingPlayer.socketId = socket.id;
                 existingPlayer.disconnected = false;
                 existingPlayer.disconnectTime = null;
 
-                // CANCEL OLD DELETE TIMER
-                if (disconnectTimers.has(playerId)) {
-                    clearTimeout(disconnectTimers.get(playerId));
+                const timer = disconnectTimers.get(playerId);
+                if (timer) {
+                    clearTimeout(timer);
                     disconnectTimers.delete(playerId);
                 }
 
-                console.log(name + " reconnected and reclaimed slot");
+                console.log(name + " reconnected");
 
-                io.emit("playerList", game.players);
+                io.emit("playerList", game.players.map(p => ({
+                    playerId: p.playerId,
+                    name: p.name,
+                    character: p.character,
+                    disconnected: p.disconnected
+                })));
                 io.emit("lockedCharacters", Array.from(lockedCharacters));
 
                 socket.emit("joinSuccess");
@@ -251,13 +256,13 @@ io.on("connection", (socket) => {
                     players: game.players,
                     board: game.board
                 });
+
                 return;
             }
         }
 
         if (existingPlayer && existingPlayer.disconnected) {
-            // expired reconnect window treat as new join
-            lockedCharacters.delete(existingPlayer.character.toLowerCase());
+            lockedCharacters.delete(existingPlayer.characterKey);
 
             game.players = game.players.filter(p => p.playerId !== playerId);
         }
@@ -285,25 +290,20 @@ io.on("connection", (socket) => {
             playerId,
             name,
             character,
+            characterKey: character.toLowerCase(),
             isHost: !!isHost,
             disconnected: false,
             disconnectTime: null
         });
-        /*
-        game.players.push({
-            id: socket.id,
-            playerId,
-            name,
-            character,
-            isHost: !!isHost,
-            disconnected: false,
-            disconnectTime: null
-        });
-        */
 
         console.log(name + " joined with " + character);
 
-        io.emit("playerList", game.players);
+        io.emit("playerList", game.players.map(p => ({
+            playerId: p.playerId,
+            name: p.name,
+            character: p.character,
+            disconnected: p.disconnected
+        })));
         io.emit("lockedCharacters", Array.from(lockedCharacters));
 
         socket.emit("joinSuccess");
@@ -317,9 +317,9 @@ io.on("connection", (socket) => {
         broadcastToUnity({
             type: "playerList",
             players: game.players.map(p => ({
-                id: p.id,
+                playerId: p.playerId,
                 name: p.name,
-                characterId: p.character.toLowerCase()
+                characterId: p.characterKey
             }))
         });
     });
@@ -410,16 +410,13 @@ io.on("connection", (socket) => {
 
     // DISCONNECT
     socket.on("disconnect", () => {
-
         if (socket.isHost) {
             hostConnected = false;
             io.emit("hostStatus", false);
-
             console.log("Host disconnected");
         }
 
         const player = game.players.find(p => p.socketId === socket.id);
-
         if (!player) return;
 
         console.log(player.name + " temporarily disconnected");
@@ -427,85 +424,39 @@ io.on("connection", (socket) => {
         player.disconnected = true;
         player.disconnectTime = Date.now();
 
-        if (disconnectTimers.has(playerId)) {
-            clearTimeout(disconnectTimers.get(playerId));
-            disconnectTimers.delete(playerId);
-        }
-
         const timer = setTimeout(() => {
 
-            const p = game.players.find(
+            const stillThere = game.players.find(
                 p => p.playerId === player.playerId
             );
 
-            // player already reconnected
-            if (!p || !p.disconnected) {
-
+            if (!stillThere || !stillThere.disconnected) {
                 disconnectTimers.delete(player.playerId);
                 return;
             }
 
             console.log(player.name + " fully removed");
 
-            lockedCharacters.delete(
-                player.character.toLowerCase()
-            );
+            lockedCharacters.delete(player.characterKey);
 
             game.players = game.players.filter(
                 p => p.playerId !== player.playerId
             );
 
-            io.emit("playerList", game.players);
-            io.emit("lockedCharacters",
-                Array.from(lockedCharacters)
-            );
-
-            disconnectTimers.delete(player.playerId);
-
-        }, 10000);
-
-        disconnectTimers.set(player.playerId, timer);
-    });
-
-    /*
-    socket.on("disconnect", () => {
-        if (socket.isHost) {
-            hostConnected = false;
-            io.emit("hostStatus", false);
-
-            console.log("Host disconnected");
-        }
-    
-        const player = game.players.find(p => p.id === socket.id);
-
-        if (!player) return;
-
-        console.log(player.name + " temporarily disconnected");
-
-        player.disconnected = true;
-        player.disconnectTime = Date.now();
-
-        const timer = setTimeout(() => {
-            const p = game.players.find(p => p.playerId === player.playerId);
-
-            // IMPORTANT: only remove if STILL disconnected AND no reconnection happened
-            if (!p || !p.disconnected) return;
-
-            console.log(player.name + " fully removed");
-
-            lockedCharacters.delete(player.character.toLowerCase());
-
-            game.players = game.players.filter(p => p.playerId !== player.playerId);
-
-            io.emit("playerList", game.players);
+            io.emit("playerList", game.players.map(p => ({
+                playerId: p.playerId,
+                name: p.name,
+                character: p.character,
+                disconnected: p.disconnected
+            })));
             io.emit("lockedCharacters", Array.from(lockedCharacters));
 
             disconnectTimers.delete(player.playerId);
+
         }, 10000);
 
         disconnectTimers.set(player.playerId, timer);
     });
-    */
 });
 
 resetGameState();
