@@ -200,6 +200,12 @@ io.on("connection", (socket) => {
 
             io.emit("hostStatus", true);
             socket.emit("joinSuccess");
+
+            socket.emit("gameStateSync", {
+                state: game.state,
+                players: game.players,
+                board: game.board
+            });
             console.log("Host connected");
 
             return;
@@ -239,6 +245,12 @@ io.on("connection", (socket) => {
                 io.emit("lockedCharacters", Array.from(lockedCharacters));
 
                 socket.emit("joinSuccess");
+
+                socket.emit("gameStateSync", {
+                    state: game.state,
+                    players: game.players,
+                    board: game.board
+                });
                 return;
             }
         }
@@ -295,6 +307,12 @@ io.on("connection", (socket) => {
         io.emit("lockedCharacters", Array.from(lockedCharacters));
 
         socket.emit("joinSuccess");
+
+        socket.emit("gameStateSync", {
+            state: game.state,
+            players: game.players,
+            board: game.board
+        });
 
         broadcastToUnity({
             type: "playerList",
