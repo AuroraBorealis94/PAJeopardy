@@ -731,6 +731,8 @@ let isHost = false;
 let currentHostClue = null;
 let currentHostTile = null;
 let hostAnswerShowing = false;
+let characters = [];
+let currentIndex = 0;
 
 window.addEventListener("load", () => {
     // RESTORE SAVED PLAYER STATE
@@ -772,9 +774,9 @@ window.addEventListener("load", () => {
 
 /* #region SOCKETS */
     // ROOM CODE -- Not functioning
-    socket.on("roomCode", (code) => {
-        document.getElementById("roomCode").textContent = code;
-    });
+    //socket.on("roomCode", (code) => {
+    //    document.getElementById("roomCode").textContent = code;
+    //});
 
     let hasReconnected = false;
     // RECONNECT
@@ -799,7 +801,6 @@ window.addEventListener("load", () => {
                 isHost: false
             });
         }
-    });
     });
 
     let realCards = [];
