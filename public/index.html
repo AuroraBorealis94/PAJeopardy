@@ -424,6 +424,17 @@
         transition: all 0.2s ease;
     }
 
+    .hostPage {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 20px;
+    }
+
+    .hidden {
+        display: none !important;
+    }
+
     #hostBoard {
         display: none;
         grid-template-columns: repeat(6, minmax(0, 1fr));
@@ -681,7 +692,7 @@
 </div>
 
 <!-- HOST CONTROLS -->
-<div id="hostControls" class="hidden">
+<div id="hostControls" class="hostPage">
     <div id="hostJoinPg">
         <div>Welcome Host! Let's meet our contestants</div>
         <button id="startGameBtn" onclick="hostStartGame()">
@@ -689,14 +700,14 @@
         </button>
     </div>
 
-    <div id="hostLobbyPg">
+    <div id="hostLobbyPg" class="hostPage hidden">
         <div>Wait for all contestants to join</div>
         <button id="instructionsBtn" onclick="hostShowInstructions()" style="display:none;">
             Start Game
         </button>
     </div>
 
-    <div id="hostInstructionsPg">
+    <div id="hostInstructionsPg" class="hostPage hidden">
         <div>Explain gameplay instructions to contestants</div>
         <button id="showBoardBtn" onclick="hostShowBoard()" style="display:none;">
             Show Game Board
@@ -1412,11 +1423,9 @@ function changeCharacter() {
 
     function showHostControls() {
         document.getElementById("lobbyUI").style.display = "none";
-
         const controls = document.getElementById("hostControls");
-
         controls.classList.remove("hidden");
-
+        showHostPage("hostJoinPg");
         requestAnimationFrame(() => {
             controls.classList.add("show");
         });
@@ -1424,27 +1433,26 @@ function changeCharacter() {
 
     function hostStartGame() {
         socket.emit("hostAction", { type: "startGame" });
-
-        document.getElementById("hostJoinPg").style.display = "none";
-        document.getElementById("hostLobbyPg").style.display = "block";
+        showHostPage("hostLobbyPg");
+        //document.getElementById("startGameBtn").style.display = "none";
+        document.getElementById("instructionsBtn").style.display = "block";
     }
 
     function hostShowInstructions() {
         socket.emit("hostAction", { type: "showInstructions" });
-    
-        document.getElementById("hostLobbyPg").style.display = "none";
-        document.getElementById("hostInstructionsPg").style.display = "block";
+        showHostPage("hostInstructionsPg");
+        //document.getElementById("instructionsBtn").style.display = "none";
+        document.getElementById("showBoardBtn").style.display = "block";
     }
 
     function hostShowBoard() {
         socket.emit("hostAction", { type: "showBoard" });
-    
-        document.getElementById("hostInstructionsPg").style.display = "none";
+        
+        document.getElementById("showBoardBtn").style.display = "none";
         document.getElementById("hostBoard").style.display = "grid";
     }
 
-    function buildHostBoard(board)
-    {
+    function buildHostBoard(board){
         const hostBoard = document.getElementById("hostBoard");
         hostBoard.innerHTML = "";
 
@@ -1492,8 +1500,16 @@ function changeCharacter() {
         });
     }
 
-    function showHostClue(clue)
-    {
+    function showHostPage(pageId) {
+        document.querySelectorAll(".hostPage").forEach(page => {
+            page.classList.add("hidden");
+        });
+
+        document.getElementById(pageId)
+            .classList.remove("hidden");
+    }
+
+    function showHostClue(clue) {
         hostAnswerShowing = false;
 
         document.getElementById("hostClueText").textContent =
@@ -1514,8 +1530,7 @@ function changeCharacter() {
             .classList.remove("show");
     }
 
-    function flipHostCard()
-    {
+    function flipHostCard() {
         const inner =
             document.getElementById("hostClueInner");
 
@@ -1547,20 +1562,17 @@ function changeCharacter() {
         }
     }
 
-    function hostReveal()
-    {
+    function hostReveal() {
         flipHostCard();
     }
 
-    function hostAnswerCorrect()
-    {
+    function hostAnswerCorrect() {
         console.log("ANSWER CORRECT");
 
         closeHostClue();
     }
-
-    function hostAnswerWrong()
-    {
+    
+    function hostAnswerWrong() {
         console.log("ANSWER WRONG");
 
         document.getElementById("hostClueInner")
@@ -1572,15 +1584,13 @@ function changeCharacter() {
         hostAnswerShowing = false;
     }
 
-    function hostContinue()
-    {
+    function hostContinue() {
         console.log("CONTINUE");
 
         closeHostClue();
     }
 
-    function closeHostClue()
-    {
+    function closeHostClue() {
         document.getElementById("hostClueOverlay")
             .classList.remove("show");
 
