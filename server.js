@@ -218,7 +218,7 @@ io.on("connection", (socket) => {
 
         const RECONNECT_WINDOW = 10000;
 
-        if (existingPlayer) {
+        if (existingPlayer && existingPlayer.disconnected) {
             existingPlayer.socketId = socket.id;
             existingPlayer.disconnected = false;
             existingPlayer.disconnectTime = null;

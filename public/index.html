@@ -780,33 +780,6 @@ window.addEventListener("load", () => {
 
     // RECONNECT
     socket.on("connect", () => {
-        const playerId = localStorage.getItem("playerId");
-        const savedName = localStorage.getItem("name");
-        const savedCharacter = localStorage.getItem("character");
-        const savedSession = localStorage.getItem("gameSession");
-
-        if (!playerId || !savedName || !savedCharacter) return;
-
-        // DO NOT REJOIN OLD SERVER SESSION
-        if (savedSession != currentSession) {
-            console.log("Old session detected. Clearing local player data.");
-
-            localStorage.removeItem("playerId");
-            localStorage.removeItem("name");
-            localStorage.removeItem("character");
-            localStorage.removeItem("hasJoined");
-            localStorage.removeItem("gameSession");
-
-            return;
-        }
-
-        socket.emit("join", {
-            playerId,
-            name: savedName,
-            character: JSON.parse(savedCharacter).name,
-            isHost: false
-        });
-        /*
         console.log("connected:", socket.id);
 
         const playerId = localStorage.getItem("playerId");
@@ -821,7 +794,6 @@ window.addEventListener("load", () => {
             character: JSON.parse(savedCharacter).name,
             isHost: false
         });
-        */
     });
 
     let realCards = [];
