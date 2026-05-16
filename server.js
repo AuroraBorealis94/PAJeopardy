@@ -420,6 +420,40 @@ io.on("connection", (socket) => {
 
         //disconnectTimers.set(player.playerId, timer);
     });
+
+    socket.on("leavePlayer", ({ playerId }) => {
+        const player = game.players.find(
+            p => p.playerId === playerId
+        );
+
+        if (!player) return;
+
+        console.log(player.name + " left character selection");
+
+        lockedCharacters.delete(player.characterKey);
+
+        game.players = game.players.filter(
+            p => p.playerId !== playerId
+        );
+
+        io.emit("playerList", game.players.map(p => ({
+            playerId: p.playerId,
+            name: p.name,
+            character: p.character,
+            disconnected: p.disconnected
+        })));
+
+        io.emit("lockedCharacters", Array.from(lockedCharacters));
+
+        broadcastToUnity({
+            type: "playerList",
+            players: game.players.map(p => ({
+                playerId: p.playerId,
+                name: p.name,
+                characterId: p.characterKey
+            }))
+        });
+    });
 });
 
 resetGameState();

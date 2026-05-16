@@ -661,6 +661,12 @@
     </div>
 
     <p id="playerCount">0 players joined</p>
+
+    <br>
+
+    <button id="changeCharacterBtn" onclick="changeCharacter()">
+        Change Character
+    </button>
 </div>
 
 <!-- HOST CONTROLS -->
@@ -1318,6 +1324,42 @@ function showWaitingScreen() {
     requestAnimationFrame(() => {
         screen.classList.add("show");
     });
+}
+
+function changeCharacter() {
+    document.getElementById("previewImage").style.display = "none";
+    const playerId = localStorage.getItem("playerId");
+
+    if (!playerId) return;
+
+    socket.emit("leavePlayer", { playerId });
+
+    // clear only character selection
+    localStorage.removeItem("character");
+
+    state.character = null;
+
+    // return to lobby
+    document.getElementById("waitingScreen")
+        .classList.remove("show");
+
+    document.getElementById("lobbyUI").style.display = "block";
+
+    // re-enable character buttons
+    document.querySelectorAll(".charCard").forEach(card => {
+        card.disabled = false;
+        card.style.pointerEvents = "";
+    });
+
+    // reset join button
+    const joinBtn = document.getElementById("joinBtn");
+
+    joinBtn.disabled = false;
+    joinBtn.innerText = "Join Game";
+    joinBtn.style.opacity = "1";
+
+    updatePreview();
+    updateLockedUI();
 }
 
 /* #region HOST FUNCTIONS */
