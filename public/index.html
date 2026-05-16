@@ -782,28 +782,18 @@ window.addEventListener("load", () => {
     socket.on("connect", () => {
         console.log("connected:", socket.id);
 
-        const hasJoined = localStorage.getItem("hasJoined");
         const playerId = localStorage.getItem("playerId");
         const savedName = localStorage.getItem("name");
         const savedCharacter = localStorage.getItem("character");
 
-        // IMPORTANT: only auto-rejoin if we were already in-game
-        if (
-            hasJoined === "true" &&
-            playerId &&
-            savedName &&
-            savedCharacter
-        ) {
-            console.log("Attempting reconnect...");
+        if (!playerId || !savedName || !savedCharacter) return;
 
-            if (!playerId || !savedName || !savedCharacter) return;
-            socket.emit("join", {
-                playerId,
-                name: savedName,
-                character: JSON.parse(savedCharacter).name,
-                isHost: false
-            });
-        }
+        socket.emit("join", {
+            playerId,
+            name: savedName,
+            character: JSON.parse(savedCharacter).name,
+            isHost: false
+        });
     });
 
     let realCards = [];
@@ -959,7 +949,7 @@ window.addEventListener("load", () => {
             return;
         }
 
-        localStorage.setItem("hasJoined", "true");
+        //localStorage.setItem("hasJoined", "true");
         localStorage.setItem("gameSession", currentSession);
 
         const joinBtn = document.getElementById("joinBtn");
@@ -1000,6 +990,11 @@ window.addEventListener("load", () => {
     // RECONNECT GAME STATE
     socket.on("gameStateSync", (data) => {
         console.log("SYNC STATE:", data);
+        lockedSet = new Set((data.lockedCharacters || []).map(c => c.toLowerCase()));
+        updateLockedUI();
+        if (data.state === "playing" || data.state === "lobby") {
+            localStorage.setItem("playerId", localStorage.getItem("playerId"));
+        }
 
         if (data.state === "lobby") {
             document.getElementById("lobbyUI").style.display = "block";
@@ -1022,7 +1017,7 @@ window.addEventListener("load", () => {
     let currentSession = null;
     socket.on("gameSession", (session) => {
         const savedSession = localStorage.getItem("gameSession");
-        const hasJoined = localStorage.getItem("hasJoined");
+        //const hasJoined = localStorage.getItem("hasJoined");
 
         const hostSession = localStorage.getItem("hostSession");
         const storedIsHost = localStorage.getItem("isHost");

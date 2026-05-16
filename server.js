@@ -211,10 +211,6 @@ io.on("connection", (socket) => {
             return;
         }
 
-
-        //if (socket.data.joined) return;
-        //socket.data.joined = true;
-
         console.log("JOIN ATTEMPT:", { playerId, name, character });
         const normalized = character.toLowerCase();
 
@@ -223,42 +219,31 @@ io.on("connection", (socket) => {
         const RECONNECT_WINDOW = 10000;
 
         if (existingPlayer) {
-            const stillValid =
-                !existingPlayer.disconnectTime ||
-                Date.now() - existingPlayer.disconnectTime < RECONNECT_WINDOW;
+            existingPlayer.socketId = socket.id;
+            existingPlayer.disconnected = false;
+            existingPlayer.disconnectTime = null;
 
-            if (stillValid) {
+            console.log(name + " reconnected");
 
-                existingPlayer.socketId = socket.id;
-                existingPlayer.disconnected = false;
-                existingPlayer.disconnectTime = null;
+            io.emit("playerList", game.players.map(p => ({
+                playerId: p.playerId,
+                name: p.name,
+                character: p.character,
+                disconnected: p.disconnected
+            })));
 
-                const timer = disconnectTimers.get(playerId);
-                if (timer) {
-                    clearTimeout(timer);
-                    disconnectTimers.delete(playerId);
-                }
+            io.emit("lockedCharacters", Array.from(lockedCharacters));
 
-                console.log(name + " reconnected");
+            socket.emit("joinSuccess");
 
-                io.emit("playerList", game.players.map(p => ({
-                    playerId: p.playerId,
-                    name: p.name,
-                    character: p.character,
-                    disconnected: p.disconnected
-                })));
-                io.emit("lockedCharacters", Array.from(lockedCharacters));
-
-                socket.emit("joinSuccess");
-
-                socket.emit("gameStateSync", {
-                    state: game.state,
-                    players: game.players,
-                    board: game.board
-                });
-
-                return;
-            }
+            socket.emit("gameStateSync", {
+                state: game.state,
+                players: game.players,
+                board: game.board,
+                lockedCharacters: Array.from(lockedCharacters)
+            });
+            socket.data.joined = true;
+            return;
         }
 
         if (existingPlayer && existingPlayer.disconnected) {
@@ -295,6 +280,8 @@ io.on("connection", (socket) => {
             disconnected: false,
             disconnectTime: null
         });
+
+        socket.data.joined = true;
 
         console.log(name + " joined with " + character);
 
@@ -424,38 +411,14 @@ io.on("connection", (socket) => {
         player.disconnected = true;
         player.disconnectTime = Date.now();
 
-        const timer = setTimeout(() => {
+        io.emit("playerList", game.players.map(p => ({
+            playerId: p.playerId,
+            name: p.name,
+            character: p.character,
+            disconnected: p.disconnected
+        })));
 
-            const stillThere = game.players.find(
-                p => p.playerId === player.playerId
-            );
-
-            if (!stillThere || !stillThere.disconnected) {
-                disconnectTimers.delete(player.playerId);
-                return;
-            }
-
-            console.log(player.name + " fully removed");
-
-            lockedCharacters.delete(player.characterKey);
-
-            game.players = game.players.filter(
-                p => p.playerId !== player.playerId
-            );
-
-            io.emit("playerList", game.players.map(p => ({
-                playerId: p.playerId,
-                name: p.name,
-                character: p.character,
-                disconnected: p.disconnected
-            })));
-            io.emit("lockedCharacters", Array.from(lockedCharacters));
-
-            disconnectTimers.delete(player.playerId);
-
-        }, 10000);
-
-        disconnectTimers.set(player.playerId, timer);
+        //disconnectTimers.set(player.playerId, timer);
     });
 });
 
