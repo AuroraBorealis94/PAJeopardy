@@ -682,17 +682,26 @@
 
 <!-- HOST CONTROLS -->
 <div id="hostControls" class="hidden">
-    <button id="startGameBtn" onclick="hostStartGame()">
-        Start Game 
-    </button>
+    <div id="hostJoinPg">
+        <div>Welcome Host! Let's meet our contestants</div>
+        <button id="startGameBtn" onclick="hostStartGame()">
+            Go to Lobby
+        </button>
+    </div>
 
-    <button id="instructionsBtn" onclick="hostShowInstructions()" style="display:none;">
-        Show Instructions
-    </button>
+    <div id="hostLobbyPg">
+        <div>Wait for all contestants to join</div>
+        <button id="instructionsBtn" onclick="hostShowInstructions()" style="display:none;">
+            Start Game
+        </button>
+    </div>
 
-    <button id="showBoardBtn" onclick="hostShowBoard()" style="display:none;">
-        Show Game Board
-    </button>
+    <div id="hostInstructionsPg">
+        <div>Explain gameplay instructions to contestants</div>
+        <button id="showBoardBtn" onclick="hostShowBoard()" style="display:none;">
+            Show Game Board
+        </button>
+    </div>
 
     <div id="hostBoard"></div>
 
@@ -1416,21 +1425,21 @@ function changeCharacter() {
     function hostStartGame() {
         socket.emit("hostAction", { type: "startGame" });
 
-        document.getElementById("startGameBtn").style.display = "none";
-        document.getElementById("instructionsBtn").style.display = "block";
+        document.getElementById("hostJoinPg").style.display = "none";
+        document.getElementById("hostLobbyPg").style.display = "block";
     }
 
     function hostShowInstructions() {
         socket.emit("hostAction", { type: "showInstructions" });
     
-        document.getElementById("instructionsBtn").style.display = "none";
-        document.getElementById("showBoardBtn").style.display = "block";
+        document.getElementById("hostLobbyPg").style.display = "none";
+        document.getElementById("hostInstructionsPg").style.display = "block";
     }
 
     function hostShowBoard() {
         socket.emit("hostAction", { type: "showBoard" });
     
-        document.getElementById("showBoardBtn").style.display = "none";
+        document.getElementById("hostInstructionsPg").style.display = "none";
         document.getElementById("hostBoard").style.display = "grid";
     }
 
