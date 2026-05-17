@@ -695,6 +695,7 @@
 <div id="hostControls" class="hostPage">
     <div id="hostJoinPg">
         <div>Welcome Host! Let's meet our contestants</div>
+        <br>
         <button id="startGameBtn" onclick="hostStartGame()">
             Go to Lobby
         </button>
@@ -1434,6 +1435,7 @@ function changeCharacter() {
     function hostStartGame() {
         socket.emit("hostAction", { type: "startGame" });
         //showHostPage("hostLobbyPg");
+        hostJoinPg.classList.add("hidden");
         hostLobbyPg.classList.remove("hidden");
         //document.getElementById("startGameBtn").style.display = "none";
         document.getElementById("instructionsBtn").style.display = "block";
@@ -1442,6 +1444,7 @@ function changeCharacter() {
     function hostShowInstructions() {
         socket.emit("hostAction", { type: "showInstructions" });
         //showHostPage("hostInstructionsPg");
+        hostLobbyPg.classList.add("hidden");
         hostInstructionsPg.classList.remove("hidden");
         //document.getElementById("instructionsBtn").style.display = "none";
         document.getElementById("showBoardBtn").style.display = "block";
@@ -1449,7 +1452,7 @@ function changeCharacter() {
 
     function hostShowBoard() {
         socket.emit("hostAction", { type: "showBoard" });
-        
+        hostInstructionsPg.classList.add("hidden");
         document.getElementById("showBoardBtn").style.display = "none";
         document.getElementById("hostBoard").style.display = "grid";
     }
