@@ -706,7 +706,7 @@
 
     <div id="hostInstructionsPg" class="hostPage hidden">
         <div>Explain gameplay instructions to contestants</div>
-        <button id="playInstrucCutBtn" onclick="hostShowInstrucCutscene()" style="display:none;">
+        <button id="showInstrucCutBtn" onclick="hostShowInstrucCutscene()" style="display:none;">
             Play Cutscene
         </button>
     </div>
@@ -1437,19 +1437,15 @@ function changeCharacter() {
 
     function hostStartGame() {
         socket.emit("hostAction", { type: "startGame" });
-        //showHostPage("hostLobbyPg");
         hostJoinPg.classList.add("hidden");
         hostLobbyPg.classList.remove("hidden");
-        //document.getElementById("startGameBtn").style.display = "none";
         document.getElementById("instructionsBtn").style.display = "block";
     }
 
     function hostShowInstructions() {
         socket.emit("hostAction", { type: "showInstructions" });
-        //showHostPage("hostInstructionsPg");
         hostLobbyPg.classList.add("hidden");
         hostInstructionsPg.classList.remove("hidden");
-        //document.getElementById("instructionsBtn").style.display = "none";
         document.getElementById("showInstrucCutBtn").style.display = "block";
     }
 
