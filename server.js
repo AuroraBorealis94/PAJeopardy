@@ -357,8 +357,8 @@ io.on("connection", (socket) => {
                 io.emit("showInstrucCutscene");
                 break;
 
-            case "showIntroBoard":
-                io.emit("showIntroBoard");
+            case "showBoardIntro":
+                io.emit("showBoardIntro");
                 break;
 
             case "selectClue":

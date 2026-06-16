@@ -713,7 +713,7 @@
 
     <div id="hostInstrucCutscenePg" class="hostPage hidden">
         <div>When cutscene completes</div>
-        <button id="showBoardBtn" onclick="hostShowBoard()" style="display:none;">
+        <button id="showBoardIntroBtn" onclick="hostShowBoardIntro()" style="display:none;">
             Show Game Board
         </button>
     </div>
@@ -1453,7 +1453,14 @@ function changeCharacter() {
         socket.emit("hostAction", { type: "showInstrucCutscene" });
         hostInstructionsPg.classList.add("hidden");
         hostInstrucCutscenePg.classList.remove("hidden");
-        document.getElementById("showBoardBtn").style.display = "block";
+        document.getElementById("showBoardIntroBtn").style.display = "block";
+    }
+
+    function hostShowBoardIntro() {
+        socket.emit("hostAction", { type: "showBoardIntro" });
+        hostInstrucCutscenePg.classList.add("hidden");
+        document.getElementById("showBoardIntroBtn").style.display = "none";
+        document.getElementById("hostBoard").style.display = "grid";
     }
 
     function hostShowBoard() {
