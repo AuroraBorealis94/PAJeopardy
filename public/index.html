@@ -706,6 +706,13 @@
 
     <div id="hostInstructionsPg" class="hostPage hidden">
         <div>Explain gameplay instructions to contestants</div>
+        <button id="playInstrucCutBtn" onclick="hostShowInstrucCutscene()" style="display:none;">
+            Play Cutscene
+        </button>
+    </div>
+
+    <div id="hostInstrucCutscenePg" class="hostPage hidden">
+        <div>When cutscene completes</div>
         <button id="showBoardBtn" onclick="hostShowBoard()" style="display:none;">
             Show Game Board
         </button>
@@ -1443,12 +1450,19 @@ function changeCharacter() {
         hostLobbyPg.classList.add("hidden");
         hostInstructionsPg.classList.remove("hidden");
         //document.getElementById("instructionsBtn").style.display = "none";
+        document.getElementById("showInstrucCutBtn").style.display = "block";
+    }
+
+    function hostShowInstrucCutscene() {
+        socket.emit("hostAction", { type: "showInstrucCutscene" });
+        hostInstructionsPg.classList.add("hidden");
+        hostInstrucCutscenePg.classList.remove("hidden");
         document.getElementById("showBoardBtn").style.display = "block";
     }
 
     function hostShowBoard() {
         socket.emit("hostAction", { type: "showBoard" });
-        hostInstructionsPg.classList.add("hidden");
+        hostInstrucCutscenePg.classList.add("hidden");
         document.getElementById("showBoardBtn").style.display = "none";
         document.getElementById("hostBoard").style.display = "grid";
     }
