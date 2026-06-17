@@ -403,7 +403,7 @@ io.on("connection", (socket) => {
 
     // SELECT CLUE
     socket.on("selectClue", (data) => {
-        io.emit("clueSelected", data);
+        io.emit("selectClue", data);
     });
 
     // SUBMIT ANSWER
