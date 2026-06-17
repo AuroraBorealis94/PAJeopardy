@@ -372,38 +372,15 @@ io.on("connection", (socket) => {
                 break;
             */
             case "selectClue":
-            {
                 Debug.Log("SELECT CLUE");
 
                 var clueWrapper =
                     JsonUtility.FromJson<SelectClueMessage>(message);
 
-                Debug.Log("VALUE: " + clueWrapper.payload.value);
-
-                if (clueWrapper.payload.clueData != null)
-                {
-                    Debug.Log("CLUE: " + clueWrapper.payload.clueData.clue);
-                }
-                else
-                {
-                    Debug.LogError("clueData is NULL");
-                }
-
-                if (clueRevealManager == null)
-                {
-                    clueRevealManager = FindAnyObjectByType<ClueRevealManager>();
-                }
-
-                if (clueRevealManager == null)
-                {
-                    Debug.LogError("ClueRevealManager not found!");
-                    return;
-                }
+                Debug.Log("Payload value: " + clueWrapper.payload.value);
 
                 clueRevealManager.ShowClue(clueWrapper.payload);
-
                 break;
-            }
 
             case "revealAnswer":
                 io.emit("revealAnswer");
