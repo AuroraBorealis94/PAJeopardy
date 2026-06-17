@@ -818,11 +818,6 @@ window.addEventListener("load", () => {
 });
 
 /* #region SOCKETS */
-    // ROOM CODE -- Not functioning
-    //socket.on("roomCode", (code) => {
-    //    document.getElementById("roomCode").textContent = code;
-    //});
-
     // RECONNECT
     socket.on("connect", () => {
         console.log("connected:", socket.id);
@@ -866,10 +861,6 @@ window.addEventListener("load", () => {
                 state.character = restored;
             }
         }
-
-        //if (localStorage.getItem("hasJoined") === "true") {
-        //    document.getElementById("lobbyUI").style.display = "none";
-        //}
 
         console.log("RECONNECT CHECK:", {
             hasJoined: localStorage.getItem("hasJoined"),
@@ -975,15 +966,7 @@ window.addEventListener("load", () => {
     // RESET SERVER
     socket.on("forceReset", () => {
         console.log("Session expired, resetting");
-
-        /*
-        localStorage.removeItem("hasJoined");
-        localStorage.removeItem("playerId");
-        localStorage.removeItem("name");
-        localStorage.removeItem("character");
-        */
         localStorage.clear();
-
         location.reload();
     });
 
@@ -1009,13 +992,6 @@ window.addEventListener("load", () => {
             b.disabled = true;
             b.style.pointerEvents = "none";
         });
-
-        /*
-        confettiBurst();
-        setTimeout(() => {
-            showWaitingScreen();
-        }, 300);
-        */
 
         const alreadyJoined =
             document.getElementById("waitingScreen")
@@ -1062,8 +1038,6 @@ window.addEventListener("load", () => {
     let currentSession = null;
     socket.on("gameSession", (session) => {
         const savedSession = localStorage.getItem("gameSession");
-        //const hasJoined = localStorage.getItem("hasJoined");
-
         const hostSession = localStorage.getItem("hostSession");
         const storedIsHost = localStorage.getItem("isHost");
 
@@ -1104,13 +1078,6 @@ window.addEventListener("load", () => {
             location.reload();
             return;
         }
-        /*
-        if (hasJoined === "true" && savedSession && savedSession !== session) {
-            localStorage.clear();
-            location.reload();
-            return;
-        }
-        */
 
         // HOST RESET
         if (isHost && hostSession && hostSession !== session) {
@@ -1128,8 +1095,6 @@ window.addEventListener("load", () => {
         state.name = nameInput.value.trim();
 
         localStorage.setItem("name", state.name);
-
-        //document.getElementById("teamLabel").style.display = "block";
         document.getElementById("teamLabel")
             .classList.replace("previewHidden", "previewVisible");
 
@@ -1225,18 +1190,8 @@ window.addEventListener("load", () => {
 
             if (lockedSet.has(name)) {
                 card.classList.add("locked");
-                /*
-                card.style.opacity = "0.3";
-                card.style.pointerEvents = "none";
-                card.style.filter = "grayscale(1)";
-                */
             } else {
                 card.classList.remove("locked");
-                /*
-                card.style.opacity = "";
-                card.style.pointerEvents = "";
-                card.style.filter = "";
-                */
             }
         });
     }
@@ -1247,13 +1202,10 @@ window.addEventListener("load", () => {
             state.name || "---";
 
         const img = document.getElementById("previewImage");
-        //const text = document.getElementById("previewCharacterText");
 
         if (state.character) {
             img.src = state.character.front;
             img.style.display = "block";
-
-            //text.textContent = state.character.name;
         } else {
             img.style.display = "none";
         }
@@ -1543,6 +1495,7 @@ function changeCharacter() {
         const overlay =
             document.getElementById("hostClueOverlay");
 
+        overlay.classList.remove("hidden");
         overlay.classList.add("show");
 
         document.getElementById("hostClueInner")
