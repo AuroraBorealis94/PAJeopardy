@@ -372,14 +372,14 @@ io.on("connection", (socket) => {
                 break;
             */
             case "selectClue":
-                Debug.Log("SELECT CLUE");
+                console.log("SELECT CLUE");
 
-                var clueWrapper =
-                    JsonUtility.FromJson<SelectClueMessage>(message);
+                io.emit("selectClue", data.payload);
 
-                Debug.Log("Payload value: " + clueWrapper.payload.value);
-
-                clueRevealManager.ShowClue(clueWrapper.payload);
+                broadcastToUnity({
+                    type: "selectClue",
+                    payload: data.payload
+                });
                 break;
 
             case "revealAnswer":
