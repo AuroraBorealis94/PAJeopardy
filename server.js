@@ -361,7 +361,7 @@ io.on("connection", (socket) => {
                 io.emit("showBoardIntro");
                 break;
 
-            /*case "selectClue":
+            case "selectClue":
             
                 io.emit("selectClue", data.payload);
 
@@ -369,38 +369,6 @@ io.on("connection", (socket) => {
                     type: "selectClue",
                     payload: data.payload
                 });
-                break;
-            */
-            case "selectClue":
-                Debug.Log("SELECT CLUE");
-
-                var clueWrapper =
-                    JsonUtility.FromJson<SelectClueMessage>(message);
-
-                Debug.Log("VALUE: " + clueWrapper.payload.value);
-
-                if (clueWrapper.payload.clueData != null)
-                {
-                    Debug.Log("CLUE: " + clueWrapper.payload.clueData.clue);
-                }
-                else
-                {
-                    Debug.LogError("clueData is NULL");
-                }
-
-                if (clueRevealManager == null)
-                {
-                    clueRevealManager = FindAnyObjectByType<ClueRevealManager>();
-                }
-
-                if (clueRevealManager == null)
-                {
-                    Debug.LogError("ClueRevealManager not found!");
-                    return;
-                }
-
-                clueRevealManager.ShowClue(clueWrapper.payload);
-
                 break;
 
             case "revealAnswer":
