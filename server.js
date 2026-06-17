@@ -361,8 +361,8 @@ io.on("connection", (socket) => {
                 io.emit("showBoardIntro");
                 break;
 
-            case "selectClue":
-            /*
+            /*case "selectClue":
+            
                 io.emit("selectClue", data.payload);
 
                 broadcastToUnity({
