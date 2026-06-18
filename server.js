@@ -385,10 +385,9 @@ io.on("connection", (socket) => {
                     type: "selectClue",
                     payload: {
                         value: data.payload.value,
-                        clueId: clue.id,
-                        clueData: clue
-                    },
-                    screenPos: data.payload.screenPos || null
+                        clueId: data.payload.clueData.id,
+                        clueData: data.payload.clueData
+                    }
                 });
 
                 break;
