@@ -361,8 +361,8 @@ io.on("connection", (socket) => {
                 io.emit("showBoardIntro");
                 break;
 
-            case "selectClue":
-                const clue = data.payload.clueData;
+            case "selectClue":{
+                const clue = data.payload?.clueData;
 
                 if (!clue || !clue.id) return;
 
@@ -385,12 +385,13 @@ io.on("connection", (socket) => {
                     type: "selectClue",
                     payload: {
                         value: data.payload.value,
-                        clueId: data.payload.clueData.id,
-                        clueData: data.payload.clueData
+                        clueId: clue.id,
+                        clueData: clue
                     }
                 });
 
                 break;
+            }
 
             case "revealAnswer":
                 const clue = data.payload?.clueData;
