@@ -361,29 +361,54 @@ io.on("connection", (socket) => {
                 io.emit("showBoardIntro");
                 break;
 
-            /*case "selectClue":
-            
-                io.emit("selectClue", data.payload);
-
-                broadcastToUnity({
-                    type: "selectClue",
-                    payload: data.payload
-                });
-                break;
-            */
             case "selectClue":
-                console.log("SELECT CLUE");
+                const clue = data.payload.clueData;
 
-                io.emit("selectClue", data.payload);
+                if (!clue || !clue.id) return;
 
+                // 1. MARK AS USED (GLOBAL AUTHORITY)
+                usedClueIds.add(clue.id);
+
+                console.log("SELECT CLUE:", clue.id);
+
+                // 2. SEND TO WEB CLIENTS
+                io.emit("selectClue", {
+                    payload: {
+                        value: data.payload.value,
+                        clueId: clue.id,
+                        clueData: clue
+                    }
+                });
+
+                // 3. SEND TO UNITY
                 broadcastToUnity({
                     type: "selectClue",
-                    payload: data.payload
+                    payload: {
+                        value: data.payload.value,
+                        clueId: clue.id,
+                        clueData: clue
+                    },
+                    screenPos: data.payload.screenPos || null
                 });
+
                 break;
 
             case "revealAnswer":
-                io.emit("revealAnswer");
+                const clue = data.payload?.clueData;
+
+                if (!clue || !clue.id) return;
+
+                io.emit("revealAnswer", {
+                    clueId: clue.id,
+                    answer: data.payload.answer
+                });
+
+                broadcastToUnity({
+                    type: "revealAnswer",
+                    clueId: clue.id,
+                    answer: data.payload.answer
+                });
+
                 break;
 
             case "resumeBuzzing":
@@ -402,14 +427,14 @@ io.on("connection", (socket) => {
     });
 
     // SELECT CLUE
-    socket.on("selectClue", (data) => {
-        io.emit("selectClue", data);
-    });
+    //socket.on("selectClue", (data) => {
+    //    io.emit("selectClue", data);
+    //});
 
     // SUBMIT ANSWER
-    socket.on("submitAnswer", (data) => {
-        io.emit("answerSubmitted", data);
-    });
+    //socket.on("submitAnswer", (data) => {
+    //    io.emit("answerSubmitted", data);
+    //});
 
     // DISCONNECT
     socket.on("disconnect", () => {
