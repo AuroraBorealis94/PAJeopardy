@@ -393,6 +393,35 @@ io.on("connection", (socket) => {
                 break;
             }
 
+            case "answerCorrect":
+
+                broadcastToUnity({
+                    type: "revealAnswer"
+                });
+
+                io.emit("revealAnswer");
+
+                break;
+
+            case "continueClue":
+
+                broadcastToUnity({
+                    type: "revealAnswer"
+                });
+
+                io.emit("revealAnswer");
+
+                break;
+
+            case "revealAnswer":
+                io.emit("revealAnswer");
+
+                broadcastToUnity({
+                    type: "revealAnswer"
+                });
+                break;
+
+            /*
             case "revealAnswer":
                 const clue = data.payload?.clueData;
 
@@ -410,7 +439,7 @@ io.on("connection", (socket) => {
                 });
 
                 break;
-
+            */
             case "resumeBuzzing":
                 io.emit("resumeBuzzing");
                 break;

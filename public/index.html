@@ -1542,7 +1542,19 @@ function changeCharacter() {
     }
 
     function hostAnswerCorrect() {
-        console.log("ANSWER CORRECT");
+
+        socket.emit("hostAction", {
+            type: "answerCorrect"
+        });
+
+        closeHostClue();
+    }
+
+    function hostContinue() {
+
+        socket.emit("hostAction", {
+            type: "continueClue"
+        });
 
         closeHostClue();
     }
@@ -1557,12 +1569,6 @@ function changeCharacter() {
             .classList.add("hidden");
 
         hostAnswerShowing = false;
-    }
-
-    function hostContinue() {
-        console.log("CONTINUE");
-
-        closeHostClue();
     }
 
     function closeHostClue() {
