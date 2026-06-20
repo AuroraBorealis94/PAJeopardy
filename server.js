@@ -19,6 +19,16 @@ const disconnectTimers = new Map();
 const usedClueIds = new Set();
 // LOCKED CHARACTERS
 const lockedCharacters = new Set();
+// BUZZING PLAYERS
+let currentChooser = null;
+let lastBuzzedPlayer = null;
+let currentClue = null;
+
+let clueState = {
+  active: false,
+  id: null,
+  answered: false
+};
 
 // BRIDGE FROM SOCKET.IO TO WEBSOCKET
 const WebSocket = require("ws");
@@ -361,17 +371,37 @@ io.on("connection", (socket) => {
                 io.emit("showBoardIntro");
                 break;
 
-            case "selectClue":{
+            case "selectClue": {
                 const clue = data.payload?.clueData;
 
                 if (!clue || !clue.id) return;
 
-                // 1. MARK AS USED (GLOBAL AUTHORITY)
+                currentClue = clue;
+                clueState.active = true;
+                clueState.id = clue.id;
+                clueState.answered = false;
+
+                usedClueIds.add(clue.id);
+
+                io.emit("selectClue", { payload: data.payload });
+
+                io.emit("showBuzzers"); // web only
+
+                broadcastToUnity({
+                    type: "selectClue",
+                    payload: data.payload
+                });
+
+                break;
+            }
+            /*
+            case "selectClue":{
+                const clue = data.payload?.clueData;
+                if (!clue || !clue.id) return;
                 usedClueIds.add(clue.id);
 
                 console.log("SELECT CLUE:", clue.id);
 
-                // 2. SEND TO WEB CLIENTS
                 io.emit("selectClue", {
                     payload: {
                         value: data.payload.value,
@@ -380,7 +410,8 @@ io.on("connection", (socket) => {
                     }
                 });
 
-                // 3. SEND TO UNITY
+                io.emit("showBuzzers");
+
                 broadcastToUnity({
                     type: "selectClue",
                     payload: {
@@ -392,26 +423,49 @@ io.on("connection", (socket) => {
 
                 break;
             }
+            */
+            case "setChooser":
+                const player = game.players.find(
+                    p => p.playerId === data.playerId && !p.disconnected
+                );
+                currentChooser = data.playerId;
 
-            case "answerCorrect":
-
-                broadcastToUnity({
-                    type: "revealAnswer"
+                io.emit("chooserSelected", {
+                    playerId: currentChooser,
+                    playerName: player ? player.name : "___"
                 });
-
-                io.emit("revealAnswer");
 
                 break;
 
-            case "continueClue":
+            case "answerCorrect": {
+                if (!lastBuzzedPlayer) return;
 
-                broadcastToUnity({
-                    type: "revealAnswer"
-                });
+                currentChooser = lastBuzzedPlayer;
+
+                clueState.answered = true;
 
                 io.emit("revealAnswer");
+                broadcastToUnity({ type: "revealAnswer" });
+
+                io.emit("showChooserUI", {
+                    playerId: currentChooser
+                });
 
                 break;
+            }
+
+            case "continueClue": {
+                clueState.answered = true;
+
+                io.emit("revealAnswer");
+                broadcastToUnity({ type: "revealAnswer" });
+
+                currentChooser = null;
+
+                io.emit("manualChooserNeeded");
+
+                break;
+            }
 
             case "revealAnswer":
                 io.emit("revealAnswer");
@@ -455,15 +509,14 @@ io.on("connection", (socket) => {
         io.emit("gameStarted", game.board);
     });
 
-    // SELECT CLUE
-    //socket.on("selectClue", (data) => {
-    //    io.emit("selectClue", data);
-    //});
+    // PLAYER BUZZED
+    socket.on("buzz", (data) => {
+        lastBuzzedPlayer = data.playerId;
 
-    // SUBMIT ANSWER
-    //socket.on("submitAnswer", (data) => {
-    //    io.emit("answerSubmitted", data);
-    //});
+        io.emit("playerBuzzed", {
+            playerId: data.playerId
+        });
+    });
 
     // DISCONNECT
     socket.on("disconnect", () => {
