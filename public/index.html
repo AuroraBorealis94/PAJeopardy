@@ -405,6 +405,14 @@
         transition: opacity 0.4s ease;
     }
 
+    #hostLogo {
+        position: absolute;
+        top: 20px;
+
+        left: 50%;
+        transform: translateX(-50%);
+    }
+
     #hostControls.show {
         opacity: 1;
         pointer-events: auto;
@@ -697,6 +705,7 @@
 
 <!-- HOST CONTROLS -->
 <div id="hostControls" class="hostPage">
+    <img id="hostLogo" src="/backgrounds/HostImg.png">
     <div id="hostJoinPg">
         <div>Welcome Host! Let's meet our contestants</div>
         <br>
