@@ -368,27 +368,30 @@ io.on("connection", (socket) => {
 
                 if (!clue || !clue.id) return;
 
-                // prevent double-use server-side (authoritative guard)
-                if (usedClueIds.has(clue.id)) return;
+                const clueId = clue.id;
 
-                usedClueIds.add(clue.id);
+                if (usedClueIds.has(clueId)) {
+                    console.log("CLUE ALREADY USED:", clueId);
+                    return;
+                }
 
-                console.log("SELECT CLUE:", clue.id);
+                usedClueIds.add(clueId);
+
+                console.log("SELECT CLUE:", clueId);
 
                 const payload = {
                     value: data.payload.value,
-                    clueId: clue.id,
+                    clueId: clueId,
                     clueData: clue,
                     used: true
                 };
-
-                // SINGLE SOURCE OF TRUTH EVENT
-                io.emit("selectClue", { payload });
 
                 broadcastToUnity({
                     type: "selectClue",
                     payload
                 });
+
+                io.emit("selectClue", { payload });
 
                 break;
             }
