@@ -368,45 +368,6 @@ io.on("connection", (socket) => {
 
                 if (!clue || !clue.id) return;
 
-                const clueId = clue.id;
-
-                if (usedClueIds.has(clueId)) {
-                    console.log("CLUE ALREADY USED:", clueId);
-                    return;
-                }
-
-                usedClueIds.add(clueId);
-
-                console.log("SELECT CLUE:", clueId);
-
-                const payload = {
-                    value: data.payload.value,
-                    clueId: clueId,
-                    clueData: clue,
-                    used: true
-                };
-
-                io.emit("selectClue", { payload });
-
-                broadcastToUnity({
-                    type: "selectClue",
-                    payload
-                });
-
-                broadcastToUnity({
-                    type: "clueLocked",
-                    clueId: clueId
-                });
-
-                break;
-            }
-
-            /*
-            case "selectClue": {
-                const clue = data.payload?.clueData;
-
-                if (!clue || !clue.id) return;
-
                 // prevent double-use server-side (authoritative guard)
                 if (usedClueIds.has(clue.id)) return;
 
@@ -431,7 +392,7 @@ io.on("connection", (socket) => {
 
                 break;
             }
-            */
+
             case "answerCorrect":
 
                 broadcastToUnity({
