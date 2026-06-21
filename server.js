@@ -370,28 +370,25 @@ io.on("connection", (socket) => {
 
                 const clueId = clue.id;
 
-                if (usedClueIds.has(clueId)) {
-                    console.log("CLUE ALREADY USED:", clueId);
-                    return;
-                }
+                if (usedClueIds.has(clueId)) return;
 
                 usedClueIds.add(clueId);
 
-                console.log("SELECT CLUE:", clueId);
-
                 const payload = {
-                    value: data.payload.value,
-                    clueId: clueId,
-                    clueData: clue,
-                    used: true
+                    type: "selectClue",
+                    payload: {
+                        value: data.payload.value,
+                        clueId: clueId,
+                        clueData: clue,
+                        used: true
+                    }
                 };
 
-                broadcastToUnity({
-                    type: "selectClue",
-                    payload
-                });
+                // SEND SAME STRUCTURE TO BOTH
+                const message = JSON.stringify(payload);
 
-                io.emit("selectClue", { payload });
+                io.emit("selectClue", payload);
+                broadcastToUnity(payload);
 
                 break;
             }
