@@ -117,6 +117,8 @@ function generateBoard() {
 
             game.board[categoryName][value] = {
                 id: chosen.id,
+                value,
+                category: categoryName,
                 clue: chosen.clue,
                 answer: chosen.answer,
                 used: false
@@ -361,38 +363,75 @@ io.on("connection", (socket) => {
                 io.emit("showBoardIntro");
                 break;
 
-            case "selectClue":{
+            case "selectClue": {
                 const clue = data.payload?.clueData;
 
                 if (!clue || !clue.id) return;
 
-                // 1. MARK AS USED (GLOBAL AUTHORITY)
-                usedClueIds.add(clue.id);
+                const clueId = clue.id;
 
-                console.log("SELECT CLUE:", clue.id);
+                if (usedClueIds.has(clueId)) {
+                    console.log("CLUE ALREADY USED:", clueId);
+                    return;
+                }
 
-                // 2. SEND TO WEB CLIENTS
-                io.emit("selectClue", {
-                    payload: {
-                        value: data.payload.value,
-                        clueId: clue.id,
-                        clueData: clue
-                    }
-                });
+                usedClueIds.add(clueId);
 
-                // 3. SEND TO UNITY
+                console.log("SELECT CLUE:", clueId);
+
+                const payload = {
+                    value: data.payload.value,
+                    clueId: clueId,
+                    clueData: clue,
+                    used: true
+                };
+
+                io.emit("selectClue", { payload });
+
                 broadcastToUnity({
                     type: "selectClue",
-                    payload: {
-                        value: data.payload.value,
-                        clueId: clue.id,
-                        clueData: clue
-                    }
+                    payload
+                });
+
+                broadcastToUnity({
+                    type: "clueLocked",
+                    clueId: clueId
                 });
 
                 break;
             }
 
+            /*
+            case "selectClue": {
+                const clue = data.payload?.clueData;
+
+                if (!clue || !clue.id) return;
+
+                // prevent double-use server-side (authoritative guard)
+                if (usedClueIds.has(clue.id)) return;
+
+                usedClueIds.add(clue.id);
+
+                console.log("SELECT CLUE:", clue.id);
+
+                const payload = {
+                    value: data.payload.value,
+                    clueId: clue.id,
+                    clueData: clue,
+                    used: true
+                };
+
+                // SINGLE SOURCE OF TRUTH EVENT
+                io.emit("selectClue", { payload });
+
+                broadcastToUnity({
+                    type: "selectClue",
+                    payload
+                });
+
+                break;
+            }
+            */
             case "answerCorrect":
 
                 broadcastToUnity({
@@ -414,6 +453,7 @@ io.on("connection", (socket) => {
                 break;
 
             case "revealAnswer":
+                console.log("REVEAL ANSWER - Server");
                 io.emit("revealAnswer");
 
                 broadcastToUnity({
@@ -421,25 +461,6 @@ io.on("connection", (socket) => {
                 });
                 break;
 
-            /*
-            case "revealAnswer":
-                const clue = data.payload?.clueData;
-
-                if (!clue || !clue.id) return;
-
-                io.emit("revealAnswer", {
-                    clueId: clue.id,
-                    answer: data.payload.answer
-                });
-
-                broadcastToUnity({
-                    type: "revealAnswer",
-                    clueId: clue.id,
-                    answer: data.payload.answer
-                });
-
-                break;
-            */
             case "resumeBuzzing":
                 io.emit("resumeBuzzing");
                 break;
@@ -454,16 +475,6 @@ io.on("connection", (socket) => {
 
         io.emit("gameStarted", game.board);
     });
-
-    // SELECT CLUE
-    //socket.on("selectClue", (data) => {
-    //    io.emit("selectClue", data);
-    //});
-
-    // SUBMIT ANSWER
-    //socket.on("submitAnswer", (data) => {
-    //    io.emit("answerSubmitted", data);
-    //});
 
     // DISCONNECT
     socket.on("disconnect", () => {
