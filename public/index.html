@@ -640,14 +640,19 @@
     #buzzerPage{
         position:fixed;
         inset:0;
+        display:flex;
+        justify-content:center;
+        align-items:center;
         overflow:hidden;
     }
 
     #buzzerBackground{
         position:absolute;
+        inset:0;
         width:100%;
         height:100%;
         object-fit:cover;
+        z-index:0;
     }
 
     #buzzButton{
@@ -658,6 +663,7 @@
         background:none;
         border:none;
         padding:0;
+        z-index:5;
     }
 
     #buzzImg{
@@ -691,8 +697,8 @@
         justify-content:center;
         align-items:center;
         flex-direction:column;
-
-        z-index:9000;
+        overflow:hidden;
+        z-index:1000;
     }
 
     #answeringCharacter{
@@ -715,8 +721,15 @@
     #answeringName{
         font-size:40px;
         font-weight:bold;
-
         margin-bottom:20px;
+    }
+    .fullscreenBg{
+        position:absolute;
+        inset:0;
+        width:100%;
+        height:100%;
+        object-fit:cover;
+        z-index:0;
     }
 /* #endregion */
 
@@ -836,6 +849,10 @@
             </div>
         </div>
 
+        <button id="enableBuzzerBtn" onclick="hostEnableBuzzer()" style="display:none;">
+                Enable Buzzers
+        </button>
+
         <div id="hostJudgementArea">
             <div id="hostJudgementQuestion">
                 Did nobody answer correctly?
@@ -847,10 +864,6 @@
                 <button onclick="hostContinue()">CONTINUE</button>
             </div>
         </div>
-
-        <button id="enableBuzzerBtn" onclick="hostEnableBuzzer()" style="display:none;">
-                Enable Buzzers
-        </button>
     </div>
 </div>
 
@@ -1620,7 +1633,7 @@ window.addEventListener("load", () => {
 
         document.getElementById("hostClueInner").classList.remove("flipped");
         document.getElementById("hostJudgementArea").classList.remove("show");
-        document.getElementById("enableBuzzerBtn").style.display = "none";
+        document.getElementById("enableBuzzerBtn").style.display = "block";
     }
 
     function flipHostCard() {
@@ -1735,6 +1748,9 @@ window.addEventListener("load", () => {
         buzzImg.src = "/backgrounds/WBuzzerUp.png";
         buzzImg.classList.remove("down");
 
+        document.getElementById("waitingScreen").classList.remove("show");
+        document.getElementById("waitingScreen").classList.add("hidden");
+
         document.getElementById("answeringPage").classList.add("hidden");
 
         buzzerPage.classList.remove("hidden");
@@ -1742,6 +1758,7 @@ window.addEventListener("load", () => {
 
     socket.on("buzzAccepted", (data)=>{
         buzzerPage.classList.add("hidden");
+        answeringPage.classList.remove("hidden");
         canBuzz = false;
 
         const character = characters.find(c => c.name === data.character);
