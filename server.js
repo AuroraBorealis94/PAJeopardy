@@ -19,6 +19,9 @@ const disconnectTimers = new Map();
 const usedClueIds = new Set();
 // LOCKED CHARACTERS
 const lockedCharacters = new Set();
+// BUZZER
+let buzzAccepted = false;
+let currentBuzzPlayer = null;
 
 // BRIDGE FROM SOCKET.IO TO WEBSOCKET
 const WebSocket = require("ws");
@@ -374,6 +377,8 @@ io.on("connection", (socket) => {
 
                 usedClueIds.add(clueId);
 
+                buzzAccepted = false;
+
                 const payload = {
                     type: "selectClue",
                     payload: {
@@ -423,9 +428,42 @@ io.on("connection", (socket) => {
                 break;
 
             case "resumeBuzzing":
+                buzzAccepted = true;
+                currentBuzzPlayer = null;
+
                 io.emit("resumeBuzzing");
                 break;
         }
+    });
+
+    // BUZZER SCREEN
+    socket.on("buzz", () => {
+        if (!buzzAccepted)
+            return;
+
+        buzzAccepted = false;
+
+        const player = game.players.find(
+            p => p.socketId === socket.id
+        );
+
+        if (!player)
+            return;
+
+        currentBuzzPlayer = player;
+
+        io.emit("buzzAccepted", {
+            playerId: player.playerId,
+            playerName: player.name,
+            character: player.character
+        });
+
+        broadcastToUnity({
+            type: "buzzAccepted",
+            playerName: player.name
+        });
+
+        console.log("Buzz won by", player.name);
     });
 
     // START GAME
