@@ -841,16 +841,16 @@
                 Did nobody answer correctly?
             </div>
 
-            <button id="enableBuzzerBtn" onclick="hostEnableBuzzer()" style="display:none;">
-                Enable Buzzers
-            </button>
-
             <div id="hostJudgementButtons">
                 <button onclick="hostAnswerCorrect()">YES</button>
                 <button onclick="hostAnswerWrong()">NO</button>
                 <button onclick="hostContinue()">CONTINUE</button>
             </div>
         </div>
+
+        <button id="enableBuzzerBtn" onclick="hostEnableBuzzer()" style="display:none;">
+                Enable Buzzers
+        </button>
     </div>
 </div>
 
@@ -1620,37 +1620,31 @@ window.addEventListener("load", () => {
 
         document.getElementById("hostClueInner").classList.remove("flipped");
         document.getElementById("hostJudgementArea").classList.remove("show");
-        document.getElementById("enableBuzzerBtn").style.display = "block";
+        document.getElementById("enableBuzzerBtn").style.display = "none";
     }
 
     function flipHostCard() {
         const inner = document.getElementById("hostClueInner");
         const judgement = document.getElementById("hostJudgementArea");
+        const enableBtn = document.getElementById("enableBuzzerBtn");
 
         hostAnswerShowing = !hostAnswerShowing;
 
         inner.classList.toggle("flipped");
 
-        if (hostAnswerShowing)
-        {
-            document.getElementById("enableBuzzerBtn").style.display = "none";
+        if (hostAnswerShowing) {
+            enableBtn.style.display = "none";
 
             setTimeout(() => {
-
-                const playerName = window.lastBuzzedPlayerName || "___";
-
-                document.getElementById("hostJudgementQuestion")
-                    .textContent =
-                    `Did ${playerName} answer correctly?`;
+                document.getElementById("hostJudgementQuestion").textContent =
+                    `Did ${window.lastBuzzedPlayerName || "___"} answer correctly?`;
 
                 judgement.classList.add("show");
-
             }, 450);
         }
-        else
-        {
-            document.getElementById("enableBuzzerBtn").style.display = "block";
+        else {
             judgement.classList.remove("show");
+            enableBtn.style.display = "block";
         }
     }
 
@@ -1680,7 +1674,9 @@ window.addEventListener("load", () => {
         console.log("ANSWER WRONG");
 
         document.getElementById("hostClueInner").classList.remove("flipped");
-        document.getElementById("hostJudgementButtons").classList.add("hidden");
+        document.getElementById("hostJudgementArea").classList.remove("show");
+        document.getElementById("hostJudgementButtons").classList.remove("hidden");
+        document.getElementById("enableBuzzerBtn").style.display = "block";
 
         hostAnswerShowing = false;
     }
@@ -1697,7 +1693,11 @@ window.addEventListener("load", () => {
     }
 
     function hostEnableBuzzer() {
-        socket.emit("hostAction", { type: "resumeBuzzing" });
+        document.getElementById("enableBuzzerBtn").style.display = "none";
+
+        socket.emit("hostAction", {
+            type: "resumeBuzzing"
+        });
     }
 /* #endregion */
 
