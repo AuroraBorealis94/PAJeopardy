@@ -1101,6 +1101,21 @@ window.addEventListener("load", () => {
         buildHostBoard(board);
     });
 
+    // SELECT CLUE
+    socket.on("selectClue", ({ payload }) => {
+        //if (isHost && currentHostClue) {
+        //    showHostClue(currentHostClue);
+        //}
+
+        if (!isHost)
+            return;
+
+        showHostClue({
+            value: payload.value,
+            clueData: payload.clueData
+        });
+    });
+
     // RESET SERVER
     socket.on("forceReset", () => {
         console.log("Session expired, resetting");
@@ -1433,25 +1448,18 @@ window.addEventListener("load", () => {
 
 /* #region WAITING SCREEN */
     function showWaitingScreen() {
-        const screen = document.getElementById("waitingScreen");
-
-        if (screen.classList.contains("show")) return; // prevent flicker
-
-        // hide lobby
         document.getElementById("lobbyUI").style.display = "none";
 
-        // populate player info
         if (state.character?.front) {
+
             document.getElementById("waitingImage").src =
                 state.character.front;
         }
-        document.getElementById("waitingName").textContent = state.name;
 
-        screen.classList.remove("hidden");
+        document.getElementById("waitingName").textContent =
+            state.name;
 
-        requestAnimationFrame(() => {
-            screen.classList.add("show");
-        });
+        showPlayerScreen("waitingScreen");
     }
 
     function changeCharacter() {
@@ -1462,24 +1470,19 @@ window.addEventListener("load", () => {
 
         socket.emit("leavePlayer", { playerId });
 
-        // clear only character selection
         localStorage.removeItem("character");
 
         state.character = null;
 
-        // return to lobby
-        document.getElementById("waitingScreen")
-            .classList.remove("show");
+        hidePlayerScreen("waitingScreen");
 
         document.getElementById("lobbyUI").style.display = "block";
 
-        // re-enable character buttons
         document.querySelectorAll(".charCard").forEach(card => {
             card.disabled = false;
             card.style.pointerEvents = "";
         });
 
-        // reset join button
         const joinBtn = document.getElementById("joinBtn");
 
         joinBtn.disabled = false;
@@ -1714,6 +1717,47 @@ window.addEventListener("load", () => {
     }
 /* #endregion */
 
+/* #region PLAYER SCREENS */
+    function hideAllPlayerScreens() {
+        const waiting = document.getElementById("waitingScreen");
+
+        waiting.classList.remove("show");
+        waiting.classList.add("hidden");
+
+        document.getElementById("buzzerPage")
+            .classList.add("hidden");
+
+        document.getElementById("answeringPage")
+            .classList.add("hidden");
+    }
+
+    function showPlayerScreen(id) {
+        hideAllPlayerScreens();
+
+        const screen = document.getElementById(id);
+
+        screen.classList.remove("hidden");
+
+        if (id === "waitingScreen") {
+
+            requestAnimationFrame(() => {
+                screen.classList.add("show");
+            });
+
+        }
+    }
+
+    function hidePlayerScreen(id) {
+        const screen = document.getElementById(id);
+
+        if (id === "waitingScreen") {
+            screen.classList.remove("show");
+        }
+
+        screen.classList.add("hidden");
+    }
+/* #endregion */
+
 /* #region BUZZER SCREEN */
     const buzzerPage = document.getElementById("buzzerPage");
     const buzzButton = document.getElementById("buzzButton");
@@ -1748,24 +1792,15 @@ window.addEventListener("load", () => {
         buzzImg.src = "/backgrounds/WBuzzerUp.png";
         buzzImg.classList.remove("down");
 
-        document.getElementById("waitingScreen").classList.remove("show");
-        document.getElementById("waitingScreen").classList.add("hidden");
+        showPlayerScreen("buzzerPage");
 
-        document.getElementById("answeringPage").classList.add("hidden");
-
-        buzzerPage.classList.remove("hidden");
     });
 
     socket.on("buzzAccepted", (data)=>{
-        buzzerPage.classList.add("hidden");
-        answeringPage.classList.remove("hidden");
+        showPlayerScreen("answeringPage");
         canBuzz = false;
 
         const character = characters.find(c => c.name === data.character);
-
-        if (isHost) {
-            window.lastBuzzedPlayerName = data.playerName;
-        }
 
         if(character){
             document.getElementById("answeringCharacter").src = character.front;
@@ -1782,7 +1817,6 @@ window.addEventListener("load", () => {
             document.getElementById("answeringName").textContent = data.playerName;
         }
 
-        document.getElementById("answeringPage").classList.remove("hidden");
         window.lastBuzzedPlayerName = data.playerName;
     });
 /* #endregion */
