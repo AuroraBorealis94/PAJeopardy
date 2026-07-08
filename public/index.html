@@ -652,7 +652,6 @@
         width:100%;
         height:100%;
         object-fit:cover;
-        z-index:0;
     }
 
     #buzzButton{
@@ -660,7 +659,6 @@
         left:50%;
         top:50%;
         transform:translate(-50%,-50%);
-        z-index:2;
     }
 
     #buzzImg{
@@ -695,7 +693,6 @@
         align-items:center;
         flex-direction:column;
         overflow:hidden;
-        z-index:4000;
     }
 
     #answeringCharacter{
@@ -710,26 +707,25 @@
         margin-bottom:20px;
     }
 
-    #answeringText{
-        position:relative;
-        z-index:2;
-
-        color:white;
-        text-align:center;
-    }
-
     #answeringName{
         font-size:40px;
         font-weight:bold;
         margin-bottom:20px;
     }
+
     .fullscreenBg{
         position:absolute;
         inset:0;
         width:100%;
         height:100%;
         object-fit:cover;
-        z-index:0;
+    }
+
+    #answeringText{
+        position:relative;
+
+        color:white;
+        text-align:center;
     }
 /* #endregion */
 
@@ -889,7 +885,6 @@
         <div id="answeringTitle"></div>
         <div id="answeringName"></div>
     </div>
-
 </div>
 
 <script src="/socket.io/socket.io.js"></script>
