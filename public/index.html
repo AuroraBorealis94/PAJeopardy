@@ -352,8 +352,8 @@
         margin-top: 20px;
     }
 
-    .hidden {
-        display: none;
+    .hidden{
+        display:none !important;
     }
 
     #waitingCharacter img {
@@ -660,10 +660,7 @@
         left:50%;
         top:50%;
         transform:translate(-50%,-50%);
-        background:none;
-        border:none;
-        padding:0;
-        z-index:5;
+        z-index:2;
     }
 
     #buzzImg{
@@ -714,6 +711,9 @@
     }
 
     #answeringText{
+        position:relative;
+        z-index:2;
+
         color:white;
         text-align:center;
     }
@@ -1723,23 +1723,21 @@ window.addEventListener("load", () => {
         waiting.classList.remove("show");
         waiting.classList.add("hidden");
 
-        document.getElementById("buzzerPage")
-            .classList.add("hidden");
-
-        document.getElementById("answeringPage")
-            .classList.add("hidden");
+        document.getElementById("buzzerPage").classList.add("hidden");
+        document.getElementById("answeringPage").classList.add("hidden");
     }
 
     function showPlayerScreen(id) {
-        const waiting = document.getElementById("waitingScreen");
+        hideAllPlayerScreens();
 
-        waiting.classList.remove("show");
-        waiting.classList.add("hidden");
+        const screen = document.getElementById(id);
+        screen.classList.remove("hidden");
 
-        document.getElementById("buzzerPage").classList.add("hidden");
-        document.getElementById("answeringPage").classList.add("hidden");
-
-        document.getElementById(id).classList.remove("hidden");
+        if (id === "waitingScreen") {
+            requestAnimationFrame(() => {
+                screen.classList.add("show");
+            });
+        }
     }
 
     function hidePlayerScreen(id) {
@@ -1792,7 +1790,6 @@ window.addEventListener("load", () => {
 
     socket.on("buzzAccepted", (data)=>{
         showPlayerScreen("answeringPage");
-        hidePlayerScreen("buzzerPage");
         canBuzz = false;
 
         const character = characters.find(c => c.name === data.character);
