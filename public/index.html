@@ -698,7 +698,7 @@
         align-items:center;
         flex-direction:column;
         overflow:hidden;
-        z-index:1000;
+        z-index:4000;
     }
 
     #answeringCharacter{
@@ -880,7 +880,6 @@
 
 <!-- ANSWERING WAIT SCREEN -->
 <div id="answeringPage" class="hidden">
-
     <img
         src="/backgrounds/WBuzzerBG.png"
         class="fullscreenBg">
@@ -1732,19 +1731,15 @@ window.addEventListener("load", () => {
     }
 
     function showPlayerScreen(id) {
-        hideAllPlayerScreens();
+        const waiting = document.getElementById("waitingScreen");
 
-        const screen = document.getElementById(id);
+        waiting.classList.remove("show");
+        waiting.classList.add("hidden");
 
-        screen.classList.remove("hidden");
+        document.getElementById("buzzerPage").classList.add("hidden");
+        document.getElementById("answeringPage").classList.add("hidden");
 
-        if (id === "waitingScreen") {
-
-            requestAnimationFrame(() => {
-                screen.classList.add("show");
-            });
-
-        }
+        document.getElementById(id).classList.remove("hidden");
     }
 
     function hidePlayerScreen(id) {
@@ -1793,11 +1788,11 @@ window.addEventListener("load", () => {
         buzzImg.classList.remove("down");
 
         showPlayerScreen("buzzerPage");
-
     });
 
     socket.on("buzzAccepted", (data)=>{
         showPlayerScreen("answeringPage");
+        hidePlayerScreen("buzzerPage");
         canBuzz = false;
 
         const character = characters.find(c => c.name === data.character);
