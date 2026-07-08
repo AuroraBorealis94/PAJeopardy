@@ -383,12 +383,10 @@
     #hostControls {
         position: fixed;
         inset: 0;
-
         background-image: 
             url('/backgrounds/WHostBG.jpg');
         background-size: cover;
         background-repeat: no-repeat;
-
         color: white;
         padding-top: 140px;
         display: flex;
@@ -396,12 +394,9 @@
         justify-content: center;
         align-items: center;
         gap: 20px;
-
         z-index: 5000;
-
         opacity: 0;
         pointer-events: none;
-
         transition: opacity 0.4s ease;
     }
 
@@ -622,14 +617,6 @@
         justify-content: center;
     }
 
-    /*
-    #hostJudgementButtons {
-        margin-top: 25px;
-
-        display: flex;
-        gap: 16px;
-    }
-    */
     #hostJudgementButtons button {
         font-size: 22px;
         padding: 12px 26px;
@@ -680,19 +667,17 @@
 
 /* #region Answering Wait Screen */
     #answeringPage{
+        position: fixed;
+        inset: 0;
         background-image: 
             url('/backgrounds/WHostBG.jpg');
         background-size: cover;
         background-repeat: no-repeat;
-
-        position:fixed;
-        inset:0;
-
-        display:flex;
-        justify-content:center;
-        align-items:center;
-        flex-direction:column;
-        overflow:hidden;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        z-index: 5000;
     }
 
     #answeringCharacter{
@@ -876,10 +861,6 @@
 
 <!-- ANSWERING WAIT SCREEN -->
 <div id="answeringPage" class="hidden">
-    <img
-        src="/backgrounds/WBuzzerBG.png"
-        class="fullscreenBg">
-
     <div id="answeringText">
         <img id="answeringCharacter">
         <div id="answeringTitle"></div>
