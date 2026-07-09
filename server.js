@@ -22,6 +22,8 @@ const lockedCharacters = new Set();
 // BUZZER
 let buzzAccepted = false;
 let currentBuzzPlayer = null;
+//SCORE
+let currentClueValue = 0;
 
 // BRIDGE FROM SOCKET.IO TO WEBSOCKET
 const WebSocket = require("ws");
@@ -281,6 +283,7 @@ io.on("connection", (socket) => {
             name,
             character,
             characterKey: character.toLowerCase(),
+            score: 0,
             isHost: !!isHost,
             disconnected: false,
             disconnectTime: null
@@ -368,6 +371,7 @@ io.on("connection", (socket) => {
 
             case "selectClue": {
                 const clue = data.payload?.clueData;
+                currentClueValue = parseInt(data.payload.value);
 
                 if (!clue || !clue.id) return;
 
@@ -399,22 +403,37 @@ io.on("connection", (socket) => {
             }
 
             case "answerCorrect":
+                if (currentBuzzPlayer) {
+
+                    currentBuzzPlayer.score += currentClueValue;
+
+                    io.emit("scoreUpdate", {
+                        playerId: currentBuzzPlayer.playerId,
+                        score: currentBuzzPlayer.score,
+                        earned: currentClueValue
+                    });
+
+                    broadcastToUnity({
+                        type: "scoreUpdate",
+                        playerId: currentBuzzPlayer.playerId,
+                        score: currentBuzzPlayer.score
+                    });
+                }
+
+                io.emit("showScoreScreen");
 
                 broadcastToUnity({
-                    type: "revealAnswer"
+                    type: "showScoreScreen"
                 });
-
-                io.emit("revealAnswer");
 
                 break;
 
             case "continueClue":
+                io.emit("showScoreScreen");
 
                 broadcastToUnity({
-                    type: "revealAnswer"
+                    type: "showScoreScreen"
                 });
-
-                io.emit("revealAnswer");
 
                 break;
 

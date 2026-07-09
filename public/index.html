@@ -720,6 +720,21 @@
     }
 /* #endregion */
 
+/* #region Score Screen */
+    #scorePage {
+        position: fixed;
+        inset: 0;
+        background-image: 
+            url('/backgrounds/WHostBG.jpg');
+        background-size: cover;
+        background-repeat: no-repeat;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+    }
+/* #endregion */
+
 </style>
 
 <!-- HTML -->
@@ -874,6 +889,14 @@
     </div>
 </div>
 
+<!-- SCORE PAGE -->
+<div id="scorePage" class="hidden">
+    <img id="scoreCharacter">
+
+    <div id="scoreValue">$0</div>
+    <div id="scoreChange"></div>
+</div>
+
 <script src="/socket.io/socket.io.js"></script>
 <script>
 
@@ -893,6 +916,7 @@ let currentHostTile = null;
 let hostAnswerShowing = false;
 let characters = [];
 let currentIndex = 0;
+let currentScore = 0;
 
 window.addEventListener("load", () => {
     // RESTORE SAVED PLAYER STATE
@@ -1076,6 +1100,26 @@ window.addEventListener("load", () => {
     // BOARD DATA
     socket.on("boardData", (board) => {
         buildHostBoard(board);
+    });
+
+    // SCORE
+    socket.on("scoreUpdate", (data)=>{
+        if(data.playerId !== localStorage.getItem("playerId"))
+            return;
+
+        animateScoreGain(
+            currentScore,
+            data.score,
+            data.earned
+        );
+
+        currentScore = data.score;
+    });
+
+    socket.on("showScoreScreen", ()=>{
+        showPlayerScreen("scorePage");
+
+        document.getElementById("scoreValue").textContent = currentScore;
     });
 
     // SELECT CLUE
@@ -1628,12 +1672,12 @@ window.addEventListener("load", () => {
         if (hostAnswerShowing) {
             enableBtn.style.display = "none";
 
-            setTimeout(() => {
-                document.getElementById("hostJudgementQuestion").textContent =
-                    `Did ${window.lastBuzzedPlayerName || "___"} answer correctly?`;
+            //setTimeout(() => {
+            //    document.getElementById("hostJudgementQuestion").textContent =
+            //        `Did ${window.lastBuzzedPlayerName || "___"} answer correctly?`;
 
-                judgement.classList.add("show");
-            }, 450);
+            //    judgement.classList.add("show");
+            //}, 450);
         }
         else {
             judgement.classList.remove("show");
@@ -1666,10 +1710,16 @@ window.addEventListener("load", () => {
     function hostAnswerWrong() {
         console.log("ANSWER WRONG");
 
-        document.getElementById("hostClueInner").classList.remove("flipped");
         document.getElementById("hostJudgementArea").classList.remove("show");
-        document.getElementById("hostJudgementButtons").classList.remove("hidden");
-        document.getElementById("enableBuzzerBtn").style.display = "block";
+
+        socket.emit("hostAction", {
+            type:"resumeBuzzing"
+        });
+
+        //document.getElementById("hostClueInner").classList.remove("flipped");
+        //document.getElementById("hostJudgementArea").classList.remove("show");
+        //document.getElementById("hostJudgementButtons").classList.remove("hidden");
+        //document.getElementById("enableBuzzerBtn").style.display = "block";
 
         hostAnswerShowing = false;
     }
@@ -1769,7 +1819,7 @@ window.addEventListener("load", () => {
     socket.on("buzzAccepted", (data) => {
         window.lastBuzzedPlayerName = data.playerName;
 
-        if (isHost) {
+        if (!isHost) {
             return;
         }
 
@@ -1782,6 +1832,9 @@ window.addEventListener("load", () => {
             document.getElementById("answeringCharacter").src = character.front;
         }
 
+        document.getElementById("hostJudgementQuestion").textContent = `Did Team ${data.playerName} answer correctly?`;
+        document.getElementById("hostJudgementArea").classList.add("show");
+
         const isMe = data.playerId === localStorage.getItem("playerId");
 
         if (isMe) {
@@ -1793,6 +1846,32 @@ window.addEventListener("load", () => {
 
         document.getElementById("answeringName").textContent = "Team " + data.playerName;
     });
+/* #endregion */
+
+/* #region SCORE SCREEN */
+    function animateScoreGain(oldScore,newScore,gain){
+        const plus=document.getElementById("scoreGain");
+
+        plus.textContent="+"+gain;
+        plus.classList.remove("hidden");
+
+        let value=oldScore;
+
+        const label=document.getElementById("scoreValue");
+        const timer=setInterval(()=>{
+            value+=20;
+
+            if(value>=newScore){
+                value=newScore;
+                clearInterval(timer);
+
+                setTimeout(()=>{
+                    plus.classList.add("hidden");
+                },1000);
+            }
+            label.textContent=value;
+        },20);
+    }
 /* #endregion */
 
 </script>
