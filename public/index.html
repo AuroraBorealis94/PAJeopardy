@@ -733,6 +733,8 @@
         justify-content: center;
         align-items: center;
     }
+
+
 /* #endregion */
 
 </style>
@@ -1103,6 +1105,7 @@ window.addEventListener("load", () => {
     });
 
     // SCORE
+    /*
     socket.on("scoreUpdate", (data)=>{
         if(data.playerId !== localStorage.getItem("playerId"))
             return;
@@ -1120,6 +1123,22 @@ window.addEventListener("load", () => {
         showPlayerScreen("scorePage");
 
         document.getElementById("scoreValue").textContent = currentScore;
+    });
+    */
+
+    socket.on("showScoreScreen", (data)=>{
+        if(data.playerId !== localStorage.getItem("playerId"))
+            return;
+
+        showPlayerScreen("scorePage");
+
+        animateScoreReveal(
+            currentScore,
+            data.score,
+            data.earned
+        );
+
+        currentScore = data.score;
     });
 
     // SELECT CLUE

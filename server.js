@@ -407,24 +407,23 @@ io.on("connection", (socket) => {
 
                     currentBuzzPlayer.score += currentClueValue;
 
-                    io.emit("scoreUpdate", {
+                    // Send score page info to all phones
+                    io.emit("showScoreScreen", {
                         playerId: currentBuzzPlayer.playerId,
+                        character: currentBuzzPlayer.character,
                         score: currentBuzzPlayer.score,
                         earned: currentClueValue
                     });
 
+                    // Send score popup info to Unity
                     broadcastToUnity({
-                        type: "scoreUpdate",
+                        type: "showScoreScreen",
                         playerId: currentBuzzPlayer.playerId,
-                        score: currentBuzzPlayer.score
+                        character: currentBuzzPlayer.character,
+                        score: currentBuzzPlayer.score,
+                        earned: currentClueValue
                     });
                 }
-
-                io.emit("showScoreScreen");
-
-                broadcastToUnity({
-                    type: "showScoreScreen"
-                });
 
                 break;
 
