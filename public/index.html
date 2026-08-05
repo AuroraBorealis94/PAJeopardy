@@ -916,6 +916,7 @@ let isHost = false;
 let currentHostClue = null;
 let currentHostTile = null;
 let hostAnswerShowing = false;
+let buzzersEnabled = false;
 let characters = [];
 let currentIndex = 0;
 let currentScore = 0;
@@ -1529,6 +1530,9 @@ window.addEventListener("load", () => {
         joinBtn.innerText = "Join Game";
         joinBtn.style.opacity = "1";
 
+        document.getElementById("name").disabled = false;
+        document.getElementById("enterBtn").disabled = false;
+
         updatePreview();
         updateLockedUI();
     }
@@ -1676,7 +1680,8 @@ window.addEventListener("load", () => {
 
         document.getElementById("hostClueInner").classList.remove("flipped");
         document.getElementById("hostJudgementArea").classList.remove("show");
-        document.getElementById("enableBuzzerBtn").style.display = "block";
+        buzzersEnabled = false;
+document.getElementById("enableBuzzerBtn").style.display = "block";
     }
 
     function flipHostCard() {
@@ -1700,7 +1705,7 @@ window.addEventListener("load", () => {
         }
         else {
             judgement.classList.remove("show");
-            enableBtn.style.display = "block";
+            enableBtn.style.display = buzzersEnabled ? "none" : "block";
         }
     }
 
@@ -1755,6 +1760,7 @@ window.addEventListener("load", () => {
     }
 
     function hostEnableBuzzer() {
+        buzzersEnabled = true;
         document.getElementById("enableBuzzerBtn").style.display = "none";
 
         socket.emit("hostAction", {
@@ -1838,32 +1844,45 @@ window.addEventListener("load", () => {
     socket.on("buzzAccepted", (data) => {
         window.lastBuzzedPlayerName = data.playerName;
 
-        if (!isHost) {
+        const character =
+            characters.find(c => c.name === data.character);
+
+        //
+        // HOST
+        //
+        if (isHost)
+        {
+            document.getElementById("hostJudgementQuestion").textContent =
+                `Did Team ${data.playerName} answer correctly?`;
+
+            document
+                .getElementById("hostJudgementArea")
+                .classList.add("show");
+
             return;
         }
 
+        //
+        // PLAYERS
+        //
         showPlayerScreen("answeringPage");
+
         canBuzz = false;
 
-        const character = characters.find(c => c.name === data.character);
-
-        if (character) {
-            document.getElementById("answeringCharacter").src = character.front;
+        if (character)
+        {
+            document.getElementById("answeringCharacter").src =
+                character.front;
         }
 
-        document.getElementById("hostJudgementQuestion").textContent = `Did Team ${data.playerName} answer correctly?`;
-        document.getElementById("hostJudgementArea").classList.add("show");
+        const isMe =
+            data.playerId === localStorage.getItem("playerId");
 
-        const isMe = data.playerId === localStorage.getItem("playerId");
+        document.getElementById("answeringTitle").textContent =
+            isMe ? "YOUR TURN!" : "IS ANSWERING";
 
-        if (isMe) {
-            document.getElementById("answeringTitle").textContent = "YOUR TURN!";
-        }
-        else {
-            document.getElementById("answeringTitle").textContent = "IS ANSWERING";
-        }
-
-        document.getElementById("answeringName").textContent = "Team " + data.playerName;
+        document.getElementById("answeringName").textContent =
+            "Team " + data.playerName;
     });
 /* #endregion */
 
