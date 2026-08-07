@@ -3,6 +3,7 @@ const app = express();
 const http = require("http").createServer(app);
 const loadCategories = require("./loadCategories");
 
+app.use(express.static("public"));
 app.use("/characters", express.static("characters"));
 app.use("/fonts", express.static("fonts"));
 app.use("/backgrounds", express.static("backgrounds"));
