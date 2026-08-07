@@ -56,17 +56,57 @@ const game = {
 
 // CHARACTER STORAGE
 const characters = [
-    { name: "The Boss", front: "/characters/thebossfront.png", back: "/characters/thebossback.png" },
-    { name: "Janice Mowes", front: "/characters/janicemowesfront.png", back: "/characters/janicemowesback.png" },
+    { name: "The Boss", front: "/characters/thebossfront.png", back: "/characters/thebossback.png",
+        animations: {
+            idle: { src: "/characters/animations/thebossidle.png", frames: 4, speed: "0.8s" },
+            victory: { src: "/characters/animations/thebossvictory.png", frames: 6, speed: "0.4s" }
+    },
+    { name: "Janice Mowes", front: "/characters/janicemowesfront.png", back: "/characters/janicemowesback.png",
+        animations: {
+            idle: { src: "/characters/animations/janicemowesidle.png", frames: 4, speed: "0.8s" },
+            victory: { src: "/characters/animations/janicemowesvictory.png", frames: 6, speed: "0.4s" }
+    },
     { name: "Tricerex", front: "/characters/tricerexfront.png", back: "/characters/tricerexback.png" },
-    { name: "Fancy Dancer", front: "/characters/fancydancerpinkfront.png", back: "/characters/fancydancerpinkback.png" },
-    { name: "Deerhead", front: "/characters/deerheadfront.png", back: "/characters/deerheadback.png" },
-    { name: "Caity Satyr", front: "/characters/caitysatyrfront.png", back: "/characters/caitysatyrback.png" },
-    { name: "The Holy Spirit", front: "/characters/jesusfront.png", back: "/characters/jesusback.png" },
-    { name: "The Newlyweds", front: "/characters/thenewlywedsfront.png", back: "/characters/thenewlywedsback.png" },
-    { name: "Lorenzo", front: "/characters/lorenzofront.png", back: "/characters/lorenzoback.png" },
+        animations: {
+            idle: { src: "/characters/animations/tricerexidle.png", frames: 4, speed: "0.8s" },
+            victory: { src: "/characters/animations/tricerexvictory.png", frames: 6, speed: "0.4s" }
+    },
+    { name: "Fancy Dancer", front: "/characters/fancydancerpinkfront.png", back: "/characters/fancydancerpinkback.png",
+        animations: {
+            idle: { src: "/characters/animations/fancydanceridle.png", frames: 4, speed: "0.8s" },
+            victory: { src: "/characters/animations/fancydancervictory.png", frames: 6, speed: "0.4s" }
+    },
+    { name: "Deerhead", front: "/characters/deerheadfront.png", back: "/characters/deerheadback.png",
+        animations: {
+            idle: { src: "/characters/animations/deerheadidle.png", frames: 4, speed: "0.8s" },
+            victory: { src: "/characters/animations/deerheadvictory.png", frames: 6, speed: "0.4s" }
+    },
+    { name: "Caity Satyr", front: "/characters/caitysatyrfront.png", back: "/characters/caitysatyrback.png",
+        animations: {
+            idle: { src: "/characters/animations/caitysatyridle.png", frames: 4, speed: "0.8s" },
+            victory: { src: "/characters/animations/caitysatyrvictory.png", frames: 6, speed: "0.4s" }
+    },
+    { name: "The Holy Spirit", front: "/characters/jesusfront.png", back: "/characters/jesusback.png",
+        animations: {
+            idle: { src: "/characters/animations/jesusidle.png", frames: 4, speed: "0.8s" },
+            victory: { src: "/characters/animations/jesusvictory.png", frames: 6, speed: "0.4s" }
+    },
+    { name: "The Newlyweds", front: "/characters/thenewlywedsfront.png", back: "/characters/thenewlywedsback.png",
+        animations: {
+            idle: { src: "/characters/animations/thenewlywedsidle.png", frames: 4, speed: "0.8s" },
+            victory: { src: "/characters/animations/thenewlywedsvictory.png", frames: 6, speed: "0.4s" }
+    },
+    { name: "Lorenzo", front: "/characters/lorenzofront.png", back: "/characters/lorenzoback.png",
+        animations: {
+            idle: { src: "/characters/animations/lorenzoidle.png", frames: 4, speed: "0.8s" },
+            victory: { src: "/characters/animations/lorenzovictory.png", frames: 6, speed: "0.4s" }
+    },
     //{ name: "Wise Old Boy", front: "/characters/oldsawyerfront.png", back: "/characters/oldsawyerback.png" },
-    { name: "The Guitarist", front: "/characters/theguitaristfront.png", back: "/characters/theguitaristback.png" }
+    { name: "The Guitarist", front: "/characters/theguitaristfront.png", back: "/characters/theguitaristback.png",
+        animations: {
+            idle: { src: "/characters/animations/guitaristidle.png", frames: 4, speed: "0.8s" },
+            victory: { src: "/characters/animations/theguitaristvictory.png", frames: 6, speed: "0.4s" }
+    }
 ];
 
 // WEBSOCKET TO UNITY

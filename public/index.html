@@ -734,6 +734,17 @@
         align-items: center;
     }
 
+    .dynamic-sprite {
+      width: 100px;  /* Match the width of ONE single frame */
+      height: 100px; /* Match the height of ONE single frame */
+      background-repeat: no-repeat;
+      background-position: 0px 0px;
+    }
+
+    @keyframes play-dynamic-frames {
+      from { background-position: 0px 0px; }
+      to { background-position: var(--total-width) 0px; }
+    }
 
 /* #endregion */
 
@@ -893,7 +904,8 @@
 
 <!-- SCORE PAGE -->
 <div id="scorePage" class="hidden">
-    <img id="scoreCharacter">
+    <!--<img id="scoreCharacter">-->
+    <div id="scoreSprite" class="dynamic-sprite"></div>
 
     <div id="scoreValue">$0</div>
     <div id="scoreChange"></div>
@@ -1105,35 +1117,30 @@ window.addEventListener("load", () => {
         buildHostBoard(board);
     });
 
-    // SCORE
-    /*
-    socket.on("scoreUpdate", (data)=>{
-        if(data.playerId !== localStorage.getItem("playerId"))
-            return;
-
-        animateScoreGain(
-            currentScore,
-            data.score,
-            data.earned
-        );
-
-        currentScore = data.score;
-    });
-
-    socket.on("showScoreScreen", ()=>{
-        showPlayerScreen("scorePage");
-
-        document.getElementById("scoreValue").textContent = currentScore;
-    });
-    */
-
     socket.on("showScoreScreen", (data)=>{
         if(data.playerId !== localStorage.getItem("playerId"))
             return;
 
+        const character = characters.find(c => c.name === data.character);
+
+        if(character){
+            //document.getElementById("scoreCharacter").src = character.front;
+            const scoreSprite = document.getElementById("scoreSprite");
+            const idleAnim = character.animations.idle;
+
+            // Set frame dimensions (Change 100 to your actual frame width if different)
+            const frameWidth = 100; 
+            const totalWidth = idleAnim.frames * frameWidth;
+
+            // Inject the background sprite sheet and animation properties
+            scoreSprite.style.backgroundImage = `url('${idleAnim.src}')`;
+            scoreSprite.style.animation = `play-dynamic-frames ${idleAnim.speed} steps(${idleAnim.frames}) infinite`;
+            scoreSprite.style.setProperty('--total-width', `-${totalWidth}px`);
+        }
+
         showPlayerScreen("scorePage");
 
-        animateScoreReveal(
+        animateScoreGain(
             currentScore,
             data.score,
             data.earned
@@ -1681,7 +1688,7 @@ window.addEventListener("load", () => {
         document.getElementById("hostClueInner").classList.remove("flipped");
         document.getElementById("hostJudgementArea").classList.remove("show");
         buzzersEnabled = false;
-document.getElementById("enableBuzzerBtn").style.display = "block";
+        document.getElementById("enableBuzzerBtn").style.display = "block";
     }
 
     function flipHostCard() {
@@ -1695,13 +1702,6 @@ document.getElementById("enableBuzzerBtn").style.display = "block";
 
         if (hostAnswerShowing) {
             enableBtn.style.display = "none";
-
-            //setTimeout(() => {
-            //    document.getElementById("hostJudgementQuestion").textContent =
-            //        `Did ${window.lastBuzzedPlayerName || "___"} answer correctly?`;
-
-            //    judgement.classList.add("show");
-            //}, 450);
         }
         else {
             judgement.classList.remove("show");
@@ -1739,11 +1739,6 @@ document.getElementById("enableBuzzerBtn").style.display = "block";
         socket.emit("hostAction", {
             type:"resumeBuzzing"
         });
-
-        //document.getElementById("hostClueInner").classList.remove("flipped");
-        //document.getElementById("hostJudgementArea").classList.remove("show");
-        //document.getElementById("hostJudgementButtons").classList.remove("hidden");
-        //document.getElementById("enableBuzzerBtn").style.display = "block";
 
         hostAnswerShowing = false;
     }
@@ -1837,7 +1832,7 @@ document.getElementById("enableBuzzerBtn").style.display = "block";
 
         buzzImg.src = "/backgrounds/WBuzzerUp.png";
         buzzImg.classList.remove("down");
-
+        hideAllPlayerScreens();
         showPlayerScreen("buzzerPage");
     });
 
@@ -1855,9 +1850,7 @@ document.getElementById("enableBuzzerBtn").style.display = "block";
             document.getElementById("hostJudgementQuestion").textContent =
                 `Did Team ${data.playerName} answer correctly?`;
 
-            document
-                .getElementById("hostJudgementArea")
-                .classList.add("show");
+            document.getElementById("hostJudgementArea").classList.add("show");
 
             return;
         }
@@ -1887,28 +1880,33 @@ document.getElementById("enableBuzzerBtn").style.display = "block";
 /* #endregion */
 
 /* #region SCORE SCREEN */
-    function animateScoreGain(oldScore,newScore,gain){
-        const plus=document.getElementById("scoreGain");
+    function animateScoreGain(oldScore, newScore, earned) {
+        const value = document.getElementById("scoreValue");
+        const change = document.getElementById("scoreChange");
 
-        plus.textContent="+"+gain;
-        plus.classList.remove("hidden");
+        value.textContent = "$" + oldScore;
 
-        let value=oldScore;
+        change.textContent = "+" + earned;
+        change.classList.remove("hidden");
 
-        const label=document.getElementById("scoreValue");
-        const timer=setInterval(()=>{
-            value+=20;
+        let current = oldScore;
 
-            if(value>=newScore){
-                value=newScore;
+        const timer = setInterval(() => {
+
+            current += Math.max(1, Math.ceil(earned / 20));
+
+            if (current >= newScore) {
+                current = newScore;
                 clearInterval(timer);
 
-                setTimeout(()=>{
-                    plus.classList.add("hidden");
-                },1000);
+                setTimeout(() => {
+                    change.classList.add("hidden");
+                },1200);
             }
-            label.textContent=value;
-        },20);
+
+            value.textContent = "$" + current;
+
+        },30);
     }
 /* #endregion */
 
