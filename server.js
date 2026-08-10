@@ -65,13 +65,13 @@ const characters = [
         animations: {
             idle: { 
                 src: "/characters/animations/thebossidle.png", 
-                frames: 4, 
-                speed: "0.8s" 
+                frames: 6, 
+                speed: "1.2s" 
             },
             victory: { 
                 src: "/characters/animations/thebossvictory.png", 
                 frames: 6, 
-                speed: "0.4s" 
+                speed: "1.2s" 
             }
         }
     },
@@ -83,13 +83,13 @@ const characters = [
         animations: {
             idle: { 
                 src: "/characters/animations/janicemowesidle.png", 
-                frames: 4, 
-                speed: "0.8s" 
+                frames: 6, 
+                speed: "1.2s" 
             },
             victory: { 
                 src: "/characters/animations/janicemowesvictory.png", 
                 frames: 6, 
-                speed: "0.4s" 
+                speed: "1.2s" 
             }
         }
     },
@@ -101,13 +101,13 @@ const characters = [
         animations: {
             idle: { 
                 src: "/characters/animations/tricerexidle.png", 
-                frames: 4, 
-                speed: "0.8s" 
+                frames: 6, 
+                speed: "1.2s" 
             },
             victory: { 
                 src: "/characters/animations/tricerexvictory.png", 
                 frames: 6, 
-                speed: "0.4s" 
+                speed: "1.2s" 
             }
         }
     },
@@ -119,13 +119,13 @@ const characters = [
         animations: {
             idle: { 
                 src: "/characters/animations/fancydanceridle.png", 
-                frames: 4, 
-                speed: "0.8s" 
+                frames: 6, 
+                speed: "1.2s" 
             },
             victory: { 
                 src: "/characters/animations/fancydancervictory.png", 
                 frames: 6, 
-                speed: "0.4s" 
+                speed: "1.2s" 
             }
         }
     },
@@ -137,13 +137,13 @@ const characters = [
         animations: {
             idle: { 
                 src: "/characters/animations/deerheadidle.png", 
-                frames: 4, 
-                speed: "0.8s" 
+                frames: 6, 
+                speed: "1.2s" 
             },
             victory: { 
                 src: "/characters/animations/deerheadvictory.png", 
                 frames: 6, 
-                speed: "0.4s" 
+                speed: "1.2s" 
             }
         }
     },
@@ -155,13 +155,13 @@ const characters = [
         animations: {
             idle: { 
                 src: "/characters/animations/caitysatyridle.png", 
-                frames: 4, 
-                speed: "0.8s" 
+                frames: 6, 
+                speed: "1.2s" 
             },
             victory: { 
                 src: "/characters/animations/caitysatyrvictory.png", 
                 frames: 6, 
-                speed: "0.4s" 
+                speed: "1.2s" 
             }
         }
     },
@@ -173,13 +173,13 @@ const characters = [
         animations: {
             idle: { 
                 src: "/characters/animations/jesusidle.png", 
-                frames: 4, 
-                speed: "0.8s" 
+                frames: 6, 
+                speed: "1.2s" 
             },
             victory: { 
                 src: "/characters/animations/jesusvictory.png", 
                 frames: 6, 
-                speed: "0.4s" 
+                speed: "1.2s" 
             }
         }
     },
@@ -191,13 +191,13 @@ const characters = [
         animations: {
             idle: { 
                 src: "/characters/animations/thenewlywedsidle.png", 
-                frames: 4, 
-                speed: "0.8s" 
+                frames: 6, 
+                speed: "1.2s" 
             },
             victory: { 
                 src: "/characters/animations/thenewlywedsvictory.png", 
                 frames: 6, 
-                speed: "0.4s" 
+                speed: "1.2s" 
             }
         }
     },
@@ -209,13 +209,13 @@ const characters = [
         animations: {
             idle: { 
                 src: "/characters/animations/lorenzoidle.png", 
-                frames: 4, 
-                speed: "0.8s" 
+                frames: 6, 
+                speed: "1.2s" 
             },
             victory: { 
                 src: "/characters/animations/lorenzovictory.png", 
                 frames: 6, 
-                speed: "0.4s" 
+                speed: "1.2s" 
             }
         }
     },
@@ -233,13 +233,13 @@ const characters = [
         animations: {
             idle: { 
                 src: "/characters/animations/guitaristidle.png", 
-                frames: 4, 
-                speed: "0.8s" 
+                frames: 6, 
+                speed: "1.2s" 
             },
             victory: { 
                 src: "/characters/animations/theguitaristvictory.png", 
                 frames: 6, 
-                speed: "0.4s" 
+                speed: "1.2s" 
             }
         }
     }
