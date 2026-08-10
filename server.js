@@ -66,12 +66,16 @@ const characters = [
             idle: { 
                 src: "/characters/animations/thebossidle.png", 
                 frames: 6, 
-                speed: "1.2s" 
+                speed: "1.2s",
+                frameWidth: 401,
+                frameHeight: 870
             },
             victory: { 
                 src: "/characters/animations/thebossvictory.png", 
                 frames: 6, 
-                speed: "1.2s" 
+                speed: "1.2s",
+                frameWidth: 401,
+                frameHeight: 870 
             }
         }
     },
@@ -84,12 +88,16 @@ const characters = [
             idle: { 
                 src: "/characters/animations/janicemowesidle.png", 
                 frames: 6, 
-                speed: "1.2s" 
+                speed: "1.2s",
+                frameWidth: 401,
+                frameHeight: 870 
             },
             victory: { 
                 src: "/characters/animations/janicemowesvictory.png", 
                 frames: 6, 
-                speed: "1.2s" 
+                speed: "1.2s",
+                frameWidth: 401,
+                frameHeight: 870 
             }
         }
     },
@@ -102,12 +110,16 @@ const characters = [
             idle: { 
                 src: "/characters/animations/tricerexidle.png", 
                 frames: 6, 
-                speed: "1.2s" 
+                speed: "1.2s",
+                frameWidth: 401,
+                frameHeight: 870 
             },
             victory: { 
                 src: "/characters/animations/tricerexvictory.png", 
                 frames: 6, 
-                speed: "1.2s" 
+                speed: "1.2s",
+                frameWidth: 401,
+                frameHeight: 870 
             }
         }
     },
@@ -120,12 +132,16 @@ const characters = [
             idle: { 
                 src: "/characters/animations/fancydanceridle.png", 
                 frames: 6, 
-                speed: "1.2s" 
+                speed: "1.2s",
+                frameWidth: 401,
+                frameHeight: 870 
             },
             victory: { 
                 src: "/characters/animations/fancydancervictory.png", 
                 frames: 6, 
-                speed: "1.2s" 
+                speed: "1.2s",
+                frameWidth: 401,
+                frameHeight: 870 
             }
         }
     },
@@ -138,12 +154,16 @@ const characters = [
             idle: { 
                 src: "/characters/animations/deerheadidle.png", 
                 frames: 6, 
-                speed: "1.2s" 
+                speed: "1.2s",
+                frameWidth: 401,
+                frameHeight: 870 
             },
             victory: { 
                 src: "/characters/animations/deerheadvictory.png", 
                 frames: 6, 
-                speed: "1.2s" 
+                speed: "1.2s",
+                frameWidth: 401,
+                frameHeight: 870 
             }
         }
     },
@@ -156,12 +176,16 @@ const characters = [
             idle: { 
                 src: "/characters/animations/caitysatyridle.png", 
                 frames: 6, 
-                speed: "1.2s" 
+                speed: "1.2s",
+                frameWidth: 401,
+                frameHeight: 870 
             },
             victory: { 
                 src: "/characters/animations/caitysatyrvictory.png", 
                 frames: 6, 
-                speed: "1.2s" 
+                speed: "1.2s",
+                frameWidth: 401,
+                frameHeight: 870 
             }
         }
     },
@@ -174,12 +198,16 @@ const characters = [
             idle: { 
                 src: "/characters/animations/jesusidle.png", 
                 frames: 6, 
-                speed: "1.2s" 
+                speed: "1.2s",
+                frameWidth: 401,
+                frameHeight: 870 
             },
             victory: { 
                 src: "/characters/animations/jesusvictory.png", 
                 frames: 6, 
-                speed: "1.2s" 
+                speed: "1.2s",
+                frameWidth: 401,
+                frameHeight: 870 
             }
         }
     },
@@ -192,12 +220,16 @@ const characters = [
             idle: { 
                 src: "/characters/animations/thenewlywedsidle.png", 
                 frames: 6, 
-                speed: "1.2s" 
+                speed: "1.2s",
+                frameWidth: 401,
+                frameHeight: 870 
             },
             victory: { 
                 src: "/characters/animations/thenewlywedsvictory.png", 
                 frames: 6, 
-                speed: "1.2s" 
+                speed: "1.2s",
+                frameWidth: 401,
+                frameHeight: 870 
             }
         }
     },
@@ -210,12 +242,16 @@ const characters = [
             idle: { 
                 src: "/characters/animations/lorenzoidle.png", 
                 frames: 6, 
-                speed: "1.2s" 
+                speed: "1.2s",
+                frameWidth: 401,
+                frameHeight: 870 
             },
             victory: { 
                 src: "/characters/animations/lorenzovictory.png", 
                 frames: 6, 
-                speed: "1.2s" 
+                speed: "1.2s",
+                frameWidth: 401,
+                frameHeight: 870 
             }
         }
     },
@@ -234,12 +270,16 @@ const characters = [
             idle: { 
                 src: "/characters/animations/guitaristidle.png", 
                 frames: 6, 
-                speed: "1.2s" 
+                speed: "1.2s",
+                frameWidth: 401,
+                frameHeight: 870 
             },
             victory: { 
                 src: "/characters/animations/theguitaristvictory.png", 
                 frames: 6, 
-                speed: "1.2s" 
+                speed: "1.2s",
+                frameWidth: 401,
+                frameHeight: 870 
             }
         }
     }

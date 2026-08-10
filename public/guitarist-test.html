@@ -7,6 +7,7 @@
     <title>Guitarist Idle Test</title>
 
     <style>
+
         * {
             box-sizing: border-box;
         }
@@ -30,7 +31,7 @@
         }
 
         h1 {
-            margin-bottom: 30px;
+            margin-bottom: 20px;
         }
 
         #previewArea {
@@ -42,13 +43,41 @@
             align-items: center;
 
             background: rgba(0, 0, 0, 0.35);
-            border: 2px solid rgba(255, 255, 255, 0.5);
+
+            border: 2px solid rgba(255,255,255,0.5);
             border-radius: 20px;
 
             overflow: hidden;
         }
 
+
+        /*
+        ==========================================
+        DEBUG IMAGE
+        ==========================================
+        */
+
+        #debugImage {
+
+            width: 500px;
+            height: auto;
+
+            max-width: 80vw;
+
+            border: 3px solid red;
+
+            display: block;
+        }
+
+
+        /*
+        ==========================================
+        SPRITE
+        ==========================================
+        */
+
         #guitarist {
+
             width: 401px;
             height: 870px;
 
@@ -56,20 +85,17 @@
                 url("/characters/animations/guitaristidle.png");
 
             background-repeat: no-repeat;
+
             background-position: 0 0;
 
-            /*
-                6 frames
-                401px per frame
-                6 × 401 = 2406px
-            */
-
             animation:
-                guitaristIdle 1.5s steps(6) infinite;
+                guitaristIdle 1.8s steps(6) infinite;
 
             transform: scale(0.5);
+
             transform-origin: center center;
         }
+
 
         @keyframes guitaristIdle {
 
@@ -83,34 +109,64 @@
 
         }
 
+
         #controls {
-            margin-top: 25px;
+
+            margin-top: 20px;
 
             display: flex;
+
             flex-direction: column;
+
             align-items: center;
+
             gap: 10px;
         }
+
 
         input {
             width: 250px;
         }
 
+
         #info {
-            margin-top: 15px;
+
+            margin-top: 10px;
+
             opacity: 0.8;
+
             text-align: center;
         }
+
     </style>
 </head>
+
 
 <body>
 
     <h1>The Guitarist — Idle Animation Test</h1>
 
+
     <div id="previewArea">
-        <div id="guitarist"></div>
+
+        <!--
+        TEMPORARY DEBUG IMAGE
+
+        If this image DOES NOT appear,
+        the problem is the server/path.
+
+        If this image DOES appear,
+        the problem is the sprite CSS.
+        -->
+
+        <img
+            id="debugImage"
+            src="/characters/animations/guitaristidle.png"
+            alt="Guitarist spritesheet"
+        >
+
     </div>
+
 
     <div id="controls">
 
@@ -121,13 +177,14 @@
                 id="speed"
                 type="range"
                 min="0.2"
-                max="3"
+                max="4"
                 step="0.1"
-                value="1.5"
+                value="1.8"
             >
 
-            <span id="speedValue">1.5s</span>
+            <span id="speedValue">1.8s</span>
         </label>
+
 
         <label>
             Scale:
@@ -141,11 +198,13 @@
                 value="0.5"
             >
 
-            <span id="scaleValue">0.5x</span>
+            <span id="scaleValue">0.50x</span>
         </label>
 
+
         <div id="info">
-            6 frames • 401 × 870px per frame
+            Spritesheet: 2406 × 870<br>
+            6 frames × 401 × 870
         </div>
 
     </div>
@@ -153,8 +212,8 @@
 
     <script>
 
-        const guitarist =
-            document.getElementById("guitarist");
+        const debugImage =
+            document.getElementById("debugImage");
 
         const speed =
             document.getElementById("speed");
@@ -169,38 +228,81 @@
             document.getElementById("scaleValue");
 
 
-        // -------------------------
-        // SPEED
-        // -------------------------
+        /*
+        ==========================================
+        CHECK IMAGE LOAD
+        ==========================================
+        */
+
+        debugImage.addEventListener("load", () => {
+
+            console.log(
+                "GUITARIST IMAGE LOADED:",
+                debugImage.naturalWidth,
+                "x",
+                debugImage.naturalHeight
+            );
+
+        });
+
+
+        debugImage.addEventListener("error", () => {
+
+            console.error(
+                "FAILED TO LOAD GUITARIST IMAGE"
+            );
+
+            document.getElementById("info").innerHTML =
+                "<strong style='color:red'>" +
+                "IMAGE FAILED TO LOAD" +
+                "</strong><br>" +
+                "Check the server path and console.";
+
+        });
+
+
+        /*
+        ==========================================
+        SPEED
+        ==========================================
+        */
 
         speed.addEventListener("input", () => {
 
             const value =
                 parseFloat(speed.value);
 
-            guitarist.style.animationDuration =
-                value + "s";
-
             speedValue.textContent =
                 value.toFixed(1) + "s";
+
+            document.getElementById("guitarist")
+                ?.style.setProperty(
+                    "animation-duration",
+                    value + "s"
+                );
 
         });
 
 
-        // -------------------------
-        // SCALE
-        // -------------------------
+        /*
+        ==========================================
+        SCALE
+        ==========================================
+        */
 
         scale.addEventListener("input", () => {
 
             const value =
                 parseFloat(scale.value);
 
-            guitarist.style.transform =
-                `scale(${value})`;
-
             scaleValue.textContent =
                 value.toFixed(2) + "x";
+
+            document.getElementById("guitarist")
+                ?.style.setProperty(
+                    "transform",
+                    `scale(${value})`
+                );
 
         });
 
