@@ -3,14 +3,12 @@ const app = express();
 const http = require("http").createServer(app);
 const loadCategories = require("./loadCategories");
 
-const path = require("path");
-
 app.use(express.static("public"));
-app.use("/characters", express.static(path.join(__dirname, "characters")));
-app.use("/fonts", express.static(path.join(__dirname, "fonts")));
-app.use("/backgrounds", express.static(path.join(__dirname, "backgrounds")));
-app.use("/sprites", express.static(path.join(__dirname, "sprites")));
-app.use("/confetti", express.static(path.join(__dirname, "public", "confetti")));
+app.use("/characters", express.static("characters"));
+app.use("/fonts", express.static("fonts"));
+app.use("/backgrounds", express.static("backgrounds"));
+app.use("/sprites", express.static("sprites"));
+app.use("/confetti", express.static("public/confetti"));
 
 // HOST NOT CONNECTED
 let hostConnected = false;
@@ -34,8 +32,6 @@ const wss = new WebSocket.Server({
     server: http,
     path: "/unity"
 });
-
-
 
 wss.on("connection", (ws) => {
     ws.isUnity = true;
@@ -289,21 +285,7 @@ const characters = [
     }
 ];
 
-const fs = require("fs");
-const path = require("path");
 
-const guitaristPath = path.join(
-    __dirname,
-    "characters",
-    "animations",
-    "guitaristidle.png"
-);
-
-console.log("GUITARIST PATH:", guitaristPath);
-console.log(
-    "GUITARIST EXISTS:",
-    fs.existsSync(guitaristPath)
-);
 
 // WEBSOCKET TO UNITY
 function broadcastToUnity(data) {
