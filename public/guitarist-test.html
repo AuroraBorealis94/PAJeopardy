@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 ```
-<title>Fancy Dancer Idle Test</title>
+<title>Guitarist Idle Test</title>
 
 <style>
 
@@ -54,30 +54,43 @@
 
     /*
     ==========================================
-    SPRITE
+    GUITARIST SPRITE
     ==========================================
     */
 
-    #fancydancer {
+    #guitarist {
         width: 401px;
         height: 870px;
 
         background-image:
-            url("/characters/animations/fancydanceridle.png");
+            url("/characters/animations/guitaristidle.png");
 
         background-repeat: no-repeat;
         background-position: 0 0;
 
+        /*
+        6 frames total.
+        Each frame is 401px wide.
+
+        1.8 seconds = full animation cycle.
+        steps(6) = one frame at a time.
+        */
+
         animation:
-            fancydancerIdle 1.8s steps(6) infinite;
+            guitaristIdle 1.8s steps(6) infinite;
 
         transform: scale(0.5);
         transform-origin: center center;
 
+        /*
+        Prevent the browser from trying
+        to smooth/interpolate the sprites.
+        */
+
         image-rendering: auto;
     }
 
-    @keyframes fancydancerIdle {
+    @keyframes guitaristIdle {
 
         from {
             background-position: 0 0;
@@ -126,12 +139,12 @@
 <body>
 
 ```
-<h1>Fancy Dancer — Idle Animation Test</h1>
+<h1>The Guitarist — Idle Animation Test</h1>
 
 
 <div id="previewArea">
 
-    <div id="fancydancer"></div>
+    <div id="guitarist"></div>
 
 </div>
 
@@ -180,8 +193,8 @@
 
 <script>
 
-    const fancydancer =
-        document.getElementById("fancydancer");
+    const guitarist =
+        document.getElementById("guitarist");
 
     const speed =
         document.getElementById("speed");
