@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 ```
-<title>Fancy Dancer Idle Test</title>
+<title>Lorenzo Idle Test</title>
 
 <style>
 
@@ -58,18 +58,18 @@
     ==========================================
     */
 
-    #fancydancer {
+    #lorenzo {
         width: 401px;
         height: 870px;
 
         background-image:
-            url("/characters/animations/fancydanceridle.png");
+            url("/characters/animations/lorenzoidle.png");
 
         background-repeat: no-repeat;
         background-position: 0 0;
 
         animation:
-            fancydancerIdle 1.8s steps(6) infinite;
+            lorenzoIdle 1.8s steps(6) infinite;
 
         transform: scale(0.5);
         transform-origin: center center;
@@ -77,7 +77,7 @@
         image-rendering: auto;
     }
 
-    @keyframes fancydancerIdle {
+    @keyframes lorenzoIdle {
 
         from {
             background-position: 0 0;
@@ -126,12 +126,12 @@
 <body>
 
 ```
-<h1>The Fancy Dancer — Idle Animation Test</h1>
+<h1>The Lorenzo — Idle Animation Test</h1>
 
 
 <div id="previewArea">
 
-    <div id="fancydancer"></div>
+    <div id="lorenzo"></div>
 
 </div>
 
@@ -180,8 +180,8 @@
 
 <script>
 
-    const fancydancer =
-        document.getElementById("fancydancer");
+    const lorenzo =
+        document.getElementById("lorenzo");
 
     const speed =
         document.getElementById("speed");
@@ -210,7 +210,7 @@
         speedValue.textContent =
             value.toFixed(1) + "s";
 
-        fancydancer.style.animationDuration =
+        lorenzo.style.animationDuration =
             value + "s";
 
     });
@@ -230,7 +230,7 @@
         scaleValue.textContent =
             value.toFixed(2) + "x";
 
-        fancydancer.style.transform =
+        lorenzo.style.transform =
             `scale(${value})`;
 
     });
