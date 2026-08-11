@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 ```
-<title>Lorenzo Idle Test</title>
+<title>Janice Mowes Idle Test</title>
 
 <style>
 
@@ -58,18 +58,18 @@
     ==========================================
     */
 
-    #lorenzo {
+    #janicemowes {
         width: 401px;
         height: 870px;
 
         background-image:
-            url("/characters/animations/lorenzoidle.png");
+            url("/characters/animations/janicemowesidle.png");
 
         background-repeat: no-repeat;
         background-position: 0 0;
 
         animation:
-            lorenzoIdle 1.8s steps(6) infinite;
+            janicemowesIdle 1.8s steps(6) infinite;
 
         transform: scale(0.5);
         transform-origin: center center;
@@ -77,7 +77,7 @@
         image-rendering: auto;
     }
 
-    @keyframes lorenzoIdle {
+    @keyframes janicemowesIdle {
 
         from {
             background-position: 0 0;
@@ -126,12 +126,12 @@
 <body>
 
 ```
-<h1>The Lorenzo — Idle Animation Test</h1>
+<h1>Janice Mowes — Idle Animation Test</h1>
 
 
 <div id="previewArea">
 
-    <div id="lorenzo"></div>
+    <div id="janicemowes"></div>
 
 </div>
 
@@ -180,8 +180,8 @@
 
 <script>
 
-    const lorenzo =
-        document.getElementById("lorenzo");
+    const janicemowes =
+        document.getElementById("janicemowes");
 
     const speed =
         document.getElementById("speed");
@@ -210,7 +210,7 @@
         speedValue.textContent =
             value.toFixed(1) + "s";
 
-        lorenzo.style.animationDuration =
+        janicemowes.style.animationDuration =
             value + "s";
 
     });
@@ -230,7 +230,7 @@
         scaleValue.textContent =
             value.toFixed(2) + "x";
 
-        lorenzo.style.transform =
+        janicemowes.style.transform =
             `scale(${value})`;
 
     });
