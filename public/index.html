@@ -385,6 +385,29 @@
     }
 /* #endregion */
 
+/* #region Instructions Holding Screen */
+    #instructionsHoldingScreen {
+        position: fixed;
+        inset: 0;
+
+        background-image:
+            url('/backgrounds/instrucholding.png');
+
+        background-size: cover;
+        background-position: center;
+        background-repeat: no-repeat;
+
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+
+        z-index: 5000;
+
+        opacity: 1;
+    }
+/* #endregion */
+
 /* #region Host Controls */
     #hostControls {
         position: fixed;
@@ -823,6 +846,14 @@
     </button>
 </div>
 
+<!-- INSTRUCTIONS HOLDING SCREEN -->
+<div id="instructionsHoldingScreen" class="hidden">
+    <!--
+        The background image contains the full
+        holding-screen design.
+    -->
+</div>
+
 <!-- HOST CONTROLS -->
 <div id="hostControls" class="hostPage">
     <img id="hostLogo" src="/backgrounds/HostImg.png">
@@ -1231,7 +1262,7 @@ window.addEventListener("load", () => {
 
         if (data.state === "playing") {
             document.getElementById("lobbyUI").style.display = "none";
-            showWaitingScreen(); // or better: showGameUI()
+            showInstructionsHoldingScreen();
         }
 
         if (data.state === "buzzer") {
@@ -1516,6 +1547,12 @@ window.addEventListener("load", () => {
         showPlayerScreen("waitingScreen");
     }
 
+    function showInstructionsHoldingScreen() {
+        document.getElementById("lobbyUI").style.display = "none";
+
+        showPlayerScreen("instructionsHoldingScreen");
+    }
+
     function changeCharacter() {
         document.getElementById("previewImage").style.display = "none";
         const playerId = localStorage.getItem("playerId");
@@ -1777,8 +1814,17 @@ window.addEventListener("load", () => {
         waiting.classList.remove("show");
         waiting.classList.add("hidden");
 
-        document.getElementById("buzzerPage").classList.add("hidden");
-        document.getElementById("answeringPage").classList.add("hidden");
+        document.getElementById("instructionsHoldingScreen")
+            .classList.add("hidden");
+
+        document.getElementById("buzzerPage")
+            .classList.add("hidden");
+
+        document.getElementById("answeringPage")
+            .classList.add("hidden");
+
+        document.getElementById("scorePage")
+            .classList.add("hidden");
     }
 
     function showPlayerScreen(id) {
