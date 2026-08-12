@@ -1831,6 +1831,12 @@ window.addEventListener("load", () => {
         hideAllPlayerScreens();
 
         const screen = document.getElementById(id);
+
+        if (!screen) {
+            console.error("Player screen not found:", id);
+            return;
+        }
+
         screen.classList.remove("hidden");
 
         if (id === "waitingScreen") {
@@ -1849,6 +1855,16 @@ window.addEventListener("load", () => {
 
         screen.classList.add("hidden");
     }
+/* #endregion */
+
+/* #region INSTRUCTIONS HOLDING SCREEN */
+    socket.on("showInstructionsHolding", () => {
+        console.log("Showing instructions holding screen");
+
+        document.getElementById("lobbyUI").style.display = "none";
+
+        showPlayerScreen("instructionsHoldingScreen");
+    });
 /* #endregion */
 
 /* #region BUZZER SCREEN */

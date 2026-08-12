@@ -55,7 +55,6 @@ const game = {
     board: {}
 };
 
-
 // CHARACTER STORAGE
 const characters = [
     { 
@@ -284,8 +283,6 @@ const characters = [
         }
     }
 ];
-
-
 
 // WEBSOCKET TO UNITY
 function broadcastToUnity(data) {
@@ -548,19 +545,27 @@ io.on("connection", (socket) => {
         if (data.type === "startGame") {
             generateBoard();
 
-            // FIRST tell Unity to load lobby scene
+            // Tell Unity to start the game
             broadcastToUnity({
                 type: "startGame"
             });
 
-            // THEN send board data
+            // Tell all PLAYER devices to leave the waiting screen
+            // and move to the instructions holding screen
+            io.emit("showInstructionsHolding");
+
+            // THEN send board data to Unity and host
             setTimeout(() => {
 
                 broadcastToUnity({
                     type: "boardData",
                     board: convertBoardForUnity(game.board)
                 });
-                io.emit("boardData", convertBoardForUnity(game.board));
+
+                io.emit(
+                    "boardData",
+                    convertBoardForUnity(game.board)
+                );
 
             }, 1000);
         }
