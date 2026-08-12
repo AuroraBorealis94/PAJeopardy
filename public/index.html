@@ -226,15 +226,13 @@
     #preview {
         font-family: 'Korinna';
         font-size: 18px;
-        /*text-transform: uppercase;*/
         height: 220px;
-        
         position: relative;
-
         display: flex;
         flex-direction: column;
         justify-content: center;
         align-items: center;
+        padding-top: 10px;
     }
 
     #previewCharacterBox {
@@ -747,8 +745,8 @@
     }
 
 /* #endregion */
-
 </style>
+
 
 <!-- HTML -->
     <title>Jeopardy Lobby</title>
@@ -757,9 +755,9 @@
 
 <!-- LOBBY SCREEN -->
 <div id="lobbyUI">
-    <!-- TITLE -->
+    <!-- TITLE
     <h1 id="h11">PA Jeopardy</h1>
-    <h1 id="h12">2026 Edition</h1>
+    <h1 id="h12">2026 Edition</h1>-->
 
     <!-- PREVIEW -->
     <div id="preview">
@@ -768,13 +766,13 @@
             Host Game
         </button>
 
-        <p id="teamLabel" class="previewHidden">
-            <b>Team </b><span id="previewName">---</span>
-        </p>
-
         <div id="previewCharacterBox">
             <img id="previewImage" src="" />
         </div>
+
+        <p id="teamLabel" class="previewHidden">
+            <b>Team </b><span id="previewName">---</span>
+        </p>
     </div>
 
     <!-- ENTER NAME -->
