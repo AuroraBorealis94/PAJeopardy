@@ -550,10 +550,6 @@ io.on("connection", (socket) => {
                 type: "startGame"
             });
 
-            // Tell all PLAYER devices to leave the waiting screen
-            // and move to the instructions holding screen
-            io.emit("showInstructionsHolding");
-
             // THEN send board data to Unity and host
             setTimeout(() => {
 
@@ -581,7 +577,8 @@ io.on("connection", (socket) => {
         switch (data.type) {
 
             case "showInstructions":
-                io.emit("showInstructions");
+                //io.emit("showInstructions");
+                io.emit("showInstructionsHolding");
                 break;
 
             case "showInstrucCutscene":
