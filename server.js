@@ -585,7 +585,7 @@ io.on("connection", (socket) => {
                 break;
 
             case "showBoardIntro":
-                io.emit("showBoardIntro");
+                io.emit("showScoreScreen");
                 break;
 
             case "selectClue": {
