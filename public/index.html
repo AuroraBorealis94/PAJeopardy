@@ -230,7 +230,7 @@
         position: relative;
         display: flex;
         flex-direction: column;
-        justify-content: center;
+        justify-content: flex-end;
         align-items: center;
         padding-top: 10px;
     }
@@ -390,21 +390,14 @@
         position: fixed;
         inset: 0;
 
-        background-image:
-            url('/backgrounds/instrucholding.png');
-
+        background-image: url('/backgrounds/instrucholding.png');
         background-size: cover;
         background-position: center;
         background-repeat: no-repeat;
 
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        align-items: center;
-
         z-index: 5000;
 
-        opacity: 1;
+        display: block;
     }
 /* #endregion */
 
