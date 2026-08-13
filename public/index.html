@@ -1227,10 +1227,6 @@ window.addEventListener("load", () => {
 
     // SELECT CLUE
     socket.on("selectClue", ({ payload }) => {
-        //if (isHost && currentHostClue) {
-        //    showHostClue(currentHostClue);
-        //}
-
         if (!isHost)
             return;
 
@@ -1650,13 +1646,14 @@ window.addEventListener("load", () => {
         isHost = true;
 
         socket.emit("join", { isHost: true });
-
+        confettiBurst();
         localStorage.setItem("isHost", "true");
         localStorage.setItem("hostSession", currentSession);
     }
 
     function showHostControls() {
         document.getElementById("lobbyUI").style.display = "none";
+        //confettiBurst();
         const controls = document.getElementById("hostControls");
         controls.classList.remove("hidden");
 
