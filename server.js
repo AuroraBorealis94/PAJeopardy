@@ -575,14 +575,13 @@ io.on("connection", (socket) => {
 
         // OPTIONAL WEB EVENTS
         switch (data.type) {
-
             case "showInstructions":
                 //io.emit("showInstructions");
                 io.emit("showInstructionsHolding");
                 break;
 
             case "showInstrucCutscene":
-                io.emit("showInstrucCutscene");
+                io.emit("showAnimHolding");
                 break;
 
             case "showBoardIntro":

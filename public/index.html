@@ -401,6 +401,35 @@
     }
 /* #endregion */
 
+/* #region Animation Holding Screen */
+    #animHoldingScreen {
+        position: fixed;
+        inset: 0;
+
+        background-image:
+            url('/backgrounds/WHostBG.jpg');
+
+        background-size: cover;
+        background-position: center;
+        background-repeat: no-repeat;
+
+        display: flex;
+        justify-content: center;
+        align-items: center;
+
+        z-index: 5000;
+    }
+
+    #animHoldingSprite {
+        width: 300px;
+        height: 300px;
+
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+/* #endregion */
+
 /* #region Host Controls */
     #hostControls {
         position: fixed;
@@ -847,6 +876,15 @@
     -->
 </div>
 
+<!-- ANIMATION HOLDING SCREEN -->
+<div id="animHoldingScreen" class="hidden">
+
+    <div id="animHoldingSprite">
+        <!-- Animated sprite will go here later -->
+    </div>
+
+</div>
+
 <!-- HOST CONTROLS -->
 <div id="hostControls" class="hostPage">
     <img id="hostLogo" src="/backgrounds/HostImg.png">
@@ -1147,6 +1185,7 @@ window.addEventListener("load", () => {
         buildHostBoard(board);
     });
 
+    // SCORE SCREEN
     socket.on("showScoreScreen", (data)=>{
         if(data.playerId !== localStorage.getItem("playerId"))
             return;
@@ -1177,6 +1216,13 @@ window.addEventListener("load", () => {
         );
 
         currentScore = data.score;
+    });
+
+    // ANIM HOLDING SCREEN
+    socket.on("showAnimHolding", () => {
+        console.log("Showing animation holding screen");
+        document.getElementById("lobbyUI").style.display = "none";
+        showPlayerScreen("animHoldingScreen");
     });
 
     // SELECT CLUE
@@ -1802,22 +1848,11 @@ window.addEventListener("load", () => {
 
 /* #region PLAYER SCREENS */
     function hideAllPlayerScreens() {
-        const waiting = document.getElementById("waitingScreen");
-
-        waiting.classList.remove("show");
-        waiting.classList.add("hidden");
-
-        document.getElementById("instructionsHoldingScreen")
-            .classList.add("hidden");
-
-        document.getElementById("buzzerPage")
-            .classList.add("hidden");
-
-        document.getElementById("answeringPage")
-            .classList.add("hidden");
-
-        document.getElementById("scorePage")
-            .classList.add("hidden");
+        document.getElementById("waitingScreen").classList.add("hidden");
+        document.getElementById("instructionsHoldingScreen").classList.add("hidden");
+        document.getElementById("buzzerPage").classList.add("hidden");
+        document.getElementById("answeringPage").classList.add("hidden");
+        document.getElementById("scorePage").classList.add("hidden");
     }
 
     function showPlayerScreen(id) {
