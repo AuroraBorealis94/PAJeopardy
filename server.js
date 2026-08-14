@@ -14,6 +14,14 @@ app.use("/confetti", express.static("public/confetti"));
 let hostConnected = false;
 // CURRENT SESSION
 let GAME_SESSION = Date.now();
+
+console.log("NEW SERVER SESSION:", GAME_SESSION);
+console.log("================================");
+console.log("PA Jeopardy SERVER LIVE");
+console.log("Port:", process.env.PORT || 3000);
+console.log("Session:", GAME_SESSION);
+console.log("================================");
+
 // DISCONNECT TIMER
 const disconnectTimers = new Map();
 // USED CLUES
@@ -544,6 +552,7 @@ io.on("connection", (socket) => {
 
         // SEND TO UNITY
         if (data.type === "startGame") {
+            game.state = "playing";
             generateBoard();
 
             // Tell Unity to start the game
@@ -578,45 +587,48 @@ io.on("connection", (socket) => {
 
         // OPTIONAL WEB EVENTS
         switch (data.type) {
+            // ==========================================
+            // INSTRUCTIONS HOLDING SCREEN
+            // ==========================================
             case "showInstructions":
-                //io.emit("showInstructions");
+                console.log("HOST ACTION: showInstructions");
+
+                // Player devices instructions holding screen
                 io.emit("showInstructionsHolding");
-                break;
 
-            case "showInstrucCutscene":
-                io.emit("showAnimHolding");
-                break;
-
-            case "showBoardIntro":
-                io.emit("showScoreScreen");
-                break;
-
-            case "showInstructions":
-                game.hostScreen = "hostInstructionsPg";
-
-                io.emit("showInstructions");
-
+                // Unity instructions page
                 broadcastToUnity({
                     type: "showInstructions"
                 });
 
                 break;
 
-            case "showInstrucCutscene":
-                game.hostScreen = "hostInstrucCutscenePg";
 
+            // ==========================================
+            // INSTRUCTION CUTSCENE / ANIM HOLDING
+            // ==========================================
+            case "showInstrucCutscene":
+                console.log("HOST ACTION: showInstrucCutscene");
+
+                // Player devices animation holding screen
                 io.emit("showAnimHolding");
 
+                // Unity instruction cutscene
                 broadcastToUnity({
                     type: "showInstrucCutscene"
                 });
 
                 break;
 
-            case "showBoardIntro":
-                game.hostScreen = "hostBoard";
 
-                io.emit("showScoreScreen");
+            // ==========================================
+            // BOARD INTRO
+            // ==========================================
+            case "showBoardIntro":
+                console.log("HOST ACTION: showBoardIntro");
+
+                // Player devices stay on their current holding screen
+                // unless you want a separate player event here.
 
                 broadcastToUnity({
                     type: "showBoardIntro"
@@ -624,19 +636,50 @@ io.on("connection", (socket) => {
 
                 break;
 
+
+            // ==========================================
+            // SHOW GAME BOARD
+            // ==========================================
+            case "showBoard":
+                console.log("HOST ACTION: showBoard");
+
+                // Player devices score screen
+                io.emit("showScoreScreen");
+
+                // Unity game board
+                broadcastToUnity({
+                    type: "showBoard"
+                });
+
+                break;
+
+
+            // ==========================================
+            // SELECT CLUE
+            // ==========================================
             case "selectClue": {
+                console.log("HOST ACTION: selectClue");
+
                 const clue = data.payload?.clueData;
                 currentClueValue = parseInt(data.payload.value);
 
-                if (!clue || !clue.id) return;
+                if (!clue || !clue.id) {
+                    console.warn("selectClue received without valid clue data");
+                    return;
+                }
 
                 const clueId = clue.id;
 
-                if (usedClueIds.has(clueId)) return;
+                if (usedClueIds.has(clueId)) {
+                    console.warn("Clue already used:", clueId);
+                    return;
+                }
 
                 usedClueIds.add(clueId);
 
+                // Reset buzzer state for the new clue
                 buzzAccepted = false;
+                currentBuzzPlayer = null;
 
                 const payload = {
                     type: "selectClue",
@@ -648,21 +691,27 @@ io.on("connection", (socket) => {
                     }
                 };
 
-                // SEND SAME STRUCTURE TO BOTH
-                const message = JSON.stringify(payload);
-
+                // Send clue to player screens
                 io.emit("selectClue", payload);
+
+                // Send clue to Unity
                 broadcastToUnity(payload);
 
                 break;
             }
 
+
+            // ==========================================
+            // CORRECT ANSWER
+            // ==========================================
             case "answerCorrect":
+                console.log("HOST ACTION: answerCorrect");
+
                 if (currentBuzzPlayer) {
 
                     currentBuzzPlayer.score += currentClueValue;
 
-                    // Send score page info to all phones
+                    // Player who buzzed gets score screen
                     io.emit("showScoreScreen", {
                         playerId: currentBuzzPlayer.playerId,
                         character: currentBuzzPlayer.character,
@@ -670,7 +719,7 @@ io.on("connection", (socket) => {
                         earned: currentClueValue
                     });
 
-                    // Send score popup info to Unity
+                    // Unity gets score update
                     broadcastToUnity({
                         type: "showScoreScreen",
                         playerId: currentBuzzPlayer.playerId,
@@ -682,29 +731,62 @@ io.on("connection", (socket) => {
 
                 break;
 
+
+            // ==========================================
+            // CONTINUE
+            // ==========================================
             case "continueClue":
+                console.log("HOST ACTION: continueClue");
+
+                // Everyone goes to score screen
                 io.emit("showScoreScreen");
 
+                // Unity goes to score screen
                 broadcastToUnity({
                     type: "showScoreScreen"
                 });
 
                 break;
 
+
+            // ==========================================
+            // REVEAL ANSWER
+            // ==========================================
             case "revealAnswer":
-                console.log("REVEAL ANSWER - Server");
+                console.log("HOST ACTION: revealAnswer");
+
                 io.emit("revealAnswer");
 
                 broadcastToUnity({
                     type: "revealAnswer"
                 });
+
                 break;
 
+
+            // ==========================================
+            // ENABLE / RESUME BUZZERS
+            // ==========================================
             case "resumeBuzzing":
+                console.log("HOST ACTION: resumeBuzzing");
+
                 buzzAccepted = true;
                 currentBuzzPlayer = null;
 
                 io.emit("resumeBuzzing");
+
+                broadcastToUnity({
+                    type: "resumeBuzzing"
+                });
+
+                break;
+
+
+            // ==========================================
+            // UNKNOWN HOST ACTION
+            // ==========================================
+            default:
+                console.warn("Unknown hostAction type:", data.type);
                 break;
         }
     });

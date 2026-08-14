@@ -1059,17 +1059,50 @@ window.addEventListener("load", () => {
 
 /* #region SOCKETS */
     // RECONNECT
+    let socketConnected = false;
+    let sessionReceived = false;
+
     socket.on("connect", () => {
         console.log("connected:", socket.id);
+        socketConnected = true;
+    });
+
+    function reconnectAfterSessionCheck() {
+        if (!socketConnected || !sessionReceived) {
+            return;
+        }
+
         const savedIsHost = localStorage.getItem("isHost") === "true";
 
         // HOST RECONNECT
         if (savedIsHost) {
-            console.log("Reconnecting as HOST");
+            const savedHostSession =
+                localStorage.getItem("hostSession");
 
-            socket.emit("join", {
-                isHost: true
-            });
+            if (savedHostSession === currentSession) {
+                console.log("Reconnecting as HOST");
+                socket.emit("join", {
+                    isHost: true
+                });
+
+                return;
+            }
+
+            console.log(
+                "Old host session detected. Clearing host state."
+            );
+
+            localStorage.removeItem("isHost");
+            localStorage.removeItem("hostSession");
+
+            isHost = false;
+
+            const hostBtn =
+                document.getElementById("hostBtn");
+
+            if (hostBtn) {
+                hostBtn.style.display = "block";
+            }
 
             return;
         }
@@ -1079,7 +1112,9 @@ window.addEventListener("load", () => {
         const savedName = localStorage.getItem("name");
         const savedCharacter = localStorage.getItem("character");
 
-        if (!playerId || !savedName || !savedCharacter) return;
+        if (!playerId || !savedName || !savedCharacter) {
+            return;
+        }
 
         socket.emit("join", {
             playerId,
@@ -1087,7 +1122,7 @@ window.addEventListener("load", () => {
             character: JSON.parse(savedCharacter).name,
             isHost: false
         });
-    });
+    }
 
     let realCards = [];
 
@@ -1216,10 +1251,10 @@ window.addEventListener("load", () => {
 
     // SCORE SCREEN
     socket.on("showScoreScreen", (data)=>{
-        const targetedPlayer = data?.playerId;
+        //const targetedPlayer = data?.playerId;
 
-        if(targetedPlayer && targetedPlayer !== localStorage.getItem("playerId"))
-            return;
+        //if(targetedPlayer && targetedPlayer !== localStorage.getItem("playerId"))
+        //    return;
 
         const character = characters.find(c => c.name === data.character);
 
@@ -1340,37 +1375,63 @@ window.addEventListener("load", () => {
 
     // SET CURRENT SESSION
     let currentSession = null;
+
     socket.on("gameSession", (session) => {
-        const savedSession = localStorage.getItem("gameSession");
-        const hostSession = localStorage.getItem("hostSession");
-        const storedIsHost = localStorage.getItem("isHost");
+
+        const savedSession =
+            localStorage.getItem("gameSession");
+
+        const savedHostSession =
+            localStorage.getItem("hostSession");
+
+        const storedIsHost =
+            localStorage.getItem("isHost") === "true";
 
         currentSession = session;
 
-        // restore isHost variable
-        isHost = storedIsHost === "true";
+        console.log("SERVER SESSION:", session);
+        console.log("SAVED PLAYER SESSION:", savedSession);
+        console.log("SAVED HOST SESSION:", savedHostSession);
 
-        const hostBtn = document.getElementById("hostBtn");
+        // HOST SESSION CHECK
+        if (storedIsHost) {
+            if (savedHostSession === session) {
+                // SAME SERVER SESSION
+                isHost = true;
 
-        // SHOW OR HIDE HOST BUTTON
-        if (isHost && hostSession === session) {
-            if (hostBtn) hostBtn.style.display = "none";
+                console.log(
+                    "Valid host session. Waiting for reconnect..."
+                );
 
-            showHostControls();
-        } else {
-            if (hostBtn) hostBtn.style.display = "block";
+                const hostBtn =
+                    document.getElementById("hostBtn");
 
-            const controls = document.getElementById("hostControls");
+                if (hostBtn) {
+                    hostBtn.style.display = "none";
+                }
+            } 
+            else {
+                // SERVER RESTARTED
+                console.log(
+                    "Server session changed. Clearing host state."
+                );
 
-            controls.classList.remove("show");
+                localStorage.removeItem("isHost");
+                localStorage.removeItem("hostSession");
 
-            setTimeout(() => {
-                controls.classList.add("hidden");
-            }, 400);
+                isHost = false;
+
+                const hostBtn =
+                    document.getElementById("hostBtn");
+
+                if (hostBtn) {
+                    hostBtn.style.display = "block";
+                }
+            }
         }
 
-        // PLAYER RESET
-        if (savedSession && savedSession != session) {
+        // PLAYER SESSION CHECK
+        if (savedSession && savedSession !== session && !storedIsHost){
             console.log("Server session changed. Clearing old player state.");
 
             localStorage.removeItem("playerId");
@@ -1380,15 +1441,11 @@ window.addEventListener("load", () => {
             localStorage.removeItem("gameSession");
 
             location.reload();
+
             return;
         }
-
-        // HOST RESET
-        if (isHost && hostSession && hostSession !== session) {
-            localStorage.removeItem("isHost");
-            localStorage.removeItem("hostSession");
-            location.reload();
-        }
+        sessionReceived = true;
+        reconnectAfterSessionCheck();
     });
 /* #endregion */
 
@@ -1674,12 +1731,21 @@ window.addEventListener("load", () => {
 
     // HOST JOIN
     function joinAsHost() {
+        if (!currentSession) {
+            console.log("Cannot become host yet - session not received.");
+            return;
+        }
+
         isHost = true;
 
-        socket.emit("join", { isHost: true });
-        confettiBurst();
         localStorage.setItem("isHost", "true");
         localStorage.setItem("hostSession", currentSession);
+
+        socket.emit("join", {
+            isHost: true
+        });
+
+        confettiBurst();
     }
 
     function showHostControls() {
