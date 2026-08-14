@@ -426,7 +426,8 @@ io.on("connection", (socket) => {
             socket.emit("gameStateSync", {
                 state: game.state,
                 players: game.players,
-                board: game.board
+                board: game.board,
+                hostScreen: game.hostScreen
             });
             console.log("Host connected");
 
@@ -550,6 +551,8 @@ io.on("connection", (socket) => {
                 type: "startGame"
             });
 
+            io.emit("showInstructionsHolding");
+
             // THEN send board data to Unity and host
             setTimeout(() => {
 
@@ -586,6 +589,39 @@ io.on("connection", (socket) => {
 
             case "showBoardIntro":
                 io.emit("showScoreScreen");
+                break;
+
+            case "showInstructions":
+                game.hostScreen = "hostInstructionsPg";
+
+                io.emit("showInstructions");
+
+                broadcastToUnity({
+                    type: "showInstructions"
+                });
+
+                break;
+
+            case "showInstrucCutscene":
+                game.hostScreen = "hostInstrucCutscenePg";
+
+                io.emit("showAnimHolding");
+
+                broadcastToUnity({
+                    type: "showInstrucCutscene"
+                });
+
+                break;
+
+            case "showBoardIntro":
+                game.hostScreen = "hostBoard";
+
+                io.emit("showScoreScreen");
+
+                broadcastToUnity({
+                    type: "showBoardIntro"
+                });
+
                 break;
 
             case "selectClue": {
@@ -718,6 +754,7 @@ io.on("connection", (socket) => {
             hostConnected = false;
             io.emit("hostStatus", false);
             console.log("Host disconnected");
+            socket.isHost = false;
         }
 
         const player = game.players.find(p => p.socketId === socket.id);
@@ -734,8 +771,6 @@ io.on("connection", (socket) => {
             character: p.character,
             disconnected: p.disconnected
         })));
-
-        //disconnectTimers.set(player.playerId, timer);
     });
 
     socket.on("leavePlayer", ({ playerId }) => {

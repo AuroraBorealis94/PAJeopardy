@@ -955,7 +955,7 @@
 
             <button
                 id="clueContinueBtn" onclick="hostContinue()">
-                    CONTINUE
+                    SKIP CLUE
             </button>
         </div>
 
@@ -1019,6 +1019,7 @@ let currentHostClue = null;
 let currentHostTile = null;
 let hostAnswerShowing = false;
 let buzzersEnabled = false;
+let currentBuzzPlayer = null;
 let characters = [];
 let currentIndex = 0;
 let currentScore = 0;
@@ -1027,6 +1028,12 @@ window.addEventListener("load", () => {
     // RESTORE SAVED PLAYER STATE
     const savedName = localStorage.getItem("name");
     const savedCharacter = localStorage.getItem("character");
+    // RESTORE HOST STATE
+    const savedIsHost = localStorage.getItem("isHost");
+
+    if (savedIsHost === "true") {
+        isHost = true;
+    }
 
     if (savedName) {
         state.name = savedName;
@@ -1037,17 +1044,6 @@ window.addEventListener("load", () => {
 
     if (savedCharacter) {
         state.character = JSON.parse(savedCharacter);
-    }
-
-    //updatePreview();
-
-    // HOST JOIN //
-    const isHost = localStorage.getItem("isHost");
-    const hostSession = localStorage.getItem("hostSession");
-
-    if (isHost === "true" && hostSession === currentSession) {
-        const btn = document.getElementById("hostBtn");
-        if (btn) btn.style.display = "none";
     }
 
     // CAROUSEL //
@@ -1065,7 +1061,20 @@ window.addEventListener("load", () => {
     // RECONNECT
     socket.on("connect", () => {
         console.log("connected:", socket.id);
+        const savedIsHost = localStorage.getItem("isHost") === "true";
 
+        // HOST RECONNECT
+        if (savedIsHost) {
+            console.log("Reconnecting as HOST");
+
+            socket.emit("join", {
+                isHost: true
+            });
+
+            return;
+        }
+
+        // PLAYER RECONNECT
         const playerId = localStorage.getItem("playerId");
         const savedName = localStorage.getItem("name");
         const savedCharacter = localStorage.getItem("character");
@@ -1085,9 +1094,7 @@ window.addEventListener("load", () => {
     // HOST SPOT FILLED
     socket.on("hostStatus", (taken) => {
         const btn = document.getElementById("hostBtn");
-
         if (!btn) return;
-
         btn.style.display = taken ? "none" : "block";
     });
 
@@ -1209,7 +1216,9 @@ window.addEventListener("load", () => {
 
     // SCORE SCREEN
     socket.on("showScoreScreen", (data)=>{
-        if(data.playerId && data.playerId !== localStorage.getItem("playerId"))
+        const targetedPlayer = data?.playerId;
+
+        if(targetedPlayer && targetedPlayer !== localStorage.getItem("playerId"))
             return;
 
         const character = characters.find(c => c.name === data.character);
@@ -1675,13 +1684,39 @@ window.addEventListener("load", () => {
 
     function showHostControls() {
         document.getElementById("lobbyUI").style.display = "none";
-        //confettiBurst();
         const controls = document.getElementById("hostControls");
         controls.classList.remove("hidden");
 
         requestAnimationFrame(() => {
             controls.classList.add("show");
         });
+
+        // Restore last host page
+        const lastHostPage =
+            localStorage.getItem("lastHostPage");
+
+        if (lastHostPage) {
+            restoreHostPage(lastHostPage);
+        }
+    }
+
+    function restoreHostPage(pageId) {
+        // Hide all host pages
+        document.querySelectorAll(".hostPage").forEach(page => {
+            page.classList.add("hidden");
+        });
+
+        // Restore requested page
+        const page = document.getElementById(pageId);
+
+        if (page) {
+            page.classList.remove("hidden");
+        }
+
+        // Restore board if necessary
+        if (pageId === "hostBoard") {
+            document.getElementById("hostBoard").style.display = "grid";
+        }
     }
 
     function hostStartGame() {
@@ -1689,6 +1724,7 @@ window.addEventListener("load", () => {
         hostJoinPg.classList.add("hidden");
         hostLobbyPg.classList.remove("hidden");
         document.getElementById("instructionsBtn").style.display = "block";
+        localStorage.setItem("lastHostPage", "hostLobbyPg");
     }
 
     function hostShowInstructions() {
@@ -1696,6 +1732,7 @@ window.addEventListener("load", () => {
         hostLobbyPg.classList.add("hidden");
         hostInstructionsPg.classList.remove("hidden");
         document.getElementById("showInstrucCutBtn").style.display = "block";
+        localStorage.setItem("lastHostPage", "hostInstructionsPg");
     }
 
     function hostShowInstrucCutscene() {
@@ -1703,6 +1740,7 @@ window.addEventListener("load", () => {
         hostInstructionsPg.classList.add("hidden");
         hostInstrucCutscenePg.classList.remove("hidden");
         document.getElementById("showBoardIntroBtn").style.display = "block";
+        localStorage.setItem("lastHostPage", "hostInstrucCutscenePg");
     }
 
     function hostShowBoardIntro() {
@@ -1710,6 +1748,7 @@ window.addEventListener("load", () => {
         hostInstrucCutscenePg.classList.add("hidden");
         document.getElementById("showBoardIntroBtn").style.display = "none";
         document.getElementById("hostBoard").style.display = "grid";
+        localStorage.setItem("lastHostPage", "hostBoard");
     }
 
     function hostShowBoard() {
@@ -1717,6 +1756,7 @@ window.addEventListener("load", () => {
         hostInstrucCutscenePg.classList.add("hidden");
         document.getElementById("showBoardBtn").style.display = "none";
         document.getElementById("hostBoard").style.display = "grid";
+        localStorage.setItem("lastHostPage", "hostBoard");
     }
 
     function buildHostBoard(board){
@@ -1799,13 +1839,21 @@ window.addEventListener("load", () => {
 
         hostAnswerShowing = !hostAnswerShowing;
 
-        inner.classList.toggle("flipped");
+        inner.classList.toggle(
+            "flipped",
+            hostAnswerShowing
+        );
 
+        // ANSWER SIDE
         if (hostAnswerShowing) {
+            if (currentBuzzPlayer) {
+                judgement.classList.add("show");
+            }
             enableBtn.style.display = buzzersEnabled ? "none" : "block";
         }
+
+        // CLUE SIDE
         else {
-            judgement.classList.remove("show");
             enableBtn.style.display = buzzersEnabled ? "none" : "block";
         }
     }
@@ -1815,7 +1863,6 @@ window.addEventListener("load", () => {
     }
 
     function hostAnswerCorrect() {
-
         socket.emit("hostAction", {
             type: "answerCorrect"
         });
@@ -1824,7 +1871,6 @@ window.addEventListener("load", () => {
     }
 
     function hostContinue() {
-
         socket.emit("hostAction", {
             type: "continueClue"
         });
@@ -1840,6 +1886,8 @@ window.addEventListener("load", () => {
         inner.classList.remove("flipped");
         hostAnswerShowing = false;
 
+        currentBuzzPlayer = null;
+
         socket.emit("hostAction", {
             type: "resumeBuzzing"
         });
@@ -1849,6 +1897,11 @@ window.addEventListener("load", () => {
         document.getElementById("enableBuzzerBtn").style.display = "none";
         document.getElementById("hostClueOverlay").classList.remove("show");
         document.getElementById("hostJudgementArea").classList.remove("show");
+
+        currentBuzzPlayer = null;
+        hostAnswerShowing = false;
+
+        document.getElementById("hostClueInner").classList.remove("flipped");
 
         if (currentHostTile)
         {
@@ -1954,6 +2007,7 @@ window.addEventListener("load", () => {
     });
 
     socket.on("buzzAccepted", (data) => {
+        currentBuzzPlayer = data;
         window.lastBuzzedPlayerName = data.playerName;
 
         const character =
@@ -1970,7 +2024,8 @@ window.addEventListener("load", () => {
                 `Did Team ${data.playerName} answer correctly?`;
 
             document.getElementById("hostJudgementArea").classList.add("show");
-
+            judgement.classList.add("show");
+            document.getElementById("enableBuzzerBtn").style.display = "none";
             return;
         }
 
