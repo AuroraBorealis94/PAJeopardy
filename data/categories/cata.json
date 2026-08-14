@@ -1,12 +1,12 @@
 {
-  "category": "A",
+  "category": "Memory Lane",
 
   "clues": {
     "200": [
       {
         "id": "A_200_1",
-        "clue": "200.1 Clue",
-        "answer": "200.1 Answer"
+        "clue": "200.1 Clue Alissia enjoyed this habit once but would never pick it back up",
+        "answer": "200.1 Answer "
       },
       {
         "id": "A_200_2",
@@ -31,8 +31,8 @@
     "600": [
       {
         "id": "A_600_1",
-        "clue": "600.1 Clue",
-        "answer": "600.1 Answer"
+        "clue": "600.1 Clue "Kashmir" by Led Zepplin instantly takes this person back to their teen years hanging out with their best friend",
+        "answer": "600.1 Answer Who is Alissia?"
       },
       {
         "id": "A_600_2",
