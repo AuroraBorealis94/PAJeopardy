@@ -12,9 +12,16 @@ app.use("/confetti", express.static("public/confetti"));
 app.use("/data/clueImages", express.static("clueImages"));
 app.use("/data/answerImages", express.static("answerImages"));
 
-// HOST NOT CONNECTED
+// HOST CONNECTION
 let hostConnected = false;
-// CURRENT SESSION
+let hostSocketId = null;
+
+const HOST_RECONNECT_TOKEN = "HOST_" + Math.random().toString(36).substring(2) + "_" + Date.now();
+
+let hostDisconnectTimer = null;
+const HOST_RECONNECT_WINDOW = 15000;
+
+// CURRENT GAME SESSION
 let GAME_SESSION = Date.now();
 
 console.log("NEW SERVER SESSION:", GAME_SESSION);
@@ -408,138 +415,329 @@ function convertBoardForUnity(board) {
     return { categories };
 }
 
+function sendHostState(socket) {
+
+    socket.emit("hostStatus", true);
+
+    socket.emit("gameSession", GAME_SESSION);
+
+    socket.emit("roomCode", ROOM_CODE);
+
+    socket.emit("characterList", characters);
+
+    socket.emit("playerList", game.players.map(p => ({
+        playerId: p.playerId,
+        name: p.name,
+        character: p.character,
+        disconnected: p.disconnected
+    })));
+
+    socket.emit(
+        "lockedCharacters",
+        Array.from(lockedCharacters)
+    );
+
+    socket.emit("gameStateSync", {
+        state: game.state,
+        players: game.players,
+        board: game.board,
+        lockedCharacters: Array.from(lockedCharacters),
+        hostScreen: game.hostScreen || null
+    });
+
+    console.log("Host state synchronized:", {
+        state: game.state,
+        players: game.players.length,
+        boardCategories: Object.keys(game.board).length
+    });
+}
+
 // NEW CONNECTION
 io.on("connection", (socket) => {
+    console.log("================================");
     console.log("Socket connected:", socket.id);
+    console.log("================================");
+
     socket.data.joined = false;
-    socket.isUnity = false;
-    // SEND INFO TO WEB
+    socket.isHost = false;
     socket.emit("gameSession", GAME_SESSION);
     socket.emit("roomCode", ROOM_CODE);
     socket.emit("characterList", characters);
     socket.emit("hostStatus", hostConnected);
+    socket.emit(
+        "playerList",
+        game.players.map(p => ({
+            playerId: p.playerId,
+            name: p.name,
+            character: p.character,
+            disconnected: p.disconnected
+        }))
+    );
+    socket.emit(
+        "lockedCharacters",
+        Array.from(lockedCharacters)
+    );
 
-    socket.emit("playerList", game.players);
-    socket.emit("lockedCharacters", Array.from(lockedCharacters));
+    // AUTOMATIC HOST RECONNECTION
+    const reconnectToken = socket.handshake.auth?.hostReconnectToken;
+
+    if (reconnectToken && reconnectToken === HOST_RECONNECT_TOKEN) {
+        console.log("HOST RECONNECT TOKEN ACCEPTED");
+
+        // Cancel pending host disconnect
+        if (hostDisconnectTimer) {
+            clearTimeout(hostDisconnectTimer);
+            hostDisconnectTimer = null;
+        }
+
+        hostConnected = true;
+        hostSocketId = socket.id;
+
+        socket.isHost = true;
+        socket.data.joined = true;
+
+        console.log("HOST RECONNECTED:", socket.id);
+
+        sendHostState(socket);
+
+        io.emit("hostStatus", true);
+
+        console.log("Host state restored.");
+
+        return;
+    }
 
     console.log("A player connected:", socket.id);
 
     // JOIN LOBBY
     socket.on("join", ({ playerId, name, character, isHost }) => {
+        console.log("JOIN ATTEMPT:", {
+            socketId: socket.id,
+            playerId,
+            name,
+            character,
+            isHost
+        });
+
+        // HOST JOIN
         if (isHost) {
-            if (hostConnected) {
-                socket.emit("hostTaken");
+            const reconnectToken = socket.handshake.auth?.hostReconnectToken;
+
+            if (reconnectToken && reconnectToken === HOST_RECONNECT_TOKEN) {
+                console.log("Host manually reconnected with token.");
+
+                if (hostDisconnectTimer) {
+                    clearTimeout(hostDisconnectTimer);
+                    hostDisconnectTimer = null;
+                }
+
+                hostConnected = true;
+                hostSocketId = socket.id;
+
+                socket.isHost = true;
+                socket.data.joined = true;
+
+                sendHostState(socket);
+
+                io.emit("hostStatus", true);
+
                 return;
             }
 
+            // Another host is already connected
+            if (hostConnected) {
+                console.log(
+                    "HOST CONNECTION REJECTED - HOST ALREADY CONNECTED"
+                );
+
+                socket.emit("hostTaken");
+
+                return;
+            }
+
+            // New host connection
             hostConnected = true;
+            hostSocketId = socket.id;
+
             socket.isHost = true;
+            socket.data.joined = true;
+
+            console.log("================================");
+            console.log("HOST CONNECTED");
+            console.log("Socket:", socket.id);
+            console.log("================================");
+
+            // Give the browser its reconnect token.
+            socket.emit("hostReconnectToken", HOST_RECONNECT_TOKEN);
+
+            sendHostState(socket);
 
             io.emit("hostStatus", true);
-            socket.emit("joinSuccess");
-
-            socket.emit("gameStateSync", {
-                state: game.state,
-                players: game.players,
-                board: game.board,
-                hostScreen: game.hostScreen
-            });
-            console.log("Host connected");
 
             return;
         }
 
-        console.log("JOIN ATTEMPT:", { playerId, name, character });
+        // PLAYER JOIN
+        if (!playerId || !name || !character) {
+            console.warn(
+                "Invalid player join attempt:",
+                { playerId, name, character }
+            );
+
+            socket.emit("joinError", {
+                message: "Missing player information."
+            });
+
+            return;
+        }
+
         const normalized = character.toLowerCase();
 
         let existingPlayer = game.players.find(p => p.playerId === playerId);
 
-        const RECONNECT_WINDOW = 10000;
-
+        // PLAYER RECONNECT
         if (existingPlayer && existingPlayer.disconnected) {
+            console.log(
+                "PLAYER RECONNECT:",
+                existingPlayer.name
+            );
+
             existingPlayer.socketId = socket.id;
             existingPlayer.disconnected = false;
             existingPlayer.disconnectTime = null;
 
-            console.log(name + " reconnected");
+            socket.data.joined = true;
 
-            io.emit("playerList", game.players.map(p => ({
-                playerId: p.playerId,
-                name: p.name,
-                character: p.character,
-                disconnected: p.disconnected
-            })));
+            io.emit(
+                "playerList",
+                game.players.map(p => ({
+                    playerId: p.playerId,
+                    name: p.name,
+                    character: p.character,
+                    disconnected: p.disconnected
+                }))
+            );
 
-            io.emit("lockedCharacters", Array.from(lockedCharacters));
+            io.emit(
+                "lockedCharacters",
+                Array.from(lockedCharacters)
+            );
 
             socket.emit("joinSuccess");
-
             socket.emit("gameStateSync", {
                 state: game.state,
                 players: game.players,
                 board: game.board,
                 lockedCharacters: Array.from(lockedCharacters)
             });
-            socket.data.joined = true;
+
+            broadcastToUnity({
+                type: "playerList",
+                players: game.players.map(p => ({
+                    playerId: p.playerId,
+                    name: p.name,
+                    characterId: p.characterKey
+                }))
+            });
+
             return;
         }
 
-        if (existingPlayer && existingPlayer.disconnected) {
-            lockedCharacters.delete(existingPlayer.characterKey);
+        // PLAYER WITH SAME ID ALREADY CONNECTED
+        if (existingPlayer) {
+            console.log(
+                "Player ID already connected:",
+                playerId
+            );
 
-            game.players = game.players.filter(p => p.playerId !== playerId);
+            socket.emit("joinError", {
+                message: "Player is already connected."
+            });
+
+            return;
         }
 
         // CHARACTER TAKEN
-        const characterOwnedBySomeoneElse = game.players.find(
-            p => p.character.toLowerCase() === normalized && p.playerId !== playerId
-        );
+        const characterOwnedBySomeoneElse =
+            game.players.find(
+                p =>
+                    p.character.toLowerCase() === normalized &&
+                    !p.disconnected
+            );
 
         if (characterOwnedBySomeoneElse) {
+            console.log(
+                "Character already owned:",
+                character
+            );
+
             socket.emit("characterTaken");
+
             return;
         }
 
         if (lockedCharacters.has(normalized)) {
+            console.log(
+                "Character locked:",
+                character
+            );
+
             socket.emit("characterTaken");
+
             return;
         }
 
-        // VALID JOIN
+        // VALID PLAYER JOIN
         lockedCharacters.add(normalized);
 
-        game.players.push({
+        const player = {
             socketId: socket.id,
             playerId,
             name,
             character,
-            characterKey: character.toLowerCase(),
+            characterKey: normalized,
             score: 0,
-            isHost: !!isHost,
+            isHost: false,
             disconnected: false,
             disconnectTime: null
-        });
+        };
+
+        game.players.push(player);
 
         socket.data.joined = true;
 
-        console.log(name + " joined with " + character);
+        console.log(
+            name + " joined with " + character
+        );
 
-        io.emit("playerList", game.players.map(p => ({
-            playerId: p.playerId,
-            name: p.name,
-            character: p.character,
-            disconnected: p.disconnected
-        })));
-        io.emit("lockedCharacters", Array.from(lockedCharacters));
+        // UPDATE WEB CLIENTS
+        io.emit(
+            "playerList",
+            game.players.map(p => ({
+                playerId: p.playerId,
+                name: p.name,
+                character: p.character,
+                disconnected: p.disconnected
+            }))
+        );
+
+        io.emit(
+            "lockedCharacters",
+            Array.from(lockedCharacters)
+        );
+
 
         socket.emit("joinSuccess");
+
 
         socket.emit("gameStateSync", {
             state: game.state,
             players: game.players,
-            board: game.board
+            board: game.board,
+            lockedCharacters: Array.from(lockedCharacters)
         });
 
+        // UPDATE UNITY
         broadcastToUnity({
             type: "playerList",
             players: game.players.map(p => ({
@@ -594,9 +792,7 @@ io.on("connection", (socket) => {
 
         // OPTIONAL WEB EVENTS
         switch (data.type) {
-            // ==========================================
             // INSTRUCTIONS HOLDING SCREEN
-            // ==========================================
             case "showInstructions":
                 console.log("HOST ACTION: showInstructions");
 
@@ -610,10 +806,7 @@ io.on("connection", (socket) => {
 
                 break;
 
-
-            // ==========================================
             // INSTRUCTION CUTSCENE / ANIM HOLDING
-            // ==========================================
             case "showInstrucCutscene":
                 console.log("HOST ACTION: showInstrucCutscene");
 
@@ -627,10 +820,7 @@ io.on("connection", (socket) => {
 
                 break;
 
-
-            // ==========================================
             // BOARD INTRO
-            // ==========================================
             case "showBoardIntro":
                 console.log("HOST ACTION: showBoardIntro");
 
@@ -643,10 +833,7 @@ io.on("connection", (socket) => {
 
                 break;
 
-
-            // ==========================================
             // SHOW GAME BOARD
-            // ==========================================
             case "showBoard":
                 console.log("HOST ACTION: showBoard");
 
@@ -660,10 +847,7 @@ io.on("connection", (socket) => {
 
                 break;
 
-
-            // ==========================================
             // SELECT CLUE
-            // ==========================================
             case "selectClue": {
                 console.log("HOST ACTION: selectClue");
 
@@ -707,10 +891,7 @@ io.on("connection", (socket) => {
                 break;
             }
 
-
-            // ==========================================
             // CORRECT ANSWER
-            // ==========================================
             case "answerCorrect":
                 console.log("HOST ACTION: answerCorrect");
 
@@ -738,10 +919,7 @@ io.on("connection", (socket) => {
 
                 break;
 
-
-            // ==========================================
             // CONTINUE
-            // ==========================================
             case "continueClue":
                 console.log("HOST ACTION: continueClue");
 
@@ -755,10 +933,7 @@ io.on("connection", (socket) => {
 
                 break;
 
-
-            // ==========================================
             // REVEAL ANSWER
-            // ==========================================
             case "revealAnswer":
                 console.log("HOST ACTION: revealAnswer");
 
@@ -770,10 +945,7 @@ io.on("connection", (socket) => {
 
                 break;
 
-
-            // ==========================================
             // ENABLE / RESUME BUZZERS
-            // ==========================================
             case "resumeBuzzing":
                 console.log("HOST ACTION: resumeBuzzing");
 
@@ -788,10 +960,7 @@ io.on("connection", (socket) => {
 
                 break;
 
-
-            // ==========================================
             // UNKNOWN HOST ACTION
-            // ==========================================
             default:
                 console.warn("Unknown hostAction type:", data.type);
                 break;
@@ -838,28 +1007,61 @@ io.on("connection", (socket) => {
     });
 
     // DISCONNECT
-    socket.on("disconnect", () => {
+    socket.on("disconnect", (reason) => {
+        console.log("================================");
+        console.log("SOCKET DISCONNECTED");
+        console.log("Socket:", socket.id);
+        console.log("Reason:", reason);
+        console.log("================================");
+
+        // HOST DISCONNECTED
         if (socket.isHost) {
-            hostConnected = false;
-            io.emit("hostStatus", false);
-            console.log("Host disconnected");
+            console.log(
+                "Host temporarily disconnected."
+            );
+
             socket.isHost = false;
+            hostDisconnectTimer = setTimeout(() => {
+                if (hostSocketId === socket.id) {
+
+                    hostConnected = false;
+                    hostSocketId = null;
+
+                    io.emit("hostStatus", false);
+
+                    console.log(
+                        "Host reconnect window expired."
+                    );
+                }
+                hostDisconnectTimer = null;
+            }, HOST_RECONNECT_WINDOW);
         }
 
-        const player = game.players.find(p => p.socketId === socket.id);
-        if (!player) return;
+        // PLAYER DISCONNECT
+        const player = game.players.find(
+            p => p.socketId === socket.id
+        );
 
-        console.log(player.name + " temporarily disconnected");
+        if (!player) {
+            return;
+        }
+
+        console.log(
+            player.name + " temporarily disconnected"
+        );
 
         player.disconnected = true;
         player.disconnectTime = Date.now();
 
-        io.emit("playerList", game.players.map(p => ({
-            playerId: p.playerId,
-            name: p.name,
-            character: p.character,
-            disconnected: p.disconnected
-        })));
+        io.emit(
+            "playerList",
+            game.players.map(p => ({
+                playerId: p.playerId,
+                name: p.name,
+                character: p.character,
+                disconnected: p.disconnected
+            }))
+        );
     });
 
     socket.on("leavePlayer", ({ playerId }) => {
