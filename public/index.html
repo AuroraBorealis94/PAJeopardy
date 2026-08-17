@@ -2040,33 +2040,16 @@
             ==================================================== */
 
             if (joiningAsHost) {
-
                 requestingHost = false;
-
                 isHost = true;
 
+                localStorage.setItem("isHost", "true");
+                localStorage.setItem("hostSession", currentSession);
 
-                localStorage.setItem(
-                    "isHost",
-                    "true"
-                );
+                console.log("HOST SLOT CONFIRMED. SESSION:", currentSession);
 
-                localStorage.setItem(
-                    "hostSession",
-                    currentSession
-                );
-
-
-                console.log(
-                    "HOST SLOT CONFIRMED. SESSION:",
-                    currentSession
-                );
-
-
-                updateHostButton();
-
-
-                showHostControls();
+                // Force the host back to the initial host page.
+                showHostControls(true);
 
                 return;
             }
@@ -2190,12 +2173,13 @@
             */
 
             if (isHost) {
+                console.log("HOST STATE SYNC RECEIVED");
 
-                console.log(
-                    "HOST STATE SYNC RECEIVED"
-                );
-
-                showHostControls();
+                // Do not override the page selected by joinSuccess.
+                // The host reconnection handler controls the initial page.
+                if (!document.getElementById("hostControls").classList.contains("show")) {
+                    showHostControls(true);
+                }
 
                 return;
             }
@@ -3234,7 +3218,6 @@
     ============================================================ */
 
     function joinAsHost() {
-
         if (!socketConnected) {
 
             console.log(
@@ -3300,69 +3283,45 @@
        HOST CONTROLS
     ============================================================ */
 
-    function showHostControls() {
-
-        const lobby =
-            document.getElementById(
-                "lobbyUI"
-            );
-
-        const controls =
-            document.getElementById(
-                "hostControls"
-            );
-
+    function showHostControls(forceInitialPage = false) {
+        const lobby = document.getElementById("lobbyUI");
+        const controls = document.getElementById("hostControls");
 
         if (lobby) {
-
-            lobby.style.display =
-                "none";
+            lobby.style.display = "none";
         }
 
-
         if (!controls) {
-
-            console.error(
-                "Host controls container not found."
-            );
-
+            console.error("Host controls container not found.");
             return;
         }
 
+        controls.classList.remove("hidden");
 
-        controls.classList.remove(
-            "hidden"
-        );
+        requestAnimationFrame(() => {
+            controls.classList.add("show");
+        });
 
+        let pageToShow;
 
-        requestAnimationFrame(
-            () => {
+        if (forceInitialPage) {
+            // Fresh host connection or host reconnection
+            // always starts at the "Go to Lobby" page.
+            pageToShow = "hostJoinPg";
 
-                controls.classList.add(
-                    "show"
-                );
-            }
-        );
-
-
-        const savedPage =
-            localStorage.getItem(
-                "lastHostPage"
-            );
-
-
-        if (savedPage) {
-
-            restoreHostPage(
-                savedPage
-            );
-
+            localStorage.setItem("lastHostPage", pageToShow);
         } else {
-
-            restoreHostPage(
-                "hostJoinPg"
-            );
+            // Normal host navigation/reload behavior
+            pageToShow =
+                localStorage.getItem("lastHostPage") || "hostJoinPg";
         }
+
+        console.log("SHOW HOST CONTROLS:", {
+            forceInitialPage,
+            pageToShow
+        });
+
+        restoreHostPage(pageToShow);
     }
 
 
