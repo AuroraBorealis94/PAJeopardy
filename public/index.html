@@ -1013,6 +1013,7 @@ const state = {
 
 console.log("LOCAL PLAYER ID ON LOAD:", localStorage.getItem("playerId"));
 
+// THE LETS
 let isHost = false;
 let currentHostClue = null;
 let currentHostTile = null;
@@ -1022,6 +1023,7 @@ let currentBuzzPlayer = null;
 let characters = [];
 let currentIndex = 0;
 let currentScore = 0;
+let requestingHost = false;
 
 window.addEventListener("load", () => {
     // RESTORE SAVED PLAYER STATE
@@ -1310,8 +1312,19 @@ window.addEventListener("load", () => {
 
     // PLAYER JOINED
     socket.on("joinSuccess", () => {
-        if (isHost) {
+        if (requestingHost || isHost) {
+            requestingHost = false;
+            isHost = true;
+
+            localStorage.setItem("isHost", "true");
+            localStorage.setItem(
+                "hostSession",
+                currentSession
+            );
+
+            console.log("Host slot confirmed.");
             showHostControls();
+
             return;
         }
 
@@ -1349,6 +1362,15 @@ window.addEventListener("load", () => {
     // RECONNECT GAME STATE
     socket.on("gameStateSync", (data) => {
         console.log("SYNC STATE:", data);
+        // HOST UI IS RESTORED SEPARATELY
+        if (isHost) {
+            console.log("Host state sync received.");
+
+            showHostControls();
+
+            return;
+        }
+
         lockedSet = new Set((data.lockedCharacters || []).map(c => c.toLowerCase()));
         updateLockedUI();
         if (data.state === "playing" || data.state === "lobby") {
@@ -1723,14 +1745,15 @@ window.addEventListener("load", () => {
     // HOST JOIN
     function joinAsHost() {
         if (!currentSession) {
-            console.log("Cannot become host yet - session not received.");
+            console.log(
+                "Cannot become host yet - session not received."
+            );
             return;
         }
 
-        isHost = true;
+        requestingHost = true;
 
-        localStorage.setItem("isHost", "true");
-        localStorage.setItem("hostSession", currentSession);
+        console.log("Requesting host slot...");
 
         socket.emit("join", {
             isHost: true
@@ -1775,18 +1798,14 @@ window.addEventListener("load", () => {
         }
     }
 
-
     function restoreHostPage(pageId) {
-        const controls =
-            document.getElementById("hostControls");
+        const controls = document.getElementById("hostControls");
 
         if (!controls) {
             console.error("Host controls container not found.");
             return;
         }
 
-        // ONLY hide the individual host pages.
-        // Do NOT include hostControls itself.
         const hostPages = [
             "hostJoinPg",
             "hostLobbyPg",
@@ -1794,6 +1813,7 @@ window.addEventListener("load", () => {
             "hostInstrucCutscenePg"
         ];
 
+        // Hide all host pages
         hostPages.forEach(id => {
             const page = document.getElementById(id);
 
@@ -1802,25 +1822,125 @@ window.addEventListener("load", () => {
             }
         });
 
-        // Host board is handled separately
-        const hostBoard =
-            document.getElementById("hostBoard");
+        // Hide board
+        const hostBoard = document.getElementById("hostBoard");
 
         if (hostBoard) {
             hostBoard.style.display = "none";
+            hostBoard.classList.add("hidden");
         }
 
-        // Show requested page
-        const page =
-            document.getElementById(pageId);
+        // Hide all host navigation buttons first
+        const instructionsBtn =
+            document.getElementById("instructionsBtn");
 
-        if (!page) {
+        const showInstrucCutBtn =
+            document.getElementById("showInstrucCutBtn");
+
+        const showBoardIntroBtn =
+            document.getElementById("showBoardIntroBtn");
+
+        if (instructionsBtn)
+            instructionsBtn.style.display = "none";
+
+        if (showInstrucCutBtn)
+            showInstrucCutBtn.style.display = "none";
+
+        if (showBoardIntroBtn)
+            showBoardIntroBtn.style.display = "none";
+
+
+        // ==========================================
+        // HOST JOIN PAGE
+        // ==========================================
+
+        if (pageId === "hostJoinPg") {
+
+            const page = document.getElementById("hostJoinPg");
+
+            if (page) {
+                page.classList.remove("hidden");
+            }
+
+        }
+
+
+        // ==========================================
+        // HOST LOBBY
+        // ==========================================
+
+        else if (pageId === "hostLobbyPg") {
+
+            const page = document.getElementById("hostLobbyPg");
+
+            if (page) {
+                page.classList.remove("hidden");
+            }
+
+            if (instructionsBtn) {
+                instructionsBtn.style.display = "block";
+            }
+        }
+
+
+        // ==========================================
+        // INSTRUCTIONS
+        // ==========================================
+
+        else if (pageId === "hostInstructionsPg") {
+
+            const page =
+                document.getElementById("hostInstructionsPg");
+
+            if (page) {
+                page.classList.remove("hidden");
+            }
+
+            if (showInstrucCutBtn) {
+                showInstrucCutBtn.style.display = "block";
+            }
+        }
+
+
+        // ==========================================
+        // CUTSCENE
+        // ==========================================
+
+        else if (pageId === "hostInstrucCutscenePg") {
+
+            const page =
+                document.getElementById("hostInstrucCutscenePg");
+
+            if (page) {
+                page.classList.remove("hidden");
+            }
+
+            if (showBoardIntroBtn) {
+                showBoardIntroBtn.style.display = "block";
+            }
+        }
+
+
+        // ==========================================
+        // BOARD
+        // ==========================================
+
+        else if (pageId === "hostBoard") {
+
+            if (hostBoard) {
+                hostBoard.classList.remove("hidden");
+                hostBoard.style.display = "grid";
+            }
+        }
+
+
+        else {
+
             console.error(
                 "Host page not found:",
                 pageId
             );
 
-            // Fallback to host join page
             const fallback =
                 document.getElementById("hostJoinPg");
 
@@ -1828,25 +1948,11 @@ window.addEventListener("load", () => {
                 fallback.classList.remove("hidden");
             }
 
-            localStorage.setItem(
-                "lastHostPage",
-                "hostJoinPg"
-            );
-
-            return;
+            pageId = "hostJoinPg";
         }
 
-        page.classList.remove("hidden");
 
-        // If restoring the board, show it instead
-        if (pageId === "hostBoard") {
-            hostBoard.style.display = "grid";
-        }
-
-        localStorage.setItem(
-            "lastHostPage",
-            pageId
-        );
+        localStorage.setItem("lastHostPage", pageId);
     }
 
 
@@ -2191,6 +2297,7 @@ window.addEventListener("load", () => {
         if (isHost)
         {
             const inner = document.getElementById("hostClueInner");
+            const judgement = document.getElementById("hostJudgementArea");
             inner.classList.add("flipped");
             hostAnswerShowing = true;
 
