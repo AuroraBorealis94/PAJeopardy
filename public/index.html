@@ -900,9 +900,9 @@
 </div>
 
 <!-- HOST CONTROLS -->
-<div id="hostControls" class="hostPage">
+<div id="hostControls">
     <img id="hostLogo" src="/backgrounds/HostImg.png">
-    <div id="hostJoinPg">
+    <div id="hostJoinPg" class="hostPage">
         <div>Welcome Host! Let's meet our contestants</div>
         <br>
         <button id="startGameBtn" onclick="hostStartGame()">
@@ -931,7 +931,7 @@
         </button>
     </div>
 
-    <div id="hostBoard"></div>
+    <div id="hostBoard" class="hostPage hidden"></div>
 
     <div id="hostClueOverlay" class="hidden">
         <div id="hostClueCard">
@@ -1376,15 +1376,9 @@ window.addEventListener("load", () => {
     let currentSession = null;
 
     socket.on("gameSession", (session) => {
-
-        const savedSession =
-            localStorage.getItem("gameSession");
-
-        const savedHostSession =
-            localStorage.getItem("hostSession");
-
-        const storedIsHost =
-            localStorage.getItem("isHost") === "true";
+        const savedSession = localStorage.getItem("gameSession");
+        const savedHostSession = localStorage.getItem("hostSession");
+        const storedIsHost = localStorage.getItem("isHost") === "true";
 
         currentSession = session;
 
@@ -1402,8 +1396,7 @@ window.addEventListener("load", () => {
                     "Valid host session. Waiting for reconnect..."
                 );
 
-                const hostBtn =
-                    document.getElementById("hostBtn");
+                const hostBtn = document.getElementById("hostBtn");
 
                 if (hostBtn) {
                     hostBtn.style.display = "none";
@@ -1420,8 +1413,7 @@ window.addEventListener("load", () => {
 
                 isHost = false;
 
-                const hostBtn =
-                    document.getElementById("hostBtn");
+                const hostBtn = document.getElementById("hostBtn");
 
                 if (hostBtn) {
                     hostBtn.style.display = "block";
@@ -1748,89 +1740,195 @@ window.addEventListener("load", () => {
     }
 
     function showHostControls() {
-        document.getElementById("lobbyUI").style.display = "none";
+        // Hide player lobby
+        const lobby = document.getElementById("lobbyUI");
+
+        if (lobby) {
+            lobby.style.display = "none";
+        }
+
+        // Show host controls container
         const controls = document.getElementById("hostControls");
+
+        if (!controls) {
+            console.error("Host controls container not found.");
+            return;
+        }
+
+        // IMPORTANT:
+        // hostControls itself should NEVER receive the "hidden" class.
         controls.classList.remove("hidden");
 
         requestAnimationFrame(() => {
             controls.classList.add("show");
         });
 
-        // Restore last host page
+        // Restore last host page if one exists
         const lastHostPage =
             localStorage.getItem("lastHostPage");
 
         if (lastHostPage) {
             restoreHostPage(lastHostPage);
+        } else {
+            // First time entering host mode
+            restoreHostPage("hostJoinPg");
         }
     }
+
 
     function restoreHostPage(pageId) {
-        // Hide all host pages
-        document.querySelectorAll(".hostPage").forEach(page => {
-            page.classList.add("hidden");
+        const controls =
+            document.getElementById("hostControls");
+
+        if (!controls) {
+            console.error("Host controls container not found.");
+            return;
+        }
+
+        // ONLY hide the individual host pages.
+        // Do NOT include hostControls itself.
+        const hostPages = [
+            "hostJoinPg",
+            "hostLobbyPg",
+            "hostInstructionsPg",
+            "hostInstrucCutscenePg"
+        ];
+
+        hostPages.forEach(id => {
+            const page = document.getElementById(id);
+
+            if (page) {
+                page.classList.add("hidden");
+            }
         });
 
-        // Restore requested page
-        const page = document.getElementById(pageId);
+        // Host board is handled separately
+        const hostBoard =
+            document.getElementById("hostBoard");
 
-        if (page) {
-            page.classList.remove("hidden");
+        if (hostBoard) {
+            hostBoard.style.display = "none";
         }
 
-        // Restore board if necessary
+        // Show requested page
+        const page =
+            document.getElementById(pageId);
+
+        if (!page) {
+            console.error(
+                "Host page not found:",
+                pageId
+            );
+
+            // Fallback to host join page
+            const fallback =
+                document.getElementById("hostJoinPg");
+
+            if (fallback) {
+                fallback.classList.remove("hidden");
+            }
+
+            localStorage.setItem(
+                "lastHostPage",
+                "hostJoinPg"
+            );
+
+            return;
+        }
+
+        page.classList.remove("hidden");
+
+        // If restoring the board, show it instead
         if (pageId === "hostBoard") {
-            document.getElementById("hostBoard").style.display = "grid";
+            hostBoard.style.display = "grid";
         }
+
+        localStorage.setItem(
+            "lastHostPage",
+            pageId
+        );
     }
+
 
     function hostStartGame() {
-        socket.emit("hostAction", { type: "startGame" });
-        hostJoinPg.classList.add("hidden");
-        hostLobbyPg.classList.remove("hidden");
-        document.getElementById("instructionsBtn").style.display = "block";
-        localStorage.setItem("lastHostPage", "hostLobbyPg");
+        socket.emit("hostAction", {
+            type: "startGame"
+        });
+
+        restoreHostPage("hostLobbyPg");
+
+        document.getElementById(
+            "instructionsBtn"
+        ).style.display = "block";
     }
+
 
     function hostShowInstructions() {
-        socket.emit("hostAction", { type: "showInstructions" });
-        hostLobbyPg.classList.add("hidden");
-        hostInstructionsPg.classList.remove("hidden");
-        document.getElementById("showInstrucCutBtn").style.display = "block";
-        localStorage.setItem("lastHostPage", "hostInstructionsPg");
+        socket.emit("hostAction", {
+            type: "showInstructions"
+        });
+
+        restoreHostPage("hostInstructionsPg");
+
+        document.getElementById(
+            "showInstrucCutBtn"
+        ).style.display = "block";
     }
+
 
     function hostShowInstrucCutscene() {
-        socket.emit("hostAction", { type: "showInstrucCutscene" });
-        hostInstructionsPg.classList.add("hidden");
-        hostInstrucCutscenePg.classList.remove("hidden");
-        document.getElementById("showBoardIntroBtn").style.display = "block";
-        localStorage.setItem("lastHostPage", "hostInstrucCutscenePg");
+        socket.emit("hostAction", {
+            type: "showInstrucCutscene"
+        });
+
+        restoreHostPage("hostInstrucCutscenePg");
+
+        document.getElementById(
+            "showBoardIntroBtn"
+        ).style.display = "block";
     }
+
 
     function hostShowBoardIntro() {
-        socket.emit("hostAction", { type: "showBoardIntro" });
-        hostInstrucCutscenePg.classList.add("hidden");
-        document.getElementById("showBoardIntroBtn").style.display = "none";
-        document.getElementById("hostBoard").style.display = "grid";
-        localStorage.setItem("lastHostPage", "hostBoard");
+        socket.emit("hostAction", {
+            type: "showBoardIntro"
+        });
+
+        restoreHostPage("hostBoard");
+
+        document.getElementById(
+            "showBoardIntroBtn"
+        ).style.display = "none";
     }
+
 
     function hostShowBoard() {
-        socket.emit("hostAction", { type: "showBoard" });
-        hostInstrucCutscenePg.classList.add("hidden");
-        document.getElementById("showBoardBtn").style.display = "none";
-        document.getElementById("hostBoard").style.display = "grid";
-        localStorage.setItem("lastHostPage", "hostBoard");
+        socket.emit("hostAction", {
+            type: "showBoard"
+        });
+
+        restoreHostPage("hostBoard");
+
+        const showBoardBtn =
+            document.getElementById("showBoardBtn");
+
+        if (showBoardBtn) {
+            showBoardBtn.style.display = "none";
+        }
     }
 
-    function buildHostBoard(board){
-        const hostBoard = document.getElementById("hostBoard");
+
+    function buildHostBoard(board) {
+        const hostBoard =
+            document.getElementById("hostBoard");
+
         hostBoard.innerHTML = "";
 
         // HEADERS
         board.categories.forEach(category => {
-            const header = document.createElement("div");
+            const header =
+                document.createElement("div");
+
             header.className = "hostHeader";
             header.innerText = category.categoryName;
 
@@ -1838,20 +1936,34 @@ window.addEventListener("load", () => {
         });
 
         // VALUES
-        const values = ["200", "400", "600", "800", "1000"];
+        const values = [
+            "200",
+            "400",
+            "600",
+            "800",
+            "1000"
+        ];
 
         values.forEach(value => {
+
             board.categories.forEach(category => {
-                const clue = category.clues.find(c => c.value === value);
-                const tile = document.createElement("div");
+
+                const clue =
+                    category.clues.find(
+                        c => c.value === value
+                    );
+
+                const tile =
+                    document.createElement("div");
 
                 tile.className = "hostTile";
 
-                if (clue)
-                {
+                if (clue) {
+
                     tile.innerText = "$" + value;
 
                     tile.onclick = () => {
+
                         currentHostClue = clue;
                         currentHostTile = tile;
 
@@ -1866,18 +1978,15 @@ window.addEventListener("load", () => {
                         });
                     };
                 }
+
                 hostBoard.appendChild(tile);
             });
         });
     }
 
-    function showHostPage(pageId) {
-        document.querySelectorAll(".hostPage").forEach(page => {
-            page.classList.add("hidden");
-        });
 
-        document.getElementById(pageId)
-            hostLobbyPg.classList.remove("hidden");
+    function showHostPage(pageId) {
+        restoreHostPage(pageId);
     }
 
     function showHostClue(clue) {
