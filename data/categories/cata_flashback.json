@@ -6,7 +6,9 @@
       {
         "id": "A_200_1",
         "clue": "200.1 Clue Alissia enjoyed this habit once but would never pick it back up",
-        "answer": "200.1 Answer "
+	"clueImage": "/clueImages/example.jpg",
+        "answer": "200.1 Answer ",
+	"answerImage": "/clueImages/example-answer.jpg"
       },
       {
         "id": "A_200_2",
