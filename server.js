@@ -9,6 +9,8 @@ app.use("/fonts", express.static("fonts"));
 app.use("/backgrounds", express.static("backgrounds"));
 app.use("/sprites", express.static("sprites"));
 app.use("/confetti", express.static("public/confetti"));
+app.use("/data/clueImages", express.static("clueImages"));
+app.use("/data/answerImages", express.static("answerImages"));
 
 // HOST NOT CONNECTED
 let hostConnected = false;
@@ -347,8 +349,13 @@ function generateBoard() {
                 id: chosen.id,
                 value,
                 category: categoryName,
+
                 clue: chosen.clue,
+                clueImage: chosen.clueImage || "",
+
                 answer: chosen.answer,
+                answerImage: chosen.answerImage || "",
+
                 used: false
             };
         }
