@@ -976,25 +976,24 @@ io.on("connection", (socket) => {
             // BOARD INTRO
             case "showBoardIntro":
                 console.log("HOST ACTION: showBoardIntro");
-
-                broadcastToUnity({
-                    type: "showBoardIntro"
-                });
+                game.hostScreen = "hostBoardIntroPg";
+                broadcastToUnity({ type: "showBoardIntro", round: game.round, board: convertBoardForUnity(game.board) });
 
                 break;
 
             // SHOW GAME BOARD
+            /*
             case "showBoard":
                 console.log("HOST ACTION: showBoard");
 
                 io.emit("showScoreScreen");
 
                 broadcastToUnity({
-                    type: "showBoard"
+                    type: "showBoardIntro"
                 });
 
                 break;
-
+            */
             // SELECT CLUE
             case "selectClue": {
                 console.log("HOST ACTION: selectClue");
