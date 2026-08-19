@@ -493,7 +493,6 @@ function convertBoardForUnity(board) {
 }
 
 function getPublicGameState() {
-
     return {
         state: game.state,
         round: game.round,

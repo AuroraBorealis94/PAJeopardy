@@ -1019,7 +1019,7 @@
 
     <div id="hostBoard" class="hostPage hidden">
         <div id="hostRoundLabel">
-            ROUND 1
+            JEOPARDY
         </div>
 
         <div id="hostBoardGrid"></div>
@@ -1810,7 +1810,8 @@
                 } else {
                     console.log("SERVER SESSION CHANGED. CLEARING HOST STATE.");
                     localStorage.removeItem("isHost");
-                    localStorage.removeItem("hostSession");"lastHostPage");
+                    localStorage.removeItem("hostSession");
+                    localStorage.removeItem("lastHostPage");
                     localStorage.removeItem("paHostReconnectToken");
 
                     isHost = false;
@@ -2403,8 +2404,8 @@
         socket.emit("hostAction", {
             type: "showBoardIntro"
         });
-
-        restoreHostPage("hostBoard");
+        restoreHostPage("hostInstrucCutscenePg");
+        //restoreHostPage("hostBoard");
     }
 
     //HOST SHOW BOARD
@@ -2416,6 +2417,20 @@
         });
 
         restoreHostPage("hostBoard");
+    }
+
+    function hostStartRound2() {
+        console.log("HOST START ROUND 2");
+
+        socket.emit("hostAction", {
+            type: "startRound2"
+        });
+
+        const round2Btn = document.getElementById("round2Btn");
+
+        if (round2Btn) {
+            round2Btn.style.display = "none";
+        }
     }
 
     //BUILD HOST BOARD
@@ -2450,6 +2465,7 @@
         // CLUE VALUES
         // ==========================================
 
+        /*
         const values = [
             "200",
             "400",
@@ -2457,6 +2473,11 @@
             "800",
             "1000"
         ];
+        */
+        const values =
+            currentRound === 2
+                ? ["400", "800", "1200", "1600", "2000"]
+                : ["200", "400", "600", "800", "1000"];
 
         values.forEach(value => {
             board.categories.forEach(
@@ -2505,17 +2526,51 @@
     //SHOW HOST CLUE
     function showHostClue(clue) {
         hostAnswerShowing = false;
-        document.getElementById("hostClueText").textContent = clue.clueData.clue;
-        document.getElementById("hostAnswerText").textContent = clue.clueData.answer;
+        const clueText = document.getElementById("hostClueText");
+        const answerText = document.getElementById("hostAnswerText");
         const overlay = document.getElementById("hostClueOverlay");
+        const inner = document.getElementById("hostClueInner");
+        const judgement = document.getElementById("hostJudgementArea");
+        const enableBtn = document.getElementById("enableBuzzerBtn");
+        const dailyDoubleBanner = document.getElementById("dailyDoubleBanner");
+        if (!clue || !clue.clueData) {
+            console.error("Invalid clue passed to showHostClue");
+            return;
+        }
+
+        clueText.textContent = clue.clueData.clue;
+        answerText.textContent = clue.clueData.answer;
+
         overlay.classList.remove("hidden");
         overlay.classList.add("show");
-        document.getElementById("hostClueInner").classList.remove("flipped");
-        document.getElementById("hostJudgementArea").classList.remove("show");
 
+        inner.classList.remove("flipped");
+        judgement.classList.remove("show");
         buzzersEnabled = false;
+        enableBtn.style.display = "block";
 
-        document.getElementById("enableBuzzerBtn").style.display = "block";
+        // DAILY DOUBLE
+        if (clue.clueData.dailyDouble === true) {
+            currentDailyDouble = clue;
+
+            if (dailyDoubleBanner) {
+                dailyDoubleBanner.classList.remove("hidden");
+            }
+            console.log("DAILY DOUBLE:", clue.clueData.id);
+
+            socket.emit("hostAction", {
+                type: "dailyDouble",
+                clueId: clue.clueData.id
+            });
+
+        } else {
+
+            currentDailyDouble = null;
+
+            if (dailyDoubleBanner) {
+                dailyDoubleBanner.classList.add("hidden");
+            }
+        }
     }
 
     //FLIP HOST CARD
@@ -2581,8 +2636,15 @@
         document.getElementById("hostJudgementArea").classList.remove("show");
         document.getElementById("hostClueInner").classList.remove("flipped");
 
+        const dailyDoubleBanner = document.getElementById("dailyDoubleBanner");
+
+        if (dailyDoubleBanner) {
+            dailyDoubleBanner.classList.add("hidden");
+        }
+
         currentBuzzPlayer = null;
         hostAnswerShowing = false;
+        currentDailyDouble = null;
 
         if (currentHostTile) {
             currentHostTile.classList.add("used");
@@ -2813,26 +2875,41 @@
         "roundComplete",
         data => {
 
-            console.log(
-                "ROUND COMPLETE:",
-                data
-            );
+            console.log("ROUND COMPLETE:", data);
 
-            if (
-                isHost &&
-                data.round === 1
-            ) {
+            if (!isHost) {
+                showPlayerScreen("instructionsHoldingScreen");
+                return;
+            }
 
-                const btn =
-                    document.getElementById(
-                        "round2Btn"
-                    );
+            if (data.round === 1) {
+
+                const btn = document.getElementById("round2Btn");
 
                 if (btn) {
-
-                    btn.style.display =
-                        "block";
+                    btn.style.display = "block";
                 }
+
+                const finishBtn = document.getElementById("finishRoundBtn");
+
+                if (finishBtn) {
+                    finishBtn.style.display = "none";
+                }
+
+                return;
+            }
+
+            if (data.round === 2) {
+
+                console.log("FINAL ROUND COMPLETE");
+
+                const finishBtn = document.getElementById("finishRoundBtn");
+
+                if (finishBtn) {
+                    finishBtn.style.display = "none";
+                }
+
+                // We'll add Final Jeopardy handling here.
             }
         }
     );
