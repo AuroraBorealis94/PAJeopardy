@@ -7,7 +7,7 @@
         "id": "I_200_1",
         "clue": "Oliver is still afraid of this creepy crawly, though some might say he is great at handling them.",
         "answer": "What are Spiders?",
-	"answerImages": "/answerImages/Spiders_Oliver.jpg"
+	"answerImage": "/answerImages/Spiders_Oliver.jpg"
       },
       {
         "id": "I_200_2",
@@ -58,7 +58,7 @@
     "1000": [
       {
         "id": "I_1000_1",
-        "clue": "At a Christmas event in 2025, when this family member tried to leave without a photo with the Santa, he snuck up on them, grabbed their arm and said "If you don't come to Santa, Santa will come to you," effectively scarring them for life. ",
+        "clue": "At a Christmas event in 2025, when this family member tried to leave without a photo with the Santa, he snuck up on them, grabbed their arm and said \"If you don't come to Santa, Santa will come to you,\" effectively scarring them for life.",
         "answer": "Who is Arabella?"
       },
       {

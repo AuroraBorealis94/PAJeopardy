@@ -513,13 +513,9 @@ function getPublicGameState() {
 }
 
 function sendHostState(socket) {
-
     socket.emit("hostStatus", true);
-
     socket.emit("gameSession", GAME_SESSION);
-
     socket.emit("roomCode", ROOM_CODE);
-
     socket.emit("characterList", characters);
 
     socket.emit(

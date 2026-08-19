@@ -24,7 +24,7 @@
     "400": [
       {
         "id": "A_400_1",
-        "clue": "As a silent observer, Keira would witness the opening day of this world famous theme park to see how it differes from now.",
+        "clue": "As a silent observer, Keira would witness the opening day of this world famous theme park to see how it differs from now.",
         "answer": "What is Disneyland?",
 	"answerImage": "/answerImages/Disney_Keira.jpg"
       },
@@ -61,7 +61,7 @@
     "800": [
       {
         "id": "A_800_1",
-        "clue": "\"Kashmir\" by Led Zepplin instantly takes this person back to their teen years hanging out with their best friend",
+        "clue": "\"Kashmir\" by Led Zeppelin instantly takes this person back to their teen years hanging out with their best friend",
 	"clueImage": "/clueImages/Kashmir_Alissia.jpg",
         "answer": "Who is Alissia?"
       },

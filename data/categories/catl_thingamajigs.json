@@ -12,7 +12,7 @@
         "id": "L_200_2",
         "clue": "Carver would improve school by adding this, for the simple reason that it's fun.",
         "answer": "What is a pool?",
-	"answerImages": "/answerImages/Pool_Carver.jpg",
+	"answerImage": "/answerImages/Pool_Carver.jpg"
       },
       {
         "id": "L_200_3",
@@ -31,7 +31,7 @@
         "id": "L_400_2",
         "clue": "If Kevin were an inanimate object, he'd be this piece of furniture, describing it as sturdy, dependable, and something that brings people together.",
         "answer": "What is a park bench?",
-	"answerImages": "/answerImages/Bench_Kevin.jpg"
+	"answerImage": "/answerImages/Bench_Kevin.jpg"
       }
     ],
 
@@ -49,7 +49,7 @@
       {
         "id": "L_600_3",
         "clue": "If they were an inanimate object, this family member would be an old doll, fitting for someone who's called a child at heart with an old soul.",
-	"clueImages": "/clueImages/Doll_Keira.jpg",
+	"clueImage": "/clueImages/Doll_Keira.jpg",
         "answer": "Who is Keira?"
       }
     ],
@@ -58,7 +58,7 @@
       {
         "id": "L_800_1",
         "clue": "This person's first bike had a banana seat with a flag design and red, white, and blue ribbons streaming from its handlebars.",
-	"clueImages": "/clueImages/BananaBike_Carrie.jpg",
+	"clueImage": "/clueImages/BananaBike_Carrie.jpg",
         "answer": "Who is Carrie?"
       },
       {

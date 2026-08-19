@@ -16,7 +16,7 @@
       },
       {
         "id": "B_200_3",
-        "clue": "This family member would ask Chris Evans: \"How much did they pay you to come back?\",
+        "clue": "This family member would ask Chris Evans: \"How much did they pay you to come back?\"",
         "answer": "Who is Joe?"
       }
     ],
@@ -46,14 +46,14 @@
       {
         "id": "B_600_2",
         "clue": "This family member would invite Martha Stewart to dinner to learn how she became such an accomplished businesswoman.",
-	"clueImages": "/clueImages/Martha_Jerri.jpg",
+	"clueImage": "/clueImages/Martha_Jerri.jpg",
         "answer": "Who is Jerri?"
       },
       {
         "id": "B_600_3",
         "clue": "This Oscar-winning actress in her thirties is someone Aurora would like to befriend because she is hilarious and easy to talk to.",
         "answer": "Who is Jennifer Lawrence?",
-	"answerImages": "/answerImages/Jlaw_Aurora.jpg"
+	"answerImage": "/answerImages/Jlaw_Aurora.jpg"
       }
     ],
 
@@ -81,7 +81,7 @@
       {
         "id": "B_1000_1",
         "clue": "This person knows the obscure story of Hays Code enforcer Joseph Breen, whose antisemitism silenced anti-Nazi films and reportedly softended only after Pope Pius XI declared that Catholics couldn't be antisemtic.",
-        "Who is Keira?"
+        "answer": "Who is Keira?"
       },
       {
         "id": "B_1000_2",
