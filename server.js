@@ -978,19 +978,6 @@ io.on("connection", (socket) => {
 
                 break;
 
-            // SHOW GAME BOARD
-            /*
-            case "showBoard":
-                console.log("HOST ACTION: showBoard");
-
-                io.emit("showScoreScreen");
-
-                broadcastToUnity({
-                    type: "showBoardIntro"
-                });
-
-                break;
-            */
             // SELECT CLUE
             case "selectClue": {
                 console.log("HOST ACTION: selectClue");
@@ -1237,15 +1224,6 @@ io.on("connection", (socket) => {
 
         console.log("Buzz won by", player.name);
     });
-
-    // START GAME
-    /*
-    socket.on("startGame", () => {
-        game.state = "playing";
-        generateBoard();
-        io.emit("gameStarted", game.board);
-    });
-    */
 
     // DISCONNECT
     socket.on("disconnect", (reason) => {
