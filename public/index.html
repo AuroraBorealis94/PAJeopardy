@@ -385,7 +385,7 @@
     }
 /* #endregion */
 
-/* #region Instructions Holding Screen */
+/* #region Holding Screens */
     #instructionsHoldingScreen {
         position: fixed;
         inset: 0;
@@ -398,6 +398,14 @@
         z-index: 5000;
 
         display: block;
+    }
+
+    #clueHoldingScreen {
+        position: fixed;
+        background-size: cover;
+        background-repeat: no-repeat;
+        inset: 0;
+        z-index: 5000;
     }
 /* #endregion */
 
@@ -494,29 +502,6 @@
         display: none !important;
     }
 
-    #hostBoard {
-        display: none;
-        grid-template-columns: repeat(6, minmax(0, 1fr));
-        gap: 4px;
-
-        width: 100%;
-        max-width: 100vw;
-        padding: 4px;
-        box-sizing: border-box;
-        margin-top: 20px;
-        z-index: 10;
-    }
-
-    #hostBoardGrid {
-        display: grid;
-        grid-template-columns:
-            repeat(6, minmax(0, 1fr));
-
-        gap: 4px;
-
-        width: 100%;
-    }
-
     .hostCategory {
         display: contents;
     }
@@ -555,6 +540,49 @@
     .hostTile.used {
         opacity: 0.3;
         pointer-events: none;
+    }
+
+    #hostBoard {
+        display: none;
+        width: 100%;
+        max-width: 100vw;
+        padding: 4px;
+        box-sizing: border-box;
+        margin-top: 20px;
+        z-index: 10;
+
+        flex-direction: column;
+        align-items: center;
+        gap: 18px;
+    }
+
+    #hostRoundLabel {
+        font-family: 'Gyparody';
+        font-size: clamp(28px, 5vw, 52px);
+        color: white;
+
+        text-align: center;
+
+        margin-bottom: 4px;
+
+        text-shadow:
+            0 0 8px rgba(255,255,255,0.5),
+            0 0 18px rgba(255,180,0,0.5);
+    }
+
+    #hostBoardGrid {
+        display: grid;
+        grid-template-columns:
+            repeat(6, minmax(0, 1fr));
+
+        gap: 4px;
+
+        width: 100%;
+    }
+
+    #finishRoundBtn,
+    #round2Btn {
+        flex-shrink: 0;
     }
 /* #endregion */
 
@@ -964,6 +992,18 @@
     -->
 </div>
 
+<!-- CLUE HOLDING SCREEN -->
+<div id="clueHoldingScreen" class="hidden">
+
+    <img
+        id="clueHoldingImage"
+        class="fullscreenBg"
+        src=""
+        alt=""
+    >
+
+</div>
+
 <!-- ANIMATION HOLDING SCREEN -->
 <div id="animHoldingScreen" class="hidden">
 
@@ -1026,7 +1066,8 @@
 
         <button
             id="finishRoundBtn"
-            onclick="hostFinishRound()">
+            onclick="hostFinishRound()"
+            style="display:none;">
             FINISH ROUND
         </button>
 
@@ -1631,6 +1672,21 @@
         }
     );
 
+    //CLUE HOLDING
+    socket.on(
+        "showClueHolding",
+        () => {
+            console.log("Showing clue holding screen");
+            //const lobby = document.getElementById("lobbyUI");
+
+            //if (lobby) {
+            //    lobby.style.display = "none";
+            //}
+
+            showPlayerScreen("clueHoldingScreen");
+        }
+    );
+
     //SELECT CLUE
     socket.on(
         "selectClue",
@@ -2120,6 +2176,30 @@
         showPlayerScreen("instructionsHoldingScreen");
     }
 
+    function showClueHoldingScreen() {
+        const image = document.getElementById("clueHoldingImage");
+
+        if (!image) {
+            console.error("clueHoldingImage not found.");
+            return;
+        }
+
+        if (!state.character || !state.character.name) {
+            console.error("No character available for clue holding screen.");
+            return;
+        }
+
+        const characterName = state.character.name.toLowerCase().replace(/\s+/g, "");
+        const imagePath = `/backgrounds/clueholding/${characterName}clueholding.png`;
+        console.log("SHOWING CLUE HOLDING SCREEN:", imagePath);
+
+        image.src = imagePath;
+        image.onerror = () => {
+            console.error("Could not load clue holding image:", imagePath);
+        };
+        showPlayerScreen("clueHoldingScreen");
+    }
+
     function changeCharacter() {
         const previewImage = document.getElementById("previewImage");
 
@@ -2348,7 +2428,7 @@
             case "hostBoard":
                 if (hostBoard) {
                     hostBoard.classList.remove("hidden");
-                    hostBoard.style.display = "grid";
+                    hostBoard.style.display = "flex";
                 }
                 break;
 
@@ -2408,18 +2488,6 @@
         //restoreHostPage("hostBoard");
     }
 
-    //HOST SHOW BOARD
-    /*
-    function hostShowBoard() {
-        console.log("HOST SHOW BOARD");
-
-        socket.emit("hostAction", {
-            type: "showBoard"
-        });
-
-        restoreHostPage("hostBoard");
-    }
-    */
     function hostStartRound2() {
         console.log("HOST START ROUND 2");
 
@@ -2434,6 +2502,19 @@
         }
     }
 
+    function updateFinishRoundButton() {
+        const finishBtn = document.getElementById("finishRoundBtn");
+        if (!finishBtn) return;
+        const tiles = document.querySelectorAll("#hostBoardGrid .hostTile:not(.empty)");
+
+        if (!tiles.length) {
+            finishBtn.style.display = "none";
+            return;
+        }
+        const allUsed = Array.from(tiles).every(tile => tile.classList.contains("used"));
+        finishBtn.style.display = allUsed ? "block" : "none";
+    }
+
     //BUILD HOST BOARD
     function buildHostBoard(board) {
         const hostBoard = document.getElementById("hostBoardGrid");
@@ -2444,6 +2525,16 @@
         }
 
         hostBoard.innerHTML = "";
+        const finishBtn = .getElementById("finishRoundBtn");
+        const round2Btn = document.getElementById("round2Btn");
+
+        if (finishBtn) {
+            finishBtn.style.display = "none";
+        }
+
+        if (round2Btn) {
+            round2Btn.style.display = "none";
+        }
         const roundLabel = document.getElementById("hostRoundLabel");
 
         if (roundLabel) {
@@ -2649,6 +2740,10 @@
 
         if (currentHostTile) {
             currentHostTile.classList.add("used");
+
+            requestAnimationFrame(() => {
+                updateFinishRoundButton();
+            });
         }
     }
 
@@ -2680,6 +2775,7 @@
         const screens = [
             "waitingScreen",
             "instructionsHoldingScreen",
+            "clueHoldingScreen",
             "animHoldingScreen",
             "dailyDoublePage",
             "buzzerPage",
@@ -2884,33 +2980,24 @@
             }
 
             if (data.round === 1) {
-
                 const btn = document.getElementById("round2Btn");
-
                 if (btn) {
                     btn.style.display = "block";
                 }
-
                 const finishBtn = document.getElementById("finishRoundBtn");
-
                 if (finishBtn) {
                     finishBtn.style.display = "none";
                 }
-
                 return;
             }
 
             if (data.round === 2) {
-
                 console.log("FINAL ROUND COMPLETE");
-
                 const finishBtn = document.getElementById("finishRoundBtn");
 
                 if (finishBtn) {
                     finishBtn.style.display = "none";
                 }
-
-                // We'll add Final Jeopardy handling here.
             }
         }
     );

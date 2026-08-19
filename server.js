@@ -972,6 +972,7 @@ io.on("connection", (socket) => {
             // BOARD INTRO
             case "showBoardIntro":
                 console.log("HOST ACTION: showBoardIntro");
+                io.emit("showClueHolding");
                 game.hostScreen = "hostBoardIntroPg";
                 broadcastToUnity({ type: "showBoardIntro", round: game.round, board: convertBoardForUnity(game.board) });
 
