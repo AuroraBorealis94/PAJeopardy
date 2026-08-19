@@ -849,7 +849,7 @@ io.on("connection", (socket) => {
         }
         console.log("HOST ACTION:", data);
 
-        // SEND TO UNITY
+        // HOST STATE ACTIONS
         if (data.type === "startGame") {
             console.log("HOST STARTING ROUND 1");
             game.state = "playing";
@@ -857,43 +857,24 @@ io.on("connection", (socket) => {
             game.hostScreen = "hostLobbyPg";
             generateBoard(1);
 
-            // Tell Unity
-            broadcastToUnity({
-                type: "startGame",
-                round: game.round
-            });
-
-            // Tell players
-            io.emit("roundStarted", {
-                round: game.round
-            });
-
+            broadcastToUnity({ type: "startGame", round: game.round });
+            io.emit("roundStarted", { round: game.round });
             io.emit("showInstructionsHolding");
 
-            // Send board to Unity
             setTimeout(() => {
-                broadcastToUnity({
-                    type: "boardData",
+                const boardData = {
                     round: game.round,
                     board: convertBoardForUnity(game.board)
-                });
-
-                // Send board to host
-                io.emit(
-                    "boardData",
-                    {
-                        round: game.round,
-                        board: convertBoardForUnity(game.board)
-                    }
-                );
-
+                };
+                broadcastToUnity({ type: "boardData", ...boardData });
+                io.emit("boardData", boardData);
             }, 500);
-        }
-        else if (data.type === "startRound2") {
-            console.log("================================");
-            console.log("STARTING ROUND 2");
-            console.log("================================");
 
+            return;
+        }
+
+        if (data.type === "startRound2") {
+            console.log("STARTING ROUND 2");
             game.state = "playing";
             game.round = 2;
             game.hostScreen = "hostRound2";
@@ -904,78 +885,52 @@ io.on("connection", (socket) => {
             currentBuzzPlayer = null;
             generateBoard(2);
 
-            // Tell Unity to rebuild the board
-            broadcastToUnity({
-                type: "startRound",
-                round: 2
-            });
-
-            // Tell players
-            io.emit("roundStarted", {
-                round: 2
-            });
-
-            io.emit("showRoundHolding", {
-                round: 2
-            });
+            broadcastToUnity({ type: "startRound", round: 2 });
+            io.emit("roundStarted", { round: 2 });
+            io.emit("showRoundHolding", { round: 2 });
 
             setTimeout(() => {
                 const boardData = {
                     round: 2,
                     board: convertBoardForUnity(game.board)
                 };
-
-                broadcastToUnity({
-                    type: "boardData",
-                    round: 2,
-                    board: boardData.board
-                });
-
-                io.emit(
-                    "boardData",
-                    boardData
-                );
-
+                broadcastToUnity({ type: "boardData", ...boardData });
+                io.emit("boardData", boardData);
             }, 500);
-        }
-        else {
-            broadcastToUnity({
-                type: data.type,
-                payload: data.payload || null
-            });
+
+            return;
         }
 
-        // OPTIONAL WEB EVENTS
+        // OTHER HOST ACTIONS
+        broadcastToUnity({
+            type: data.type,
+            payload: data.payload || null
+        });
+
         switch (data.type) {
-            // INSTRUCTIONS HOLDING SCREEN
             case "showInstructions":
                 console.log("HOST ACTION: showInstructions");
+                game.hostScreen = "hostInstructionsPg";
                 io.emit("showInstructionsHolding");
-
-                broadcastToUnity({
-                    type: "showInstructions"
-                });
-
+                broadcastToUnity({ type: "showInstructions" });
                 break;
 
-            // INSTRUCTION CUTSCENE / ANIM HOLDING
             case "showInstrucCutscene":
                 console.log("HOST ACTION: showInstrucCutscene");
+                game.hostScreen = "hostInstrucCutscenePg";
                 io.emit("showAnimHolding");
-
-                broadcastToUnity({
-                    type: "showInstrucCutscene"
-                });
-
+                broadcastToUnity({ type: "showInstrucCutscene" });
                 break;
 
-            // BOARD INTRO
             case "showBoardIntro":
                 console.log("HOST ACTION: showBoardIntro");
+                game.hostScreen = "hostBoard";
                 io.emit("showClueHolding");
-                game.hostScreen = "hostBoardIntroPg";
-                broadcastToUnity({ type: "showBoardIntro", round: game.round, board: convertBoardForUnity(game.board) });
-
+                broadcastToUnity({
+                    type: "showBoardIntro",
+                    round: game.round,
+                    board: convertBoardForUnity(game.board)
+                });
                 break;
 
             // SELECT CLUE

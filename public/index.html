@@ -2532,11 +2532,7 @@
     //HOST SHOW INSTRUCTIONS
     function hostShowInstructions() {
         console.log("HOST SHOW INSTRUCTIONS");
-
-        socket.emit("hostAction", {
-            type: "showInstructions"
-        });
-
+        socket.emit("hostAction", { type: "showInstructions" });
         restoreHostPage("hostInstructionsPg");
     }
 
@@ -2554,12 +2550,8 @@
     //HOST SHOW BOARD INTRO
     function hostShowBoardIntro() {
         console.log("HOST SHOW BOARD INTRO");
-
-        socket.emit("hostAction", {
-            type: "showBoardIntro"
-        });
-        restoreHostPage("hostInstrucCutscenePg");
-        //restoreHostPage("hostBoard");
+        socket.emit("hostAction", { type: "showBoardIntro" });
+        restoreHostPage("hostBoard");
     }
 
     function hostStartRound2() {
