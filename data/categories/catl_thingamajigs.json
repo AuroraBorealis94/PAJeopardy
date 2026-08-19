@@ -5,65 +5,89 @@
     "200": [
       {
         "id": "L_200_1",
-        "clue": "200.1 Clue",
-        "answer": "200.1 Answer"
+        "clue": "Brian's most authentic outfit combines camo pants, a flannel shirt, hiking boots, and this.",
+        "answer": "What is a Cowboy Hat?"
       },
       {
         "id": "L_200_2",
-        "clue": "200.2 Clue",
-        "answer": "200.2 Answer"
+        "clue": "Carver would improve school by adding this, for the simple reason that it's fun.",
+        "answer": "What is a pool?",
+	"answerImages": "/answerImages/Pool_Carver.jpg",
+      },
+      {
+        "id": "L_200_3",
+        "clue": "No matter what, this person will always laugh at a baby photo of their cousin with tree branches on his head.",
+        "answer": "Who is Carver?"
       }
     ],
 
     "400": [
       {
         "id": "L_400_1",
-        "clue": "400.1 Clue",
-        "answer": "400.1 Answer"
+        "clue": "To keep everyone connected, Amber would start this as a new recurring family tradition.",
+        "answer": "What is a newsletter?"
       },
       {
         "id": "L_400_2",
-        "clue": "400.2 Clue",
-        "answer": "400.2 Answer"
+        "clue": "If Kevin were an inanimate object, he'd be this piece of furniture, describing it as sturdy, dependable, and something that brings people together.",
+        "answer": "What is a park bench?",
+	"answerImages": "/answerImages/Bench_Kevin.jpg"
       }
     ],
 
     "600": [
       {
         "id": "L_600_1",
-        "clue": "600.1 Clue",
-        "answer": "600.1 Answer"
+        "clue": "If they were an inanimate object, this family member would be a car, because it'd be fun.",
+        "answer": "Who is Derek?"
       },
       {
         "id": "L_600_2",
-        "clue": "600.2 Clue",
-        "answer": "600.2 Answer"
+        "clue": "This person's life-improving purchase under $20 was a mug, though they insist you'd have to see it to appreciate it.",
+        "answer": "Who is Gary?"
+      },
+      {
+        "id": "L_600_3",
+        "clue": "If they were an inanimate object, this family member would be an old doll, fitting for someone who's called a child at heart with an old soul.",
+	"clueImages": "/clueImages/Doll_Keira.jpg",
+        "answer": "Who is Keira?"
       }
     ],
 
     "800": [
       {
         "id": "L_800_1",
-        "clue": "800.1 Clue",
-        "answer": "800.1 Answer"
+        "clue": "This person's first bike had a banana seat with a flag design and red, white, and blue ribbons streaming from its handlebars.",
+	"clueImages": "/clueImages/BananaBike_Carrie.jpg",
+        "answer": "Who is Carrie?"
       },
       {
         "id": "L_800_2",
-        "clue": "800.2 Clue",
-        "answer": "800.2 Answer"
+        "clue": "If they were an inanimate object, this family member would be a car, because it'd be fun.",
+        "answer": "Who is Derek?"
+      },
+      {
+        "id": "L_800_3",
+        "clue": "Mike's first vehicle, representing freedom, was this.",
+        "answer": "What is a Chevy Pickup?"
       }
     ],
 
     "1000": [
       {
         "id": "L_1000_1",
-        "clue": "1000.1 Clue",
-        "answer": "1000.1 Answer"
+        "clue": "Playing with pillow corners is this family member's habit from childhood that they'll never outgrow.",
+        "answer": "Who is Joe?"
       },
       {
         "id": "L_1000_2",
-        "clue": "1000.2 Clue",
-        "answer": "1000.2 Answer"
+        "clue": "Aurora claims this bodypart genuinely creeps her out, siting the part as \"dangly flaps on an extremity of questionable cleanliness\".",
+        "answer": "What are Earlobes?"
+      },
+      {
+        "id": "L_1000_3",
+        "clue": "The dumbest purchase this family member ever made was likely the stuffed duck bought with plans to craft it an anus leading to a stomach full of mini-ducks.",
+        "answer": "Who is Aurora?"
       }
     ]
   }

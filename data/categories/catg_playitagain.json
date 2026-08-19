@@ -5,65 +5,63 @@
     "200": [
       {
         "id": "G_200_1",
-        "clue": "200.1 Clue",
-        "answer": "200.1 Answer"
+        "clue": "To this day, Justin still considers this children's show his favorite.",
+        "answer": "What is Curious George?"
       },
       {
         "id": "G_200_2",
-        "clue": "200.2 Clue",
-        "answer": "200.2 Answer"
+        "clue": "This person completely loses track of time when they play animals with dad.",
+        "answer": "Who is TJ?"
       }
     ],
 
     "400": [
       {
         "id": "G_400_1",
-        "clue": "400.1 Clue",
-        "answer": "400.1 Answer"
+        "clue": "If they knew they couldn't fail, this person would perform trapeze in a circus.",
+        "answer": "Who is Keira?"
       },
       {
         "id": "G_400_2",
-        "clue": "400.2 Clue",
-        "answer": "400.2 Answer"
+        "clue": "This person's theme songs would be "Count on Me" and "Best Day of My Life"",
+        "answer": "Who is Aspen?"
       }
     ],
 
     "600": [
       {
         "id": "G_600_1",
-        "clue": "600.1 Clue",
-        "answer": "600.1 Answer"
-      },
-      {
-        "id": "G_600_2",
-        "clue": "600.2 Clue",
-        "answer": "600.2 Answer"
+        "clue": "Arabella and Justin both love this board game that takes endless hours to complete.",
+        "answer": "What is Risk?",
+	"answerImage": "/answerImages/Risk_Multi.jpg"
       }
     ],
 
     "800": [
       {
         "id": "G_800_1",
-        "clue": "800.1 Clue",
-        "answer": "800.1 Answer"
+        "clue": "If Amber could attend any concert in history, she would take her best friend Jaclyn to see this popular two-person rock band from the early 2000's.",
+        "answer": "Who are the White Stripes?",
+	"answerImage": "/answerImages/Stripes_Amber.jpg"
       },
       {
         "id": "G_800_2",
-        "clue": "800.2 Clue",
-        "answer": "800.2 Answer"
+        "clue": "This person would attend the fictional concert from the movie "Chef," eating cubano sandwiches with their spouse while Gary Clark Jr. plays.",
+        "answer": "Who is Eric?"
       }
     ],
 
     "1000": [
       {
         "id": "G_1000_1",
-        "clue": "1000.1 Clue",
-        "answer": "1000.1 Answer"
+        "clue": "This family member would love to go to an Illit concert with their best friend.",
+	"clueImage": "/clueImages/Illit_Arabella.jpg",
+        "answer": "Who is Arabella?"
       },
       {
         "id": "G_1000_2",
-        "clue": "1000.2 Clue",
-        "answer": "1000.2 Answer"
+        "clue": "This person's superhero alter ego is shaped like an octopus, can grow multiple invisible arms and shoot lasers, all while shouting "Octo-time!"",
+        "answer": "Who is Sarah?"
       }
     ]
   }

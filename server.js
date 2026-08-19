@@ -31,16 +31,12 @@ console.log("Port:", process.env.PORT || 3000);
 console.log("Session:", GAME_SESSION);
 console.log("================================");
 
-// DISCONNECT TIMER
 const disconnectTimers = new Map();
-// USED CLUES
-const usedClueIds = new Set();
-// LOCKED CHARACTERS
+//const round1Categories = new Set();
 const lockedCharacters = new Set();
-// BUZZER
+
 let buzzAccepted = false;
 let currentBuzzPlayer = null;
-//SCORE
 let currentClueValue = 0;
 
 // BRIDGE FROM SOCKET.IO TO WEBSOCKET
@@ -52,14 +48,75 @@ const wss = new WebSocket.Server({
 
 wss.on("connection", (ws) => {
     ws.isUnity = true;
-    console.log("Unity connected via WebSocket");
+    ws.isAlive = true;
+
+    console.log("================================");
+    console.log("UNITY WEBSOCKET CONNECTED");
+    console.log("================================");
+
+    ws.on("pong", () => {
+        ws.isAlive = true;
+    });
+
+    ws.on("error", (error) => {
+        console.error(
+            "UNITY WEBSOCKET ERROR:",
+            error
+        );
+    });
+
+    ws.on("close", (code, reason) => {
+
+        console.log(
+            "UNITY WEBSOCKET CLOSED:",
+            code,
+            reason?.toString()
+        );
+
+    });
 });
 
+const unityHeartbeat = setInterval(() => {
+
+    wss.clients.forEach(ws => {
+
+        if (ws.isAlive === false) {
+
+            console.log(
+                "Terminating dead Unity WebSocket"
+            );
+
+            return ws.terminate();
+        }
+
+        ws.isAlive = false;
+
+        ws.ping();
+    });
+
+}, 30000);
+
 // SOCKET.IO
+/*
 const io = require("socket.io")(http, {
     cors: {
         origin: "*"
     }
+});
+*/
+const io = require("socket.io")(http, {
+    cors: {
+        origin: "*"
+    },
+
+    transports: [
+        "websocket",
+        "polling"
+    ],
+
+    pingInterval: 25000,
+    pingTimeout: 60000,
+    connectTimeout: 20000
 });
 
 // CLOUD SERVER
@@ -69,15 +126,20 @@ const PORT = process.env.PORT || 3000;
 const game = {
     players: [],
     state: "lobby",
-    board: {}
+    round: 0,
+    board: {},
+    usedClueIds: new Set(),
+    dailyDoubleIds: new Set(),
+    currentClueId: null,
+    currentClueValue: 0,
+    currentClueIsDailyDouble: false,
+    hostScreen: "hostJoinPg"
 };
 
 // CHARACTER STORAGE
 const characters = [
     { 
-        name: "The Boss", 
-        front: "/characters/thebossfront.png", 
-        back: "/characters/thebossback.png",
+        name: "The Boss", front: "/characters/thebossfront.png", back: "/characters/thebossback.png",
         animations: {
             idle: { 
                 src: "/characters/animations/thebossidle.png", 
@@ -97,9 +159,7 @@ const characters = [
     },
 
     { 
-        name: "Janice Mowes", 
-        front: "/characters/janicemowesfront.png", 
-        back: "/characters/janicemowesback.png",
+        name: "Janice Mowes", front: "/characters/janicemowesfront.png", back: "/characters/janicemowesback.png",
         animations: {
             idle: { 
                 src: "/characters/animations/janicemowesidle.png", 
@@ -119,9 +179,7 @@ const characters = [
     },
 
     { 
-        name: "Tricerex", 
-        front: "/characters/tricerexfront.png", 
-        back: "/characters/tricerexback.png",
+        name: "Tricerex", front: "/characters/tricerexfront.png", back: "/characters/tricerexback.png",
         animations: {
             idle: { 
                 src: "/characters/animations/tricerexidle.png", 
@@ -141,9 +199,7 @@ const characters = [
     },
 
     { 
-        name: "Fancy Dancer", 
-        front: "/characters/fancydancerpinkfront.png", 
-        back: "/characters/fancydancerpinkback.png",
+        name: "Fancy Dancer", front: "/characters/fancydancerpinkfront.png", back: "/characters/fancydancerpinkback.png",
         animations: {
             idle: { 
                 src: "/characters/animations/fancydanceridle.png", 
@@ -163,9 +219,7 @@ const characters = [
     },
 
     { 
-        name: "Deerhead", 
-        front: "/characters/deerheadfront.png", 
-        back: "/characters/deerheadback.png",
+        name: "Deerhead", front: "/characters/deerheadfront.png", back: "/characters/deerheadback.png",
         animations: {
             idle: { 
                 src: "/characters/animations/deerheadidle.png", 
@@ -185,9 +239,7 @@ const characters = [
     },
 
     { 
-        name: "Caity Satyr", 
-        front: "/characters/caitysatyrfront.png", 
-        back: "/characters/caitysatyrback.png",
+        name: "Caity Satyr", front: "/characters/caitysatyrfront.png", back: "/characters/caitysatyrback.png",
         animations: {
             idle: { 
                 src: "/characters/animations/caitysatyridle.png", 
@@ -207,9 +259,7 @@ const characters = [
     },
 
     { 
-        name: "The Holy Spirit", 
-        front: "/characters/jesusfront.png", 
-        back: "/characters/jesusback.png",
+        name: "The Holy Spirit", front: "/characters/jesusfront.png", back: "/characters/jesusback.png",
         animations: {
             idle: { 
                 src: "/characters/animations/jesusidle.png", 
@@ -229,9 +279,7 @@ const characters = [
     },
 
     { 
-        name: "The Newlyweds", 
-        front: "/characters/thenewlywedsfront.png", 
-        back: "/characters/thenewlywedsback.png",
+        name: "The Newlyweds", front: "/characters/thenewlywedsfront.png", back: "/characters/thenewlywedsback.png",
         animations: {
             idle: { 
                 src: "/characters/animations/thenewlywedsidle.png", 
@@ -251,9 +299,7 @@ const characters = [
     },
 
     { 
-        name: "Lorenzo", 
-        front: "/characters/lorenzofront.png", 
-        back: "/characters/lorenzoback.png",
+        name: "Lorenzo", front: "/characters/lorenzofront.png", back: "/characters/lorenzoback.png",
         animations: {
             idle: { 
                 src: "/characters/animations/lorenzoidle.png", 
@@ -271,17 +317,8 @@ const characters = [
             }
         }
     },
-
-    // { 
-    //     name: "Wise Old Boy", 
-    //     front: "/characters/oldsawyerfront.png", 
-    //     back: "/characters/oldsawyerback.png" 
-    // },
-
     { 
-        name: "The Guitarist", 
-        front: "/characters/theguitaristfront.png", 
-        back: "/characters/theguitaristback.png",
+        name: "The Guitarist", front: "/characters/theguitaristfront.png", back: "/characters/theguitaristback.png",
         animations: {
             idle: { 
                 src: "/characters/animations/guitaristidle.png", 
@@ -313,72 +350,116 @@ function broadcastToUnity(data) {
 }
 
 // GENERATE BOARD
-function generateBoard() {
+function generateBoard(roundNumber) {
+    console.log("================================");
+    console.log("GENERATING ROUND", roundNumber);
+    console.log("================================");
 
     const allCategories = loadCategories();
 
-    // RANDOMIZE CATEGORY ORDER
-    const shuffled = allCategories.sort(() => Math.random() - 0.5);
+    // Randomize category order
+    const shuffled = [...allCategories].sort(
+        () => Math.random() - 0.5
+    );
 
-    // PICK 6 CATEGORIES
+    // Pick 6 categories
     const selectedCategories = shuffled.slice(0, 6);
 
     game.board = {};
+    game.dailyDoubleIds = new Set();
 
     selectedCategories.forEach(categoryData => {
-
         const categoryName = categoryData.category;
-
         game.board[categoryName] = {};
 
         for (const value in categoryData.clues) {
-
             const options = categoryData.clues[value];
 
-            // REMOVE USED CLUES
-            const available = options.filter(
-                clue => !usedClueIds.has(clue.id)
-            );
+            // Only exclude clues that were actually selected
+            // in a previous round.
+            const available = options.filter(clue => !game.usedClueIds.has(clue.id));
 
             if (available.length === 0) {
-                console.log("No clues left for:", categoryName, value);
+                console.log("No unused clues left for:", categoryName, value);
                 continue;
             }
 
-            // PICK RANDOM CLUE
             const chosen =
-                available[Math.floor(Math.random() * available.length)];
-
-            // MARK GLOBALLY USED
-            usedClueIds.add(chosen.id);
+                available[
+                    Math.floor(Math.random() * available.length)
+                ];
 
             game.board[categoryName][value] = {
                 id: chosen.id,
-                value,
+                value: value,
                 category: categoryName,
-
                 clue: chosen.clue,
                 clueImage: chosen.clueImage || "",
-
                 answer: chosen.answer,
                 answerImage: chosen.answerImage || "",
-
-                used: false
+                used: false,
+                dailyDouble: false
             };
         }
     });
 
-    console.log("Generated board:");
+    // DAILY DOUBLES
+    const allTiles = [];
+
+    for (const categoryName in game.board) {
+        for (const value in game.board[categoryName]) {
+            allTiles.push(game.board[categoryName][value]);
+        }
+    }
+
+    // Round 1 = 1 Daily Double
+    // Round 2 = 2 Daily Doubles
+    const dailyDoubleCount = roundNumber === 1 ? 1 : 2;
+
+    // Shuffle possible Daily Double locations
+    allTiles.sort(() => Math.random() - 0.5);
+
+    for (let i = 0; i < Math.min(dailyDoubleCount, allTiles.length); i++) {
+        const clue = allTiles[i];
+        clue.dailyDouble = true;
+        game.dailyDoubleIds.add(clue.id);
+
+        console.log(
+            "DAILY DOUBLE:",
+            clue.category,
+            clue.value,
+            clue.id
+        );
+    }
+
+    console.log("================================");
+    console.log("ROUND", roundNumber, "BOARD GENERATED");
+    console.log(
+        "Daily Doubles:",
+        game.dailyDoubleIds.size
+    );
+    console.log("================================");
+
     console.log(game.board);
 }
 
 function resetGameState() {
     game.players = [];
     game.state = "lobby";
+    game.round = 0;
     game.board = {};
+    game.usedClueIds.clear();
+    game.dailyDoubleIds.clear();
+    game.currentClueId = null;
+    game.currentClueValue = 0;
+    game.currentClueIsDailyDouble = false;
+    game.hostScreen = "hostJoinPg";
     lockedCharacters.clear();
-
+    buzzAccepted = false;
+    currentBuzzPlayer = null;
     GAME_SESSION = Date.now();
+    console.log("GAME STATE RESET");
+    console.log("NEW GAME SESSION:", GAME_SESSION);
 }
 
 // ROOM CODE
@@ -395,24 +476,41 @@ function convertBoardForUnity(board) {
     const categories = [];
 
     for (const categoryName in board) {
-
         const category = {
             categoryName,
             clues: []
         };
 
         for (const value in board[categoryName]) {
-
             category.clues.push({
                 value,
                 clueData: board[categoryName][value]
             });
         }
-
         categories.push(category);
     }
-
     return { categories };
+}
+
+function getPublicGameState() {
+
+    return {
+        state: game.state,
+        round: game.round,
+        board: convertBoardForUnity(game.board),
+        currentClueId: game.currentClueId,
+        currentClueValue: game.currentClueValue,
+        currentClueIsDailyDouble:
+            game.currentClueIsDailyDouble,
+
+        players: game.players.map(p => ({
+            playerId: p.playerId,
+            name: p.name,
+            character: p.character,
+            score: p.score,
+            disconnected: p.disconnected
+        }))
+    };
 }
 
 function sendHostState(socket) {
@@ -425,12 +523,16 @@ function sendHostState(socket) {
 
     socket.emit("characterList", characters);
 
-    socket.emit("playerList", game.players.map(p => ({
-        playerId: p.playerId,
-        name: p.name,
-        character: p.character,
-        disconnected: p.disconnected
-    })));
+    socket.emit(
+        "playerList",
+        game.players.map(p => ({
+            playerId: p.playerId,
+            name: p.name,
+            character: p.character,
+            score: p.score,
+            disconnected: p.disconnected
+        }))
+    );
 
     socket.emit(
         "lockedCharacters",
@@ -439,16 +541,22 @@ function sendHostState(socket) {
 
     socket.emit("gameStateSync", {
         state: game.state,
+        round: game.round,
         players: game.players,
-        board: game.board,
+        board: convertBoardForUnity(game.board),
         lockedCharacters: Array.from(lockedCharacters),
-        hostScreen: game.hostScreen || null
+        currentClueId: game.currentClueId,
+        currentClueValue: game.currentClueValue,
+        currentClueIsDailyDouble: game.currentClueIsDailyDouble,
+        hostScreen: game.hostScreen || "hostJoinPg"
     });
 
     console.log("Host state synchronized:", {
         state: game.state,
+        round: game.round,
         players: game.players.length,
-        boardCategories: Object.keys(game.board).length
+        boardCategories:
+            Object.keys(game.board).length
     });
 }
 
@@ -670,9 +778,7 @@ io.on("connection", (socket) => {
                 "Character already owned:",
                 character
             );
-
             socket.emit("characterTaken");
-
             return;
         }
 
@@ -681,13 +787,10 @@ io.on("connection", (socket) => {
                 "Character locked:",
                 character
             );
-
             socket.emit("characterTaken");
-
             return;
         }
 
-        // VALID PLAYER JOIN
         lockedCharacters.add(normalized);
 
         const player = {
@@ -703,12 +806,8 @@ io.on("connection", (socket) => {
         };
 
         game.players.push(player);
-
         socket.data.joined = true;
-
-        console.log(
-            name + " joined with " + character
-        );
+        console.log(name + " joined with " + character);
 
         // UPDATE WEB CLIENTS
         io.emit(
@@ -726,9 +825,7 @@ io.on("connection", (socket) => {
             Array.from(lockedCharacters)
         );
 
-
         socket.emit("joinSuccess");
-
 
         socket.emit("gameStateSync", {
             state: game.state,
@@ -750,40 +847,100 @@ io.on("connection", (socket) => {
 
     // HOST CONTROLS
     socket.on("hostAction", (data) => {
-        // ONLY ALLOW HOST SOCKET
         if (!socket.isHost) return;
 
         console.log("HOST ACTION:", data);
 
         // SEND TO UNITY
         if (data.type === "startGame") {
+            console.log("HOST STARTING ROUND 1");
             game.state = "playing";
-            generateBoard();
+            game.round = 1;
+            game.hostScreen = "hostLobbyPg";
+            generateBoard(1);
 
-            // Tell Unity to start the game
+            // Tell Unity
             broadcastToUnity({
-                type: "startGame"
+                type: "startGame",
+                round: game.round
+            });
+
+            // Tell players
+            io.emit("roundStarted", {
+                round: game.round
             });
 
             io.emit("showInstructionsHolding");
 
-            // THEN send board data to Unity and host
+            // Send board to Unity
             setTimeout(() => {
+                broadcastToUnity({
+                    type: "boardData",
+                    round: game.round,
+                    board: convertBoardForUnity(game.board)
+                });
+
+                // Send board to host
+                io.emit(
+                    "boardData",
+                    {
+                        round: game.round,
+                        board: convertBoardForUnity(game.board)
+                    }
+                );
+
+            }, 500);
+        }
+        else if (data.type === "startRound2") {
+            console.log("================================");
+            console.log("STARTING ROUND 2");
+            console.log("================================");
+
+            game.state = "playing";
+            game.round = 2;
+            game.hostScreen = "hostRound2";
+            game.currentClueId = null;
+            game.currentClueValue = 0;
+            game.currentClueIsDailyDouble = false;
+            buzzAccepted = false;
+            currentBuzzPlayer = null;
+            generateBoard(2);
+
+            // Tell Unity to rebuild the board
+            broadcastToUnity({
+                type: "startRound",
+                round: 2
+            });
+
+            // Tell players
+            io.emit("roundStarted", {
+                round: 2
+            });
+
+            io.emit("showRoundHolding", {
+                round: 2
+            });
+
+            setTimeout(() => {
+                const boardData = {
+                    round: 2,
+                    board: convertBoardForUnity(game.board)
+                };
 
                 broadcastToUnity({
                     type: "boardData",
-                    board: convertBoardForUnity(game.board)
+                    round: 2,
+                    board: boardData.board
                 });
 
                 io.emit(
                     "boardData",
-                    convertBoardForUnity(game.board)
+                    boardData
                 );
 
-            }, 1000);
+            }, 500);
         }
         else {
-
             broadcastToUnity({
                 type: data.type,
                 payload: data.payload || null
@@ -795,11 +952,8 @@ io.on("connection", (socket) => {
             // INSTRUCTIONS HOLDING SCREEN
             case "showInstructions":
                 console.log("HOST ACTION: showInstructions");
-
-                // Player devices instructions holding screen
                 io.emit("showInstructionsHolding");
 
-                // Unity instructions page
                 broadcastToUnity({
                     type: "showInstructions"
                 });
@@ -809,11 +963,8 @@ io.on("connection", (socket) => {
             // INSTRUCTION CUTSCENE / ANIM HOLDING
             case "showInstrucCutscene":
                 console.log("HOST ACTION: showInstrucCutscene");
-
-                // Player devices animation holding screen
                 io.emit("showAnimHolding");
 
-                // Unity instruction cutscene
                 broadcastToUnity({
                     type: "showInstrucCutscene"
                 });
@@ -823,9 +974,6 @@ io.on("connection", (socket) => {
             // BOARD INTRO
             case "showBoardIntro":
                 console.log("HOST ACTION: showBoardIntro");
-
-                // Player devices stay on their current holding screen
-                // unless you want a separate player event here.
 
                 broadcastToUnity({
                     type: "showBoardIntro"
@@ -837,10 +985,8 @@ io.on("connection", (socket) => {
             case "showBoard":
                 console.log("HOST ACTION: showBoard");
 
-                // Player devices score screen
                 io.emit("showScoreScreen");
 
-                // Unity game board
                 broadcastToUnity({
                     type: "showBoard"
                 });
@@ -852,7 +998,6 @@ io.on("connection", (socket) => {
                 console.log("HOST ACTION: selectClue");
 
                 const clue = data.payload?.clueData;
-                currentClueValue = parseInt(data.payload.value);
 
                 if (!clue || !clue.id) {
                     console.warn("selectClue received without valid clue data");
@@ -861,33 +1006,76 @@ io.on("connection", (socket) => {
 
                 const clueId = clue.id;
 
-                if (usedClueIds.has(clueId)) {
+                // Prevent selecting the same clue twice
+                if (game.usedClueIds.has(clueId)) {
                     console.warn("Clue already used:", clueId);
                     return;
                 }
 
-                usedClueIds.add(clueId);
+                game.usedClueIds.add(clueId);
+                game.currentClueId = clueId;
+                game.currentClueValue = parseInt(data.payload.value) || 0;
+                game.currentClueIsDailyDouble = !!clue.dailyDouble;
 
-                // Reset buzzer state for the new clue
                 buzzAccepted = false;
                 currentBuzzPlayer = null;
 
+                game.state =
+                    game.currentClueIsDailyDouble
+                        ? "dailyDouble"
+                        : "buzzer";
+
                 const payload = {
                     type: "selectClue",
+                    round: game.round,
                     payload: {
                         value: data.payload.value,
                         clueId: clueId,
-                        clueData: clue,
-                        used: true
+                        clueData: {
+                            ...clue,
+                            used: true,
+                            dailyDouble: game.currentClueIsDailyDouble
+                        }
                     }
                 };
 
-                // Send clue to player screens
-                io.emit("selectClue", payload);
+                io.emit(
+                    "selectClue",
+                    payload
+                );
 
-                // Send clue to Unity
-                broadcastToUnity(payload);
+                broadcastToUnity(
+                    payload
+                );
 
+                // ==========================================
+                // DAILY DOUBLE
+                // ==========================================
+
+                if (game.currentClueIsDailyDouble) {
+                    console.log("================================");
+                    console.log("DAILY DOUBLE!");
+                    console.log("Round:", game.round);
+                    console.log("Clue:", clueId);
+                    console.log("================================");
+
+                    io.emit(
+                        "dailyDouble",
+                        {
+                            round: game.round,
+                            clueId,
+                            value:game.currentClueValue,
+                            clueData: clue
+                        }
+                    );
+
+                    broadcastToUnity({
+                        type: "dailyDouble",
+                        round: game.round,
+                        clueId,
+                        value: game.currentClueValue
+                    });
+                }
                 break;
             }
 
@@ -896,7 +1084,6 @@ io.on("connection", (socket) => {
                 console.log("HOST ACTION: answerCorrect");
 
                 if (currentBuzzPlayer) {
-
                     currentBuzzPlayer.score += currentClueValue;
 
                     // Player who buzzed gets score screen
@@ -922,11 +1109,8 @@ io.on("connection", (socket) => {
             // CONTINUE
             case "continueClue":
                 console.log("HOST ACTION: continueClue");
-
-                // Everyone goes to score screen
                 io.emit("showScoreScreen");
 
-                // Unity goes to score screen
                 broadcastToUnity({
                     type: "showScoreScreen"
                 });
@@ -936,7 +1120,6 @@ io.on("connection", (socket) => {
             // REVEAL ANSWER
             case "revealAnswer":
                 console.log("HOST ACTION: revealAnswer");
-
                 io.emit("revealAnswer");
 
                 broadcastToUnity({
@@ -959,6 +1142,66 @@ io.on("connection", (socket) => {
                 });
 
                 break;
+
+            case "startRound2":
+                console.log("HOST ACTION: startRound2");
+
+                // The actual round transition is handled
+                // above in the hostAction if/else chain.
+
+                break;
+
+            case "roundComplete":
+                console.log("ROUND", game.round, "COMPLETE");
+                game.state = "roundComplete";
+
+                io.emit(
+                    "roundComplete",
+                    {
+                        round: game.round
+                    }
+                );
+
+                broadcastToUnity({
+                    type: "roundComplete",
+                    round: game.round
+                });
+
+                break;
+
+            case "dailyDoubleWager": {
+                if (!game.currentClueIsDailyDouble) {
+                    console.warn(
+                        "Wager received but current clue is not a Daily Double."
+                    );
+                    return;
+                }
+
+                const wager =
+                    Math.max(
+                        0,
+                        parseInt(data.payload?.wager) || 0
+                    );
+
+                console.log(
+                    "DAILY DOUBLE WAGER:",
+                    wager
+                );
+
+                io.emit(
+                    "dailyDoubleWager",
+                    {
+                        wager
+                    }
+                );
+
+                broadcastToUnity({
+                    type: "dailyDoubleWager",
+                    wager
+                });
+
+                break;
+            }
 
             // UNKNOWN HOST ACTION
             default:
@@ -998,13 +1241,13 @@ io.on("connection", (socket) => {
     });
 
     // START GAME
+    /*
     socket.on("startGame", () => {
         game.state = "playing";
-
         generateBoard();
-
         io.emit("gameStarted", game.board);
     });
+    */
 
     // DISCONNECT
     socket.on("disconnect", (reason) => {
@@ -1016,14 +1259,11 @@ io.on("connection", (socket) => {
 
         // HOST DISCONNECTED
         if (socket.isHost) {
-            console.log(
-                "Host temporarily disconnected."
-            );
+            console.log("Host temporarily disconnected.");
 
             socket.isHost = false;
             hostDisconnectTimer = setTimeout(() => {
                 if (hostSocketId === socket.id) {
-
                     hostConnected = false;
                     hostSocketId = null;
 
@@ -1038,11 +1278,8 @@ io.on("connection", (socket) => {
         }
 
         // PLAYER DISCONNECT
-        const player = game.players.find(
-            p => p.socketId === socket.id
-        );
-
-        if (!player) {
+        const player = game.players.find(p => p.socketId === socket.id);
+        if (!player) { 
             return;
         }
 
@@ -1065,19 +1302,12 @@ io.on("connection", (socket) => {
     });
 
     socket.on("leavePlayer", ({ playerId }) => {
-        const player = game.players.find(
-            p => p.playerId === playerId
-        );
-
+        const player = game.players.find(p => p.playerId === playerId);
         if (!player) return;
-
         console.log(player.name + " left character selection");
-
         lockedCharacters.delete(player.characterKey);
 
-        game.players = game.players.filter(
-            p => p.playerId !== playerId
-        );
+        game.players = game.players.filter(p => p.playerId !== playerId);
 
         io.emit("playerList", game.players.map(p => ({
             playerId: p.playerId,

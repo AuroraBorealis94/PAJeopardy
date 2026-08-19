@@ -1,0 +1,59 @@
+{
+  "category": "Wonderful World",
+
+  "clues": {
+    "200": [
+      {
+        "id": "F_200_1",
+        "clue": "Mike would travel back in time to watch the construction of these ancient monuments.",
+        "answer": "What are the Egyptian pyramids?",
+	"answerImage": "/answerImages/Pyramids_Mike.jpg"
+      },
+      {
+        "id": "F_200_2",
+        "clue": "Derek would attempt to climb this mountain if failure weren't possible.",
+        "answer": "What is Mt. Everest?",
+	"answerImage": "/answerImages/Everest_Derek.jpg"
+      }
+    ],
+
+    "400": [
+      {
+        "id": "F_400_1",
+        "clue": "Sammy's greatest day was a 2020 outing to this place with Gary and Amber, followed by pizza.",
+        "answer": "What is Brownstone?",
+	"answerImage": "/answerImages/Pizza_Sammy.jpg"
+      }
+    ],
+
+    "600": [
+      {
+        "id": "F_600_1",
+        "clue": "This person gives themselves a big fat zero in a toolless forest, but say they could stay forever if you put them in a cabin.",
+        "answer": "Who is Alex?"
+      },
+      {
+        "id": "F_600_2",
+        "clue": "While on a trip to this Florida island, near Fort Meyers, Ross attempted to pick a fight with a gang of hooligans one evening.",
+        "answer": "What is Sanibel?"
+      }
+    ],
+
+    "800": [
+      {
+        "id": "F_800_1",
+        "clue": "Joe felt like an idiot in a situation involving the operation of a rental car in Canada when he had to do this. ",
+        "answer": "What is convert metric to American units?"
+      }
+    ],
+
+    "1000": [
+      {
+        "id": "F_1000_1",
+        "clue": "This family member's dream destination is the Dominican Republic, where they'd live on the beach and swim with sea turtles.",
+	"clueImage": "/clueImages/Dominican_Holly.jpg",
+        "answer": "Who is Holly?"
+      }
+    ]
+  }
+}

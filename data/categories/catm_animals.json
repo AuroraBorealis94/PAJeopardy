@@ -1,0 +1,63 @@
+{
+  "category": "Animals",
+
+  "clues": {
+    "200": [
+      {
+        "id": "M_200_1",
+        "clue": "This family member was recently chased across the backyard by five turkeys, one of which pecked their finger, until their dad and brother came to the rescue.",
+        "answer": "Who is Sawyer?"
+      },
+      {
+        "id": "M_200_2",
+        "clue": "Amber once watched this pet eat a NERF dart.",
+        "answer": "What is a turkey?",
+	"answerImage": "/answerImages/Turkey_Amber.jpg"
+      }
+    ],
+
+    "400": [
+      {
+        "id": "M_400_1",
+        "clue": "When asked to describe a moment she felt most like herself, Charlotte responded with simply \"I am a __?\"",
+        "answer": "What is a Cat?",
+	"answerImage": "/answerImages/Cat_Charlotte.jpg"
+      },
+      {
+        "id": "M_400_2",
+        "clue": "Something that family has taught this family member that has stuck, is to treat cats nicely.",
+        "answer": "Who is Charlotte?"
+      }
+    ],
+
+    "600": [
+      {
+        "id": "M_600_1",
+        "clue": "Shari offered this as her dream job.",
+        "answer": "What is zookeeper?"
+      },
+      {
+        "id": "M_600_2",
+        "clue": "Shari says that if they could have any wild animal as a pet, it would be this big cat.",
+        "answer": "What is a lion?",
+	"answerImage": "/answerImages/Lion_Shari.jpg"
+      }
+    ],
+
+    "800": [
+      {
+        "id": "M_800_1",
+        "clue": "If responsibility and allergies didn't exist, this person would get a kangaroo.",
+        "answer": "Who is Derek?"
+      }
+    ],
+
+    "1000": [
+      {
+        "id": "M_1000_1",
+        "clue": "The most interesting rabbit hole this person fell down online was the subject of male duck's reproductive anatomy.",
+        "answer": "Who is Alex?"
+      }
+    ]
+  }
+}

@@ -507,6 +507,16 @@
         z-index: 10;
     }
 
+    #hostBoardGrid {
+        display: grid;
+        grid-template-columns:
+            repeat(6, minmax(0, 1fr));
+
+        gap: 4px;
+
+        width: 100%;
+    }
+
     .hostCategory {
         display: contents;
     }
@@ -593,6 +603,24 @@
     #hostClueOverlay.show #hostClueCard {
         transform: scale(1);
         opacity: 1;
+    }
+
+    #dailyDoubleBanner {
+        position: fixed;
+        top: 15%;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 10000;
+        font-size: clamp(40px, 8vw, 100px);
+        color: gold;
+        font-weight: bold;
+        text-shadow:
+            0 0 20px #000;
+        pointer-events: none;
+    }
+
+    #dailyDoubleBanner:not(.hidden) {
+        display: block;
     }
 
     #hostClueInner {
@@ -786,6 +814,52 @@
     }
 /* #endregion */
 
+    #dailyDoublePage {
+
+        position: fixed;
+
+        inset: 0;
+
+        background:
+            url('/backgrounds/WHostBG.jpg')
+            center / cover;
+
+        display: flex;
+
+        flex-direction: column;
+
+        justify-content: center;
+
+        align-items: center;
+
+        text-align: center;
+
+        z-index: 6000;
+    }
+
+    .dailyDoubleText {
+
+        font-size:
+            clamp(50px, 12vw, 120px);
+
+        color: gold;
+
+        font-weight: bold;
+
+        text-shadow:
+            0 0 25px black;
+    }
+
+    .dailyDoubleSubtext {
+
+        font-size:
+            clamp(22px, 5vw, 50px);
+
+        color: white;
+
+        margin-top: 20px;
+    }
+
 /* #region Score Screen */
     #scorePage {
         position: fixed;
@@ -899,6 +973,18 @@
 
 </div>
 
+<div id="dailyDoublePage" class="hidden">
+
+    <div class="dailyDoubleText">
+        DAILY DOUBLE!
+    </div>
+
+    <div class="dailyDoubleSubtext">
+        Wait for the host.
+    </div>
+
+</div>
+
 <!-- HOST CONTROLS -->
 <div id="hostControls">
     <img id="hostLogo" src="/backgrounds/HostImg.png">
@@ -931,9 +1017,32 @@
         </button>
     </div>
 
-    <div id="hostBoard" class="hostPage hidden"></div>
+    <div id="hostBoard" class="hostPage hidden">
+        <div id="hostRoundLabel">
+            ROUND 1
+        </div>
+
+        <div id="hostBoardGrid"></div>
+
+        <button
+            id="finishRoundBtn"
+            onclick="hostFinishRound()">
+            FINISH ROUND
+        </button>
+
+        <button
+            id="round2Btn"
+            onclick="hostStartRound2()"
+            style="display:none;">
+            START ROUND 2
+        </button>
+
+    </div>
 
     <div id="hostClueOverlay" class="hidden">
+        <div id="dailyDoubleBanner" class="hidden">
+            DAILY DOUBLE!
+        </div>
         <div id="hostClueCard">
             <div id="hostClueInner">
                 <div id="hostClueFront" class="hostClueFace">
@@ -1002,10 +1111,7 @@
 
 <script src="/socket.io/socket.io.js"></script>
 <script>
-    /* ============================================================
-       SOCKET CONNECTION
-    ============================================================ */
-
+    //SOCKET CONNECTION
     const socket = io({
         reconnection: true,
         reconnectionAttempts: Infinity,
@@ -1013,11 +1119,7 @@
         reconnectionDelayMax: 5000
     });
 
-
-    /* ============================================================
-       GAME STATE
-    ============================================================ */
-
+    //GAME STATE
     const state = {
         name: "",
         character: null
@@ -1032,52 +1134,31 @@
     let characters = [];
     let currentIndex = 0;
     let currentScore = 0;
-
     let requestingHost = false;
-
     let socketConnected = false;
     let sessionReceived = false;
     let currentSession = null;
-
-    /*
-        IMPORTANT:
-        This is reset every time Socket.IO reconnects.
-        The old version allowed this to remain true forever,
-        which prevented reconnecting after a disconnect.
-    */
     let reconnectAttempted = false;
-
     let realCards = [];
     let lockedSet = new Set();
     let canBuzz = true;
-
-    /*
-        Stores the latest host status even if the hostStatus event
-        arrives before the DOM has finished loading.
-    */
     let serverHostTaken = false;
+    let currentRound = 0;
+    let currentDailyDouble = null;
 
     console.log(
         "LOCAL PLAYER ID ON LOAD:",
         localStorage.getItem("playerId")
     );
 
-
-    /* ============================================================
-       LOAD
-    ============================================================ */
-
+    //LOAD
     window.addEventListener("load", () => {
-
         console.log("PAGE LOAD");
 
         const savedName = localStorage.getItem("name");
         const savedCharacter = localStorage.getItem("character");
         const savedIsHost = localStorage.getItem("isHost");
 
-        /*
-            Restore basic local state.
-        */
         if (savedIsHost === "true") {
             isHost = true;
 
@@ -1101,13 +1182,9 @@
         }
 
         if (savedCharacter) {
-
             try {
-                state.character =
-                    JSON.parse(savedCharacter);
-
+                state.character = JSON.parse(savedCharacter);
             } catch (error) {
-
                 console.error(
                     "Could not restore character:",
                     error
@@ -1117,260 +1194,121 @@
             }
         }
 
+        //CHARACTER CAROUSEL
+        const container = document.getElementById("characters");
 
-        /*
-            CHARACTER CAROUSEL
-        */
+        const nextBtn = document.getElementById("nextBtn");
 
-        const container =
-            document.getElementById("characters");
-
-        const nextBtn =
-            document.getElementById("nextBtn");
-
-        const prevBtn =
-            document.getElementById("prevBtn");
+        const prevBtn = document.getElementById("prevBtn");
 
         if (nextBtn) {
-            nextBtn.onclick = () =>
-                scrollByCard(1);
+            nextBtn.onclick = () => scrollByCard(1);
         }
 
         if (prevBtn) {
-            prevBtn.onclick = () =>
-                scrollByCard(-1);
+            prevBtn.onclick = () => scrollByCard(-1);
         }
 
         if (container) {
-            container.addEventListener(
-                "scroll",
-                updateCenterCard
-            );
+            container.addEventListener("scroll", updateCenterCard);
         }
-
 
         updatePreview();
-
-
-        /*
-            IMPORTANT:
-            Apply host button state again now that the DOM exists.
-        */
-
         updateHostButton();
-
-
-        /*
-            If we already received the server session before load,
-            attempt reconnect now.
-        */
-
         tryReconnect();
     });
 
-
-    /* ============================================================
-       HOST BUTTON VISIBILITY
-    ============================================================ */
-
+    //HOST BUTTON VISIBILITY
     function updateHostButton() {
-
-        const btn =
-            document.getElementById("hostBtn");
+        const btn = document.getElementById("hostBtn");
 
         if (!btn) {
-            console.log(
-                "hostBtn not found yet."
-            );
-
+            console.log("hostBtn not found yet.");
             return;
         }
-
-
-        /*
-            If this browser is the confirmed host,
-            the host button should never be visible.
-        */
 
         if (isHost) {
-
             btn.style.display = "none";
-
             btn.classList.add("hidden");
             btn.classList.remove("show");
-
             return;
         }
-
-
-        /*
-            If another host is connected,
-            hide the button.
-        */
 
         if (serverHostTaken) {
-
             btn.style.display = "none";
-
             btn.classList.add("hidden");
             btn.classList.remove("show");
-
             return;
         }
 
-
-        /*
-            Otherwise the host slot is available.
-        */
-
         btn.style.display = "block";
-
         btn.classList.remove("hidden");
-
-        /*
-            Only remove "show" if your CSS uses hidden/show
-            as an animation system. The important part is that
-            the element is explicitly displayed.
-        */
     }
 
-
-    /* ============================================================
-       SOCKET CONNECTION EVENTS
-    ============================================================ */
-
+    //SOCKET CONNECTION EVENTS
     socket.on("connect", () => {
-
-        console.log(
-            "SOCKET CONNECTED:",
-            socket.id
-        );
-
+        console.log("SOCKET CONNECTED:", socket.id);
         socketConnected = true;
-
-        /*
-            VERY IMPORTANT.
-
-            Every new Socket.IO connection gets a new socket ID.
-            Therefore we MUST allow reconnect logic to run again.
-
-            The previous version never reset this.
-        */
-
         reconnectAttempted = false;
-
-        /*
-            A new socket means the server may need to identify us
-            again as either the host or player.
-        */
-
         tryReconnect();
     });
 
-
     socket.on("disconnect", reason => {
-
-        console.log(
-            "SOCKET DISCONNECTED:",
-            reason
-        );
-
+        console.log("SOCKET DISCONNECTED:", reason);
         socketConnected = false;
-
-        /*
-            Do NOT erase host/player localStorage here.
-
-            Socket.IO will attempt to reconnect automatically.
-        */
     });
-
 
     socket.on("connect_error", error => {
-
-        console.error(
-            "SOCKET CONNECTION ERROR:",
-            error
-        );
+        console.error("SOCKET CONNECTION ERROR:", error);
     });
 
-
-    /* ============================================================
-       HOST RECONNECT TOKEN
-    ============================================================ */
-
-    /*
-        Keep this listener in case the server later provides
-        a reconnect token.
-
-        The current server does not need this token because
-        the session + local host state are sufficient.
-    */
-
+    //HOST RECONNECT TOKEN
     socket.on("hostReconnectToken", token => {
+        console.log("Received host reconnect token");
 
-        console.log(
-            "Received host reconnect token"
-        );
-
-        localStorage.setItem(
-            "paHostReconnectToken",
-            token
-        );
+        localStorage.setItem("paHostReconnectToken", token);
     });
 
+    socket.on("dailyDouble", data => {
+        console.log("DAILY DOUBLE RECEIVED:", data);
 
-    /* ============================================================
-       RECONNECT
-    ============================================================ */
-
-    function tryReconnect() {
-
-        /*
-            We cannot reconnect until BOTH the socket and
-            server session are known.
-        */
-
-        if (!socketConnected) {
-
-            console.log(
-                "Reconnect waiting for socket..."
+        if (!isHost) {
+            // PLAYER DEVICE
+            showPlayerScreen(
+                "dailyDoublePage"
             );
 
+            return;
+        }
+
+        // HOST SCREEN
+        const banner =
+            document.getElementById("dailyDoubleBanner");
+
+        if (banner) {
+            banner.classList.remove("hidden");
+        }
+    });
+
+    //RECONNECT
+    function tryReconnect() {
+        if (!socketConnected) {
+            console.log("Reconnect waiting for socket...");
             return;
         }
 
         if (!sessionReceived) {
-
-            console.log(
-                "Reconnect waiting for game session..."
-            );
-
+            console.log("Reconnect waiting for game session...");
             return;
         }
 
-
-        /*
-            Prevent duplicate join messages during the same
-            connection.
-
-            This is reset on the next socket connection.
-        */
-
         if (reconnectAttempted) {
-
-            console.log(
-                "Reconnect already attempted for this socket."
-            );
-
+            console.log("Reconnect already attempted for this socket.");
             return;
         }
 
         reconnectAttempted = true;
-
-
-        const storedIsHost =
-            localStorage.getItem("isHost") === "true";
-
+        const storedIsHost = localStorage.getItem("isHost") === "true";
 
         console.log(
             "TRY RECONNECT:",
@@ -1386,36 +1324,12 @@
             }
         );
 
-
-        /* ========================================================
-           HOST RECONNECT
-        ======================================================== */
-
+        //HOST RECONNECT
         if (storedIsHost) {
+            const savedHostSession = localStorage.getItem("hostSession");
 
-            const savedHostSession =
-                localStorage.getItem("hostSession");
-
-
-            /*
-                Same server session:
-                reconnect as host.
-            */
-
-            if (
-                savedHostSession &&
-                String(savedHostSession) ===
-                String(currentSession)
-            ) {
-
-                console.log(
-                    "RECONNECTING AS HOST"
-                );
-
-                /*
-                    Mark that we are requesting host.
-                */
-
+            if (savedHostSession && String(savedHostSession) === String(currentSession)) {
+                console.log("RECONNECTING AS HOST");
                 requestingHost = true;
 
                 socket.emit("join", {
@@ -1425,17 +1339,7 @@
                 return;
             }
 
-
-            /*
-                The server has restarted.
-
-                This browser is no longer the host for
-                the new game session.
-            */
-
-            console.log(
-                "HOST SESSION DOES NOT MATCH CURRENT SERVER SESSION."
-            );
+            console.log("HOST SESSION DOES NOT MATCH CURRENT SERVER SESSION.");
 
             localStorage.removeItem("isHost");
             localStorage.removeItem("hostSession");
@@ -1450,82 +1354,40 @@
             return;
         }
 
+        //PLAYER RECONNECT
+        const playerId = localStorage.getItem("playerId");
 
-        /* ========================================================
-           PLAYER RECONNECT
-        ======================================================== */
+        const savedName = localStorage.getItem("name");
 
-        const playerId =
-            localStorage.getItem("playerId");
+        const savedCharacter = localStorage.getItem("character");
 
-        const savedName =
-            localStorage.getItem("name");
+        const savedGameSession = localStorage.getItem("gameSession");
 
-        const savedCharacter =
-            localStorage.getItem("character");
-
-        const savedGameSession =
-            localStorage.getItem("gameSession");
-
-
-        if (
-            !playerId ||
-            !savedName ||
-            !savedCharacter
-        ) {
-
-            console.log(
-                "No player reconnect information found."
-            );
-
+        if (!playerId || !savedName || !savedCharacter) {
+            console.log("No player reconnect information found.");
             return;
         }
 
-
-        /*
-            If the server session changed, this is an entirely
-            new game. Clear the old player.
-        */
-
-        if (
-            savedGameSession &&
-            String(savedGameSession) !==
-            String(currentSession)
-        ) {
-
-            console.log(
-                "PLAYER SESSION CHANGED. CLEARING PLAYER STATE."
-            );
+        if (savedGameSession && String(savedGameSession) !== String(currentSession)) {
+            console.log("PLAYER SESSION CHANGED. CLEARING PLAYER STATE.");
 
             localStorage.removeItem("playerId");
             localStorage.removeItem("name");
             localStorage.removeItem("character");
             localStorage.removeItem("hasJoined");
             localStorage.removeItem("gameSession");
-
             location.reload();
-
             return;
         }
-
 
         let character;
 
         try {
-
-            character =
-                JSON.parse(savedCharacter);
-
+            character = JSON.parse(savedCharacter);
         } catch (error) {
-
-            console.error(
-                "Could not parse saved character:",
-                error
-            );
-
+            console.error("Could not parse saved character:", error);
             return;
         }
-
 
         console.log(
             "RECONNECTING AS PLAYER:",
@@ -1536,49 +1398,24 @@
             }
         );
 
-
         socket.emit("join", {
-
             playerId,
             name: savedName,
             character: character.name,
             isHost: false
-
         });
     }
 
-
-    /* ============================================================
-       HOST STATUS
-    ============================================================ */
-
+    //HOST STATUS
     socket.on("hostStatus", taken => {
-
-        console.log(
-            "HOST STATUS FROM SERVER:",
-            taken
-        );
-
-        /*
-            Save it even if hostBtn does not exist yet.
-        */
-
+        console.log("HOST STATUS FROM SERVER:", taken);
         serverHostTaken = !!taken;
-
         updateHostButton();
     });
 
-
-    /* ============================================================
-       HOST TAKEN
-    ============================================================ */
-
+    //HOST TAKEN
     socket.on("hostTaken", () => {
-
-        console.warn(
-            "HOST SLOT WAS REJECTED."
-        );
-
+        console.warn("HOST SLOT WAS REJECTED.");
         requestingHost = false;
         isHost = false;
 
@@ -1586,42 +1423,21 @@
         localStorage.removeItem("hostSession");
         localStorage.removeItem("lastHostPage");
 
-        alert(
-            "The host slot is already taken."
-        );
-
+        alert("The host slot is already taken.");
         updateHostButton();
     });
 
-
-    /* ============================================================
-       CHARACTER LIST
-    ============================================================ */
-
+    //CHARACTER LIST
     socket.on("characterList", chars => {
-
         characters = chars;
 
-
-        /*
-            Restore the exact character object from
-            the server's current character list.
-        */
-
         if (state.character) {
-
-            const restored =
-                chars.find(
-                    c =>
-                        c.name ===
-                        state.character.name
-                );
+            const restored = chars.find(c => c.name === state.character.name);
 
             if (restored) {
                 state.character = restored;
             }
         }
-
 
         console.log(
             "RECONNECT CHECK:",
@@ -1643,64 +1459,25 @@
             }
         );
 
-
-        const container =
-            document.getElementById("characters");
-
+        const container = document.getElementById("characters");
         if (!container) return;
-
         container.innerHTML = "";
-
 
         realCards = chars.map(
             (char, index) => {
-
-                const btn =
-                    document.createElement("button");
-
+                const btn = document.createElement("button");
                 btn.classList.add("charCard");
-
-                btn.style.animation =
-                    "cardPopIn 0.5s ease";
-
-
-                const inner =
-                    document.createElement("div");
-
-                inner.classList.add(
-                    "cardInner"
-                );
-
-
-                const front =
-                    document.createElement("div");
-
-                front.classList.add(
-                    "cardFront"
-                );
-
-
-                const back =
-                    document.createElement("div");
-
-                back.classList.add(
-                    "cardBack"
-                );
-
-
-                const imgFront =
-                    document.createElement("img");
-
-                imgFront.src =
-                    char.front;
-
-
-                const imgBack =
-                    document.createElement("img");
-
-                imgBack.src =
-                    char.back;
-
+                btn.style.animation = "cardPopIn 0.5s ease";
+                const inner = document.createElement("div");
+                inner.classList.add("cardInner");
+                const front = document.createElement("div");
+                front.classList.add("cardFront");
+                const back = document.createElement("div");
+                back.classList.add("cardBack");
+                const imgFront = document.createElement("img");
+                imgFront.src = char.front;
+                const imgBack = document.createElement("img");
+                imgBack.src = char.back;
 
                 front.appendChild(imgFront);
                 back.appendChild(imgBack);
@@ -1710,304 +1487,175 @@
 
                 btn.appendChild(inner);
 
-
                 btn.__charData = char;
                 btn.__index = index;
 
-
                 btn.onclick = () => {
-
                     if (
-                        lockedSet.has(
-                            char.name.toLowerCase()
-                        )
+                        lockedSet.has(char.name.toLowerCase())
                     ) {
                         return;
                     }
-
-
                     setSelectedCard(btn);
-
                     currentIndex = index;
-
                     centerOnCard(btn);
                 };
-
-
                 container.appendChild(btn);
-
                 return btn;
             }
         );
 
-
         currentIndex = 0;
 
-
         requestAnimationFrame(() => {
-
             updateCenterCard();
-
             updateLockedUI();
 
-
-            if (
-                state.character &&
-                localStorage.getItem(
-                    "hasJoined"
-                ) === "true"
+            if (state.character && localStorage.getItem("hasJoined") === "true"
             ) {
-
-                const match =
-                    realCards.find(
-                        c =>
-                            c.__charData.name ===
-                            state.character.name
-                    );
-
+                const match = realCards.find(c => c.__charData.name === state.character.name);
 
                 if (match) {
-
                     setSelectedCard(match);
-
                     centerOnCard(match);
                 }
             }
         });
     });
 
-
-    /* ============================================================
-       PLAYER LIST
-    ============================================================ */
-
+    //PLAYER LIST
     socket.on("playerList", players => {
-
-        const count =
-            document.getElementById(
-                "playerCount"
-            );
-
+        const count = document.getElementById("playerCount");
         if (!count) return;
 
-        count.textContent =
-            players.length +
-            " players joined";
+        count.textContent = players.length + " players joined";
     });
 
-
-    /* ============================================================
-       LOCKED CHARACTERS
-    ============================================================ */
-
+    //LOCKED CHARACTERS
     socket.on(
         "lockedCharacters",
         locked => {
-
-            lockedSet =
-                new Set(
-                    locked.map(
-                        c => c.toLowerCase()
-                    )
-                );
-
-            requestAnimationFrame(
-                updateLockedUI
-            );
+            lockedSet = new Set(locked.map(c => c.toLowerCase()));
+            requestAnimationFrame(updateLockedUI);
         }
     );
 
-
-    /* ============================================================
-       CHARACTER TAKEN
-    ============================================================ */
-
+    //CHARACTER TAKEN
     socket.on(
         "characterTaken",
         () => {
-
-            alert(
-                "That character was just taken. Please choose another."
-            );
-
-
-            const joinBtn =
-                document.getElementById(
-                    "joinBtn"
-                );
-
+            alert("That character was just taken. Please choose another.");
+            const joinBtn = document.getElementById("joinBtn");
             if (!joinBtn) return;
 
-
             joinBtn.disabled = false;
-
-            joinBtn.innerText =
-                "Join Game";
-
+            joinBtn.innerText = "Join Game";
             joinBtn.style.opacity = "1";
         }
     );
 
-
-    /* ============================================================
-       BOARD DATA
-    ============================================================ */
-
-    socket.on("boardData", board => {
+    //BOARD DATA
+    socket.on("boardData", data => {
 
         console.log(
             "BOARD DATA RECEIVED:",
-            board
+            data
         );
 
-        buildHostBoard(board);
+        if (!data || !data.board) {
+            console.error(
+                "Invalid boardData received."
+            );
+
+            return;
+        }
+
+        currentRound =
+            parseInt(data.round) || 1;
+
+        buildHostBoard(
+            data.board
+        );
+
+        if (isHost) {
+            restoreHostPage("hostBoard");
+            /*
+            restoreHostPage(
+                currentRound === 1
+                    ? "hostBoard"
+                    : "hostRound2"
+            );
+            */
+        }
     });
 
-
-    /* ============================================================
-       SCORE SCREEN
-    ============================================================ */
-
+    //SCORE SCREEN
     socket.on(
         "showScoreScreen",
         data => {
-
             if (!data) return;
-
-
-            const character =
-                characters.find(
-                    c =>
-                        c.name ===
-                        data.character
-                );
-
+            const character = characters.find(c => c.name === data.character);
 
             if (character) {
-
-                const scoreSprite =
-                    document.getElementById(
-                        "scoreSprite"
-                    );
+                const scoreSprite = document.getElementById("scoreSprite");
 
                 if (scoreSprite) {
-
-                    const idleAnim =
-                        character.animations.idle;
-
+                    const idleAnim = character.animations.idle;
                     const frameWidth = 100;
+                    const totalWidth = idleAnim.frames * frameWidth;
 
-                    const totalWidth =
-                        idleAnim.frames *
-                        frameWidth;
-
-
-                    scoreSprite.style.backgroundImage =
-                        `url('${idleAnim.src}')`;
-
-                    scoreSprite.style.animation =
-                        `play-dynamic-frames ${idleAnim.speed} steps(${idleAnim.frames}) infinite`;
-
-                    scoreSprite.style.setProperty(
-                        "--total-width",
-                        `-${totalWidth}px`
-                    );
+                    scoreSprite.style.backgroundImage = `url('${idleAnim.src}')`;
+                    scoreSprite.style.animation = `play-dynamic-frames ${idleAnim.speed} steps(${idleAnim.frames}) infinite`;
+                    scoreSprite.style.setProperty("--total-width", `-${totalWidth}px`);
                 }
             }
 
-
-            showPlayerScreen(
-                "scorePage"
-            );
-
-
-            animateScoreGain(
-                currentScore,
-                data.score,
-                data.earned
-            );
-
-
-            currentScore =
-                data.score;
+            showPlayerScreen("scorePage");
+            animateScoreGain(currentScore, data.score, data.earned);
+            currentScore = data.score;
         }
     );
 
-
-    /* ============================================================
-       ANIMATION HOLDING
-    ============================================================ */
-
+    //ANIMATION HOLDING
     socket.on(
         "showAnimHolding",
         () => {
-
-            console.log(
-                "Showing animation holding screen"
-            );
-
-            const lobby =
-                document.getElementById(
-                    "lobbyUI"
-                );
+            console.log("Showing animation holding screen");
+            const lobby = document.getElementById("lobbyUI");
 
             if (lobby) {
                 lobby.style.display = "none";
             }
 
-            showPlayerScreen(
-                "animHoldingScreen"
-            );
+            showPlayerScreen("animHoldingScreen");
         }
     );
 
-
-    /* ============================================================
-       SELECT CLUE
-    ============================================================ */
-
+    //SELECT CLUE
     socket.on(
         "selectClue",
         ({ payload }) => {
-
             if (!isHost) return;
-
             if (!payload) return;
 
             showHostClue({
-                value:
-                    payload.value,
-
-                clueData:
-                    payload.clueData
+                value: payload.value,
+                clueData: payload.clueData
             });
         }
     );
 
-
-    /* ============================================================
-       RESET SERVER
-    ============================================================ */
-
+    //RESET SERVER
     socket.on(
         "forceReset",
         () => {
-
-            console.log(
-                "Session expired, resetting"
-            );
-
+            console.log("Session expired, resetting");
             localStorage.clear();
-
             location.reload();
         }
     );
 
-
-    /* ============================================================
-       JOIN SUCCESS
-    ============================================================ */
-
+    //JOIN SUCCESS
    socket.on("joinSuccess", data => {
         console.log(
             "JOIN SUCCESS:",
@@ -2020,47 +1668,28 @@
 
         const joiningAsHost = requestingHost || isHost;
 
-        // ==========================================
         // HOST
-        // ==========================================
-
         if (joiningAsHost) {
-
             requestingHost = false;
             isHost = true;
-
             localStorage.setItem("isHost", "true");
 
             if (currentSession) {
                 localStorage.setItem("hostSession", currentSession);
             }
-
-            console.log(
-                "HOST SLOT CONFIRMED.",
-                "SESSION:",
-                currentSession
-            );
-
-            // Do NOT overwrite lastHostPage here.
-            // Restore whatever page the host was previously on.
+            console.log("HOST SLOT CONFIRMED.", "SESSION:", currentSession);
             let savedPage = localStorage.getItem("lastHostPage");
 
             if (!savedPage) {
                 savedPage = "hostJoinPg";
                 localStorage.setItem("lastHostPage", savedPage);
             }
-
             console.log("HOST PAGE TO RESTORE:", savedPage);
-
             showHostControls();
-
             return;
         }
 
-        // ==========================================
         // PLAYER
-        // ==========================================
-
         localStorage.setItem("gameSession", currentSession);
         localStorage.setItem("hasJoined", "true");
 
@@ -2078,154 +1707,75 @@
         if (nameInput) nameInput.disabled = true;
         if (enterBtn) enterBtn.disabled = true;
 
-        document.querySelectorAll("#characters button").forEach(b => {
-            b.disabled = true;
-            b.style.pointerEvents = "none";
-        });
-
-        const alreadyJoined =
-            document
-                .getElementById("waitingScreen")
-                ?.classList.contains("show");
+        document.querySelectorAll("#characters button").forEach(b => { b.disabled = true; b.style.pointerEvents = "none";});
+        const alreadyJoined = document.getElementById("waitingScreen")?.classList.contains("show");
 
         if (!alreadyJoined) {
-
             confettiBurst();
 
             setTimeout(() => {
                 showWaitingScreen();
             }, 300);
-
         } else {
-
             showWaitingScreen();
         }
     });
 
-
-    /* ============================================================
-       GAME STATE SYNC
-    ============================================================ */
-
+    //GAME STATE SYNC
     socket.on(
         "gameStateSync",
         data => {
-
-            console.log(
-                "SYNC STATE:",
-                data
-            );
-
-
-            /*
-                HOST
-            */
+            console.log("SYNC STATE:", data);
 
             if (isHost) {
                 console.log("HOST STATE SYNC RECEIVED");
-
                 let savedPage = localStorage.getItem("lastHostPage");
 
                 if (!savedPage) {
                     savedPage = "hostJoinPg";
                     localStorage.setItem("lastHostPage", savedPage);
                 }
-
                 console.log("RESTORING HOST PAGE FROM SYNC:", savedPage);
-
                 showHostControls();
-
                 return;
             }
 
-
-            /*
-                PLAYER
-            */
-
-            lockedSet =
-                new Set(
-                    (
-                        data.lockedCharacters ||
-                        []
-                    ).map(
-                        c =>
-                            c.toLowerCase()
-                    )
-                );
-
-
+            lockedSet = new Set((data.lockedCharacters || []).map(c => c.toLowerCase()));
             updateLockedUI();
 
-
-            if (
-                data.state ===
-                "lobby"
-            ) {
-
-                const lobby =
-                    document.getElementById(
-                        "lobbyUI"
-                    );
+            if (data.state === "lobby") {
+                const lobby = document.getElementById("lobbyUI");
 
                 if (lobby) {
-                    lobby.style.display =
-                        "block";
+                    lobby.style.display = "block";
                 }
 
-
-                const waiting =
-                    document.getElementById(
-                        "waitingScreen"
-                    );
+                const waiting = document.getElementById("waitingScreen");
 
                 if (waiting) {
-                    waiting.classList.remove(
-                        "show"
-                    );
+                    waiting.classList.remove("show");
                 }
             }
 
-
-            if (
-                data.state ===
-                "playing"
-            ) {
-
-                const lobby =
-                    document.getElementById(
-                        "lobbyUI"
-                    );
+            if (data.state === "playing") {
+                const lobby = document.getElementById("lobbyUI");
 
                 if (lobby) {
                     lobby.style.display =
                         "none";
                 }
-
                 showInstructionsHoldingScreen();
             }
 
-
-            if (
-                data.state ===
-                "buzzer"
-            ) {
-
-                const lobby =
-                    document.getElementById(
-                        "lobbyUI"
-                    );
+            if (data.state === "buzzer") {
+                const lobby = document.getElementById("lobbyUI");
 
                 if (lobby) {
                     lobby.style.display =
                         "none";
                 }
 
-
-                const waiting =
-                    document.getElementById(
-                        "waitingScreen"
-                    );
+                const waiting = document.getElementById("waitingScreen");
 
                 if (waiting) {
                     waiting.classList.add(
@@ -2236,185 +1786,61 @@
         }
     );
 
-
-    /* ============================================================
-       GAME SESSION
-    ============================================================ */
-
-    socket.on(
-        "gameSession",
+    //GAME SESSION
+    socket.on("gameSession",
         session => {
+            const savedSession = localStorage.getItem("gameSession");
+            const savedHostSession = localStorage.getItem("hostSession");
+            const storedIsHost = localStorage.getItem("isHost") === "true";
 
-            const savedSession =
-                localStorage.getItem(
-                    "gameSession"
-                );
-
-            const savedHostSession =
-                localStorage.getItem(
-                    "hostSession"
-                );
-
-            const storedIsHost =
-                localStorage.getItem(
-                    "isHost"
-                ) === "true";
-
-
-            currentSession =
-                String(session);
-
+            currentSession = String(session);
             sessionReceived = true;
 
+            console.log("SERVER SESSION:", session);
+            console.log("SAVED PLAYER SESSION:", savedSession);
+            console.log("SAVED HOST SESSION:", savedHostSession);
+            console.log("STORED IS HOST:", storedIsHost);
 
-            console.log(
-                "SERVER SESSION:",
-                session
-            );
-
-            console.log(
-                "SAVED PLAYER SESSION:",
-                savedSession
-            );
-
-            console.log(
-                "SAVED HOST SESSION:",
-                savedHostSession
-            );
-
-            console.log(
-                "STORED IS HOST:",
-                storedIsHost
-            );
-
-
-            /* ====================================================
-               HOST SESSION CHECK
-            ==================================================== */
-
+            //HOST SESSION CHECK
             if (storedIsHost) {
-
-                if (
-                    savedHostSession &&
-                    String(savedHostSession) ===
-                    String(session)
-                ) {
-
+                if (savedHostSession && String(savedHostSession) === String(session)) {
                     isHost = true;
-
-
-                    console.log(
-                        "VALID HOST SESSION. RECONNECTING..."
-                    );
-
-
-                    /*
-                        Don't hide the button solely here.
-                        updateHostButton() handles everything.
-                    */
-
+                    console.log("VALID HOST SESSION. RECONNECTING...");
                     updateHostButton();
-
                 } else {
-
-                    console.log(
-                        "SERVER SESSION CHANGED. CLEARING HOST STATE."
-                    );
-
-
-                    localStorage.removeItem(
-                        "isHost"
-                    );
-
-                    localStorage.removeItem(
-                        "hostSession"
-                    );
-
-                    localStorage.removeItem(
-                        "lastHostPage"
-                    );
-
-                    localStorage.removeItem(
-                        "paHostReconnectToken"
-                    );
-
+                    console.log("SERVER SESSION CHANGED. CLEARING HOST STATE.");
+                    localStorage.removeItem("isHost");
+                    localStorage.removeItem("hostSession");"lastHostPage");
+                    localStorage.removeItem("paHostReconnectToken");
 
                     isHost = false;
-
                     requestingHost = false;
-
 
                     updateHostButton();
                 }
             }
 
-
-            /* ====================================================
-               PLAYER SESSION CHECK
-            ==================================================== */
-
-            if (
-                savedSession &&
-                String(savedSession) !==
-                String(session) &&
-                !storedIsHost
-            ) {
-
-                console.log(
-                    "SERVER SESSION CHANGED. CLEARING PLAYER STATE."
-                );
-
-
-                localStorage.removeItem(
-                    "playerId"
-                );
-
-                localStorage.removeItem(
-                    "name"
-                );
-
-                localStorage.removeItem(
-                    "character"
-                );
-
-                localStorage.removeItem(
-                    "hasJoined"
-                );
-
-                localStorage.removeItem(
-                    "gameSession"
-                );
-
-
+            //PLAYER SESSION CHECK
+            if (savedSession && String(savedSession) !== String(session) && !storedIsHost) {
+                console.log("SERVER SESSION CHANGED. CLEARING PLAYER STATE.");
+                localStorage.removeItem("playerId");
+                localStorage.removeItem("name");
+                localStorage.removeItem("character");
+                localStorage.removeItem("hasJoined");
+                localStorage.removeItem("gameSession");
                 location.reload();
-
                 return;
             }
-
-
-            /*
-                Now that we know the server session,
-                reconnect if necessary.
-            */
 
             tryReconnect();
         }
     );
 
-
-    /* ============================================================
-       ROOM CODE
-    ============================================================ */
-
+    //ROOM CODE
     socket.on(
         "roomCode",
         code => {
-
-            console.log(
-                "ROOM CODE:",
-                code
-            );
-
+            console.log("ROOM CODE:", code);
             /*
                 Keep this listener available if you want to
                 display the room code on the host/player UI.
@@ -2422,104 +1848,40 @@
         }
     );
 
-
-    /* ============================================================
-       JOIN FUNCTIONS
-    ============================================================ */
-
+    //JOIN FUNCTIONS
     function setName() {
-
-        const nameInput =
-            document.getElementById(
-                "name"
-            );
-
+        const nameInput = document.getElementById("name");
         if (!nameInput) return;
+        state.name = nameInput.value.trim();
+        localStorage.setItem("name", state.name);
 
-
-        state.name =
-            nameInput.value.trim();
-
-
-        localStorage.setItem(
-            "name",
-            state.name
-        );
-
-
-        const teamLabel =
-            document.getElementById(
-                "teamLabel"
-            );
-
+        const teamLabel = document.getElementById("teamLabel");
 
         if (teamLabel) {
-
             teamLabel.classList.replace(
                 "previewHidden",
                 "previewVisible"
             );
         }
 
-
         updatePreview();
-
-
         nameInput.value = "";
     }
 
-
     function setSelectedCard(card) {
+        document.querySelectorAll(".charCard").forEach(c => c.classList.remove("selected"));
+        card.classList.add("selected");
+        state.character = card.__charData;
 
-        document
-            .querySelectorAll(
-                ".charCard"
-            )
-            .forEach(
-                c =>
-                    c.classList.remove(
-                        "selected"
-                    )
-            );
-
-
-        card.classList.add(
-            "selected"
-        );
-
-
-        state.character =
-            card.__charData;
-
-
-        localStorage.setItem(
-            "character",
-            JSON.stringify(
-                state.character
-            )
-        );
-
-
+        localStorage.setItem("character", JSON.stringify(state.character));
         updatePreview();
     }
 
-
     function centerOnCard(card) {
-
-        const container =
-            document.getElementById(
-                "characters"
-            );
-
+        const container =document.getElementById("characters");
         if (!container || !card) return;
-
-
-        const containerRect =
-            container.getBoundingClientRect();
-
-        const cardRect =
-            card.getBoundingClientRect();
-
+        const containerRect = container.getBoundingClientRect();
+        const cardRect = card.getBoundingClientRect();
 
         const offset =
             (
@@ -2531,251 +1893,111 @@
                 containerRect.width / 2
             );
 
-
         container.scrollBy({
             left: offset,
             behavior: "smooth"
         });
     }
 
-
     function updateCenterCard() {
-
-        const container =
-            document.getElementById(
-                "characters"
-            );
-
+        const container = document.getElementById("characters");
         if (!container) return;
-
-
-        const cards =
-            container.querySelectorAll(
-                ".charCard"
-            );
-
-
+        const cards =container.querySelectorAll(".charCard");
         if (!cards.length) return;
 
-
-        const containerCenter =
-            container.getBoundingClientRect()
-                .left +
-            container.offsetWidth / 2;
-
+        const containerCenter =container.getBoundingClientRect().left + container.offsetWidth / 2;
 
         let closest = null;
-        let closestDistance =
-            Infinity;
-
+        let closestDistance = Infinity;
 
         cards.forEach(card => {
-
-            const rect =
-                card.getBoundingClientRect();
-
-
+            const rect = card.getBoundingClientRect();
             const center =
                 rect.left +
                 rect.width / 2;
-
-
             const distance =
                 Math.abs(
                     center -
                     containerCenter
                 );
-
-
-            if (
-                distance <
-                closestDistance
-            ) {
-
-                closestDistance =
-                    distance;
-
-                closest =
-                    card;
+            if (distance < closestDistance) {
+                closestDistance = distance;
+                closest = card;
             }
         });
 
-
-        cards.forEach(
-            c =>
-                c.classList.remove(
-                    "center"
-                )
-        );
-
-
+        cards.forEach(c => c.classList.remove("center"));
         if (closest) {
-
-            closest.classList.add(
-                "center"
-            );
-
-
-            currentIndex =
-                realCards.indexOf(
-                    closest
-                );
+            closest.classList.add("center");
+            currentIndex = realCards.indexOf(closest);
         }
     }
 
-
     function scrollByCard(direction) {
-
         if (!realCards.length) return;
-
-
-        currentIndex +=
-            direction;
-
-
-        if (
-            currentIndex < 0
-        ) {
-
-            currentIndex =
-                realCards.length - 1;
+        currentIndex += direction;
+        if (currentIndex < 0) {
+            currentIndex = realCards.length - 1;
         }
-
-
-        if (
-            currentIndex >=
-            realCards.length
-        ) {
-
+        if (currentIndex >= realCards.length) {
             currentIndex = 0;
         }
 
-
-        const card =
-            realCards[currentIndex];
-
-
+        const card = realCards[currentIndex];
         if (card) {
             centerOnCard(card);
         }
     }
 
-
     function updateLockedUI() {
-
-        document
-            .querySelectorAll(
-                ".charCard"
-            )
+        document.querySelectorAll(".charCard")
             .forEach(card => {
-
-                const name =
-                    card.__charData.name
-                        .toLowerCase();
-
-
-                if (
-                    lockedSet.has(name)
-                ) {
-
-                    card.classList.add(
-                        "locked"
-                    );
-
+                const name = card.__charData.name.toLowerCase();
+                if (lockedSet.has(name)) {
+                    card.classList.add("locked");
                 } else {
-
-                    card.classList.remove(
-                        "locked"
-                    );
+                    card.classList.remove("locked");
                 }
             });
     }
 
-
     function updatePreview() {
-
-        const previewName =
-            document.getElementById(
-                "previewName"
-            );
-
-        const img =
-            document.getElementById(
-                "previewImage"
-            );
-
+        const previewName = document.getElementById("previewName");
+        const img = document.getElementById("previewImage");
 
         if (previewName) {
-
-            previewName.textContent =
-                state.name ||
-                "---";
+            previewName.textContent = state.name || "---";
         }
 
-
         if (!img) return;
-
-
         if (state.character) {
-
-            img.src =
-                state.character.front;
-
-            img.style.display =
-                "block";
-
+            img.src = state.character.front;
+            img.style.display = "block";
         } else {
-
-            img.style.display =
-                "none";
+            img.style.display = "none";
         }
     }
 
-
     function joinGame() {
-
         if (!state.name) {
-
-            alert(
-                "Please enter your team name first"
-            );
-
+            alert("Please enter your team name first");
             return;
         }
-
 
         if (!state.character) {
-
-            alert(
-                "Please choose a character"
-            );
-
+            alert("Please choose a character");
             return;
         }
 
-
-        let playerId =
-            localStorage.getItem(
-                "playerId"
-            );
-
-
+        let playerId = localStorage.getItem("playerId");
         if (!playerId) {
-
-            playerId =
-                crypto.randomUUID();
-
-            localStorage.setItem(
-                "playerId",
-                playerId
-            );
+            playerId = crypto.randomUUID();
+            localStorage.setItem("playerId", playerId);
         }
-
 
         socket.emit(
             "join",
             {
-
                 playerId,
 
                 name:
@@ -2786,37 +2008,19 @@
 
                 isHost:
                     false
-
             }
         );
-
-
-        console.log(
-            "joinGame ran"
-        );
+        console.log("joinGame ran");
     }
 
-
     function confettiBurst() {
-
         const images = [
             "/confetti/confetti1.png",
             "/confetti/confetti2.png"
         ];
 
-
-        for (
-            let i = 0;
-            i < 50;
-            i++
-        ) {
-
-            const confetti =
-                document.createElement(
-                    "img"
-                );
-
-
+        for (let i = 0; i < 50; i++) {
+            const confetti = document.createElement("img");
             confetti.src =
                 images[
                     Math.floor(
@@ -2825,67 +2029,40 @@
                     )
                 ];
 
-
-            confetti.style.position =
-                "fixed";
-
-            confetti.style.left =
-                "50%";
-
-            confetti.style.top =
-                "40%";
-
-            confetti.style.width =
-                "36px";
-
-            confetti.style.height =
-                "36px";
-
-            confetti.style.zIndex =
-                "9999";
-
-            confetti.style.pointerEvents =
-                "none";
-
+            confetti.style.position = "fixed";
+            confetti.style.left = "50%"
+            confetti.style.top = "40%";
+            confetti.style.width = "36px";
+            confetti.style.height = "36px";
+            confetti.style.zIndex = "9999"
+            confetti.style.pointerEvents = "none";
 
             const hue =
                 Math.floor(
                     Math.random() * 360
                 );
 
-
-            confetti.style.filter =
-                `hue-rotate(${hue}deg)`;
-
-
-            document.body.appendChild(
-                confetti
-            );
-
+            confetti.style.filter = `hue-rotate(${hue}deg)`;
+            document.body.appendChild(confetti);
 
             const angle =
                 Math.random() *
                 Math.PI *
                 2;
 
-
             const velocity =
                 2 +
                 Math.random() *
                 5;
 
-
             let x = 0;
             let y = 0;
             let gravity = 0;
 
-
             const interval =
                 setInterval(
                     () => {
-
-                        gravity +=
-                            0.15;
+                        gravity += 0.15;
 
                         x +=
                             Math.cos(angle) *
@@ -2897,128 +2074,60 @@
                             gravity;
 
 
-                        confetti.style.transform =
-                            `translate(${x}px, ${y}px) rotate(${x * 2}deg)`;
-
-
-                        if (
-                            y >
-                            window.innerHeight
-                        ) {
-
-                            clearInterval(
-                                interval
-                            );
-
+                        confetti.style.transform = `translate(${x}px, ${y}px) rotate(${x * 2}deg)`;
+                        if (y > window.innerHeight) {
+                            clearInterval(interval);
                             confetti.remove();
                         }
-
                     },
                     16
                 );
         }
     }
 
-
-    /* ============================================================
-       WAITING
-    ============================================================ */
-
+    //WAITING
     function showWaitingScreen() {
-
-        const lobby =
-            document.getElementById(
-                "lobbyUI"
-            );
-
+        const lobby = document.getElementById("lobbyUI");
 
         if (lobby) {
-            lobby.style.display =
-                "none";
+            lobby.style.display = "none";
         }
 
-
-        if (
-            state.character?.front
-        ) {
-
-            const waitingImage =
-                document.getElementById(
-                    "waitingImage"
-                );
-
+        if (state.character?.front) {
+            const waitingImage = document.getElementById("waitingImage");
 
             if (waitingImage) {
-
-                waitingImage.src =
-                    state.character.front;
+                waitingImage.src = state.character.front;
             }
         }
 
-
-        const waitingName =
-            document.getElementById(
-                "waitingName"
-            );
-
+        const waitingName = document.getElementById("waitingName");
 
         if (waitingName) {
-
-            waitingName.textContent =
-                state.name;
+            waitingName.textContent = state.name;
         }
 
-
-        showPlayerScreen(
-            "waitingScreen"
-        );
+        showPlayerScreen("waitingScreen");
     }
-
 
     function showInstructionsHoldingScreen() {
-
-        const lobby =
-            document.getElementById(
-                "lobbyUI"
-            );
-
+        const lobby = document.getElementById("lobbyUI");
 
         if (lobby) {
-
-            lobby.style.display =
-                "none";
+            lobby.style.display = "none";
         }
-
-
-        showPlayerScreen(
-            "instructionsHoldingScreen"
-        );
+        showPlayerScreen("instructionsHoldingScreen");
     }
 
-
     function changeCharacter() {
-
-        const previewImage =
-            document.getElementById(
-                "previewImage"
-            );
-
+        const previewImage = document.getElementById("previewImage");
 
         if (previewImage) {
-
-            previewImage.style.display =
-                "none";
+            previewImage.style.display = "none";
         }
 
-
-        const playerId =
-            localStorage.getItem(
-                "playerId"
-            );
-
-
+        const playerId = localStorage.getItem("playerId");
         if (!playerId) return;
-
 
         socket.emit(
             "leavePlayer",
@@ -3027,42 +2136,19 @@
             }
         );
 
+        localStorage.removeItem("character");
+        localStorage.removeItem("hasJoined");
 
-        localStorage.removeItem(
-            "character"
-        );
+        state.character = null;
+        hidePlayerScreen("waitingScreen");
 
-        localStorage.removeItem(
-            "hasJoined"
-        );
-
-
-        state.character =
-            null;
-
-
-        hidePlayerScreen(
-            "waitingScreen"
-        );
-
-
-        const lobby =
-            document.getElementById(
-                "lobbyUI"
-            );
-
+        const lobby = document.getElementById("lobbyUI");
 
         if (lobby) {
-
-            lobby.style.display =
-                "block";
+            lobby.style.display = "block";
         }
 
-
-        document
-            .querySelectorAll(
-                ".charCard"
-            )
+        document.querySelectorAll(".charCard")
             .forEach(card => {
 
                 card.disabled =
@@ -3072,36 +2158,16 @@
                     "";
             });
 
-
-        const joinBtn =
-            document.getElementById(
-                "joinBtn"
-            );
-
+        const joinBtn = document.getElementById("joinBtn");
 
         if (joinBtn) {
-
-            joinBtn.disabled =
-                false;
-
-            joinBtn.innerText =
-                "Join Game";
-
-            joinBtn.style.opacity =
-                "1";
+            joinBtn.disabled = false;
+            joinBtn.innerText = "Join Game";
+            joinBtn.style.opacity = "1";
         }
 
-
-        const name =
-            document.getElementById(
-                "name"
-            );
-
-        const enterBtn =
-            document.getElementById(
-                "enterBtn"
-            );
-
+        const name = document.getElementById("name");
+        const enterBtn = document.getElementById("enterBtn");
 
         if (name) {
             name.disabled = false;
@@ -3111,12 +2177,9 @@
             enterBtn.disabled = false;
         }
 
-
         updatePreview();
-
         updateLockedUI();
     }
-
 
 /* #region HOST */
     document.addEventListener("click", e => {
@@ -3133,13 +2196,8 @@
         flipHostCard();
     });
 
-
-    /* ==========================================
-       BECOME HOST
-       ========================================== */
-
+    //BECOME HOST
     function joinAsHost() {
-
         if (!currentSession) {
             console.log("Cannot become host yet - session not received.");
             return;
@@ -3148,17 +2206,11 @@
         requestingHost = true;
         isHost = true;
 
-        // The initial host page should be the Host Lobby page.
-        // Once we're already hosting, later refreshes will use
-        // whatever lastHostPage contains.
         if (!localStorage.getItem("lastHostPage")) {
             localStorage.setItem("lastHostPage", "hostJoinPg");
         }
 
-        console.log(
-            "REQUESTING HOST SLOT. SESSION:",
-            currentSession
-        );
+        console.log("REQUESTING HOST SLOT. SESSION:", currentSession);
 
         socket.emit("join", {
             isHost: true
@@ -3167,13 +2219,8 @@
         confettiBurst();
     }
 
-
-    /* ==========================================
-       HOST JOIN SUCCESS
-       ========================================== */
-
+    //HOST JOIN SUCCESS
     function handleHostConnected() {
-
         console.log("================================");
         console.log("HANDLE HOST CONNECTED");
         console.log("Session:", currentSession);
@@ -3185,25 +2232,9 @@
 
         localStorage.setItem("isHost", "true");
         localStorage.setItem("hostSession", currentSession);
-
-        /*
-         * IMPORTANT:
-         *
-         * When the host successfully connects, we ALWAYS
-         * start at the Host Join page.
-         *
-         * This prevents an old lastHostPage value from
-         * preventing the "Go to Lobby" button from appearing.
-         */
         localStorage.setItem("lastHostPage", "hostJoinPg");
 
         showHostControls();
-
-        /*
-         * Give the browser one frame to finish displaying
-         * the host container before explicitly displaying
-         * hostJoinPg.
-         */
         requestAnimationFrame(() => {
             restoreHostPage("hostJoinPg");
         });
@@ -3211,11 +2242,7 @@
         console.log("HOST UI SHOULD NOW BE ON hostJoinPg");
     }
 
-
-    /* ==========================================
-       SHOW HOST CONTROLS
-       ========================================== */
-
+    //SHOW HOST CONTROLS
     function showHostControls() {
         const lobby = document.getElementById("lobbyUI");
         const controls = document.getElementById("hostControls");
@@ -3233,30 +2260,19 @@
 
         requestAnimationFrame(() => {
             controls.classList.add("show");
-
-            // Wait until the host controls are actually visible
-            // before restoring the saved page.
             setTimeout(() => {
-
                 let savedPage = localStorage.getItem("lastHostPage");
 
                 if (!savedPage) {
                     savedPage = "hostJoinPg";
                 }
-
                 console.log("RESTORING HOST PAGE:", savedPage);
-
                 restoreHostPage(savedPage);
-
             }, 50);
         });
     }
 
-
-    /* ==========================================
-       RESTORE HOST PAGE
-       ========================================== */
-
+    //RESTORE HOST PAGE
     function restoreHostPage(pageId) {
         const controls = document.getElementById("hostControls");
 
@@ -3343,20 +2359,12 @@
                 break;
         }
 
-        // VERY IMPORTANT:
-        // Save the exact page the host is currently viewing.
         localStorage.setItem("lastHostPage", pageId);
-
         console.log("HOST PAGE SAVED:", pageId);
     }
 
-
-    /* ==========================================
-       HOST START GAME
-       ========================================== */
-
+    //HOST START GAME
     function hostStartGame() {
-
         console.log("HOST START GAME");
 
         socket.emit("hostAction", {
@@ -3366,13 +2374,8 @@
         restoreHostPage("hostLobbyPg");
     }
 
-
-    /* ==========================================
-       HOST SHOW INSTRUCTIONS
-       ========================================== */
-
+    //HOST SHOW INSTRUCTIONS
     function hostShowInstructions() {
-
         console.log("HOST SHOW INSTRUCTIONS");
 
         socket.emit("hostAction", {
@@ -3382,13 +2385,8 @@
         restoreHostPage("hostInstructionsPg");
     }
 
-
-    /* ==========================================
-       HOST SHOW INSTRUCTION CUTSCENE
-       ========================================== */
-
+    //HOST SHOW INSTRUCTION CUTSCENE
     function hostShowInstrucCutscene() {
-
         console.log("HOST SHOW INSTRUCTION CUTSCENE");
 
         socket.emit("hostAction", {
@@ -3398,13 +2396,8 @@
         restoreHostPage("hostInstrucCutscenePg");
     }
 
-
-    /* ==========================================
-       HOST SHOW BOARD INTRO
-       ========================================== */
-
+    //HOST SHOW BOARD INTRO
     function hostShowBoardIntro() {
-
         console.log("HOST SHOW BOARD INTRO");
 
         socket.emit("hostAction", {
@@ -3414,13 +2407,8 @@
         restoreHostPage("hostBoard");
     }
 
-
-    /* ==========================================
-       HOST SHOW BOARD
-       ========================================== */
-
+    //HOST SHOW BOARD
     function hostShowBoard() {
-
         console.log("HOST SHOW BOARD");
 
         socket.emit("hostAction", {
@@ -3430,33 +2418,37 @@
         restoreHostPage("hostBoard");
     }
 
-
-    /* ==========================================
-       BUILD HOST BOARD
-       ========================================== */
-
+    //BUILD HOST BOARD
     function buildHostBoard(board) {
-
-        const hostBoard =
-            document.getElementById("hostBoard");
+        const hostBoard = document.getElementById("hostBoardGrid");
 
         if (!hostBoard) {
-            console.error("hostBoard element not found.");
+            console.error("hostBoardGrid element not found.");
             return;
         }
 
         hostBoard.innerHTML = "";
+        const roundLabel = document.getElementById("hostRoundLabel");
 
-        board.categories.forEach(category => {
+        if (roundLabel) {
+            roundLabel.textContent =
+                currentRound === 2
+                    ? "DOUBLE JEOPARDY"
+                    : "JEOPARDY";
+        }
 
-            const header = document.createElement("div");
+        board.categories.forEach(
+            category => {
+                const header = document.createElement("div");
+                header.className = "hostHeader";
+                header.innerText = category.categoryName;
+                hostBoard.appendChild(header);
+            }
+        );
 
-            header.className = "hostHeader";
-            header.innerText = category.categoryName;
-
-            hostBoard.appendChild(header);
-        });
-
+        // ==========================================
+        // CLUE VALUES
+        // ==========================================
 
         const values = [
             "200",
@@ -3466,147 +2458,92 @@
             "1000"
         ];
 
-
         values.forEach(value => {
+            board.categories.forEach(
+                category => {
+                    const clue = category.clues.find(c => c.value === value);
+                    const tile = document.createElement("div");
 
-            board.categories.forEach(category => {
+                    tile.className = "hostTile";
 
-                const clue =
-                    category.clues.find(
-                        c => c.value === value
-                    );
-
-                const tile =
-                    document.createElement("div");
-
-                tile.className = "hostTile";
-
-                if (clue) {
+                    if (!clue) {
+                        tile.classList.add("empty");
+                        hostBoard.appendChild(tile);
+                        return;
+                    }
 
                     tile.innerText = "$" + value;
-
+                    tile.dataset.clueId = clue.clueData.id;
                     tile.onclick = () => {
-
+                        if (tile.classList.contains("used")) {
+                            return;
+                        }
                         currentHostClue = clue;
                         currentHostTile = tile;
+                        currentDailyDouble = clue.clueData.dailyDouble ? clue : null;
 
                         showHostClue(clue);
 
-                        socket.emit("hostAction", {
-
-                            type: "selectClue",
-
-                            payload: {
-                                value,
-                                clueData: clue.clueData
+                        socket.emit(
+                            "hostAction",
+                            {
+                                type: "selectClue",
+                                payload: {
+                                    value,
+                                    clueData:clue.clueData
+                                }
                             }
-
-                        });
-
+                        );
                     };
 
+                    hostBoard.appendChild(tile);
                 }
-
-                hostBoard.appendChild(tile);
-
-            });
-
+            );
         });
-
     }
 
-
-    /* ==========================================
-       SHOW HOST CLUE
-       ========================================== */
-
+    //SHOW HOST CLUE
     function showHostClue(clue) {
-
         hostAnswerShowing = false;
-
-        document.getElementById("hostClueText").textContent =
-            clue.clueData.clue;
-
-        document.getElementById("hostAnswerText").textContent =
-            clue.clueData.answer;
-
-        const overlay =
-            document.getElementById("hostClueOverlay");
-
+        document.getElementById("hostClueText").textContent = clue.clueData.clue;
+        document.getElementById("hostAnswerText").textContent = clue.clueData.answer;
+        const overlay = document.getElementById("hostClueOverlay");
         overlay.classList.remove("hidden");
         overlay.classList.add("show");
-
-        document
-            .getElementById("hostClueInner")
-            .classList.remove("flipped");
-
-        document
-            .getElementById("hostJudgementArea")
-            .classList.remove("show");
+        document.getElementById("hostClueInner").classList.remove("flipped");
+        document.getElementById("hostJudgementArea").classList.remove("show");
 
         buzzersEnabled = false;
 
-        document
-            .getElementById("enableBuzzerBtn")
-            .style.display = "block";
+        document.getElementById("enableBuzzerBtn").style.display = "block";
     }
 
-
-    /* ==========================================
-       FLIP HOST CARD
-       ========================================== */
-
+    //FLIP HOST CARD
     function flipHostCard() {
-
-        const inner =
-            document.getElementById("hostClueInner");
-
-        const judgement =
-            document.getElementById("hostJudgementArea");
-
-        const enableBtn =
-            document.getElementById("enableBuzzerBtn");
-
+        const inner = document.getElementById("hostClueInner");
+        const judgement = document.getElementById("hostJudgementArea");
+        const enableBtn = document.getElementById("enableBuzzerBtn");
         hostAnswerShowing = !hostAnswerShowing;
 
-        inner.classList.toggle(
-            "flipped",
-            hostAnswerShowing
-        );
+        inner.classList.toggle("flipped", hostAnswerShowing);
 
         if (hostAnswerShowing) {
-
             if (currentBuzzPlayer) {
                 judgement.classList.add("show");
             }
-
-            enableBtn.style.display =
-                buzzersEnabled ? "none" : "block";
-
+            enableBtn.style.display = buzzersEnabled ? "none" : "block";
         } else {
-
-            enableBtn.style.display =
-                buzzersEnabled ? "none" : "block";
-
+            enableBtn.style.display = buzzersEnabled ? "none" : "block";
         }
     }
 
-
-    /* ==========================================
-       HOST REVEAL
-       ========================================== */
-
+    //HOST REVEAL
     function hostReveal() {
         flipHostCard();
     }
 
-
-    /* ==========================================
-       HOST ANSWER CORRECT
-       ========================================== */
-
+    //HOST ANSWER CORRECT
     function hostAnswerCorrect() {
-
         socket.emit("hostAction", {
             type: "answerCorrect"
         });
@@ -3614,13 +2551,8 @@
         closeHostClue();
     }
 
-
-    /* ==========================================
-       HOST CONTINUE
-       ========================================== */
-
+    //HOST CONTINUE
     function hostContinue() {
-
         socket.emit("hostAction", {
             type: "continueClue"
         });
@@ -3628,22 +2560,11 @@
         closeHostClue();
     }
 
-
-    /* ==========================================
-       HOST ANSWER WRONG
-       ========================================== */
-
+    //HOST ANSWER WRONG
     function hostAnswerWrong() {
-
         console.log("ANSWER WRONG");
-
-        document
-            .getElementById("hostJudgementArea")
-            .classList.remove("show");
-
-        document
-            .getElementById("hostClueInner")
-            .classList.remove("flipped");
+        document.getElementById("hostJudgementArea").classList.remove("show");
+        document.getElementById("hostClueInner").classList.remove("flipped");
 
         hostAnswerShowing = false;
         currentBuzzPlayer = null;
@@ -3653,28 +2574,12 @@
         });
     }
 
-
-    /* ==========================================
-       CLOSE HOST CLUE
-       ========================================== */
-
+    //CLOSE HOST CLUE
     function closeHostClue() {
-
-        document
-            .getElementById("enableBuzzerBtn")
-            .style.display = "none";
-
-        document
-            .getElementById("hostClueOverlay")
-            .classList.remove("show");
-
-        document
-            .getElementById("hostJudgementArea")
-            .classList.remove("show");
-
-        document
-            .getElementById("hostClueInner")
-            .classList.remove("flipped");
+        document.getElementById("enableBuzzerBtn").style.display = "none";
+        document.getElementById("hostClueOverlay").classList.remove("show");
+        document.getElementById("hostJudgementArea").classList.remove("show");
+        document.getElementById("hostClueInner").classList.remove("flipped");
 
         currentBuzzPlayer = null;
         hostAnswerShowing = false;
@@ -3684,184 +2589,109 @@
         }
     }
 
-
-    /* ==========================================
-       ENABLE BUZZER
-       ========================================== */
-
+    //ENABLE BUZZER
     function hostEnableBuzzer() {
-
         buzzersEnabled = true;
-
-        document
-            .getElementById("enableBuzzerBtn")
-            .style.display = "none";
+        document.getElementById("enableBuzzerBtn").style.display = "none";
 
         socket.emit("hostAction", {
             type: "resumeBuzzing"
         });
     }
+
+    //HOST FINISH ROUND
+    function hostFinishRound() {
+        socket.emit(
+            "hostAction",
+            {
+                type:
+                    "roundComplete"
+            }
+        );
+    }
 /* #endregion */
 
-
-    /* ============================================================
-       PLAYER SCREENS
-    ============================================================ */
-
+    //PLAYER SCREENS
     function hideAllPlayerScreens() {
 
         const screens = [
             "waitingScreen",
             "instructionsHoldingScreen",
+            "animHoldingScreen",
+            "dailyDoublePage",
             "buzzerPage",
             "answeringPage",
-            "scorePage",
-            "animHoldingScreen"
+            "scorePage"
         ];
 
-
         screens.forEach(id => {
-
-            const screen =
-                document.getElementById(
-                    id
-                );
-
+            const screen = document.getElementById(id);
 
             if (screen) {
-
-                screen.classList.add(
-                    "hidden"
-                );
+                screen.classList.add("hidden");
             }
         });
     }
 
-
     function showPlayerScreen(id) {
-
         hideAllPlayerScreens();
-
-
-        const screen =
-            document.getElementById(
-                id
-            );
-
+        const screen = document.getElementById(id);
 
         if (!screen) {
-
-            console.error(
-                "Player screen not found:",
-                id
-            );
-
+            console.error("Player screen not found:", id);
             return;
         }
 
+        screen.classList.remove("hidden");
 
-        screen.classList.remove(
-            "hidden"
-        );
-
-
-        if (
-            id ===
-            "waitingScreen"
-        ) {
-
+        if (id === "waitingScreen") {
             requestAnimationFrame(
                 () => {
-
-                    screen.classList.add(
-                        "show"
+                    screen.classList.add("show"
                     );
                 }
             );
         }
     }
 
-
     function hidePlayerScreen(id) {
-
-        const screen =
-            document.getElementById(
-                id
-            );
-
-
+        const screen = document.getElementById(id);
         if (!screen) return;
 
-
-        if (
-            id ===
-            "waitingScreen"
-        ) {
-
-            screen.classList.remove(
-                "show"
-            );
+        if (id === "waitingScreen") {
+            screen.classList.remove("show");
         }
-
-
-        screen.classList.add(
-            "hidden"
-        );
+        screen.classList.add("hidden");
     }
 
-
-    /* ============================================================
-       INSTRUCTIONS
-    ============================================================ */
-
+    //INSTRUCTIONS
     socket.on(
         "showInstructionsHolding",
         () => {
+            console.log("Showing instructions holding screen");
 
-            console.log(
-                "Showing instructions holding screen"
-            );
-
-
-            const lobby =
-                document.getElementById(
-                    "lobbyUI"
-                );
-
+            const lobby = document.getElementById("lobbyUI");
 
             if (lobby) {
-
-                lobby.style.display =
-                    "none";
+                lobby.style.display = "none";
             }
-
-
-            showPlayerScreen(
-                "instructionsHoldingScreen"
-            );
+            showPlayerScreen("instructionsHoldingScreen");
         }
     );
 
-
-    /* ============================================================
-       BUZZER
-    ============================================================ */
-
+    //BUZZER
     const buzzerPage =
         document.getElementById(
             "buzzerPage"
         );
-
     const buzzButton =
         document.getElementById(
             "buzzButton"
         );
-
     const buzzImg =
         document.getElementById(
             "buzzImg"
         );
-
 
     if (buzzButton) {
 
@@ -3871,61 +2701,27 @@
         );
     }
 
-
     function pressBuzzButton() {
-
         if (!canBuzz) return;
-
-
-        canBuzz =
-            false;
-
-
+        canBuzz = false;
         if (buzzImg) {
-
-            buzzImg.classList.add(
-                "down"
-            );
-
-            buzzImg.src =
-                "/backgrounds/WBuzzerDown.png";
+            buzzImg.classList.add("down");
+            buzzImg.src = "/backgrounds/WBuzzerDown.png";
+        }
+        if (navigator.vibrate) {
+            navigator.vibrate(20);
         }
 
-
-        if (
-            navigator.vibrate
-        ) {
-
-            navigator.vibrate(
-                20
-            );
-        }
-
-
-        socket.emit(
-            "buzz"
-        );
-
-
+        socket.emit("buzz");
         setTimeout(
             () => {
-
                 if (!buzzImg) return;
-
-
-                buzzImg.classList.remove(
-                    "down"
-                );
-
-
-                buzzImg.src =
-                    "/backgrounds/WBuzzerUp.png";
-
+                buzzImg.classList.remove("down");
+                buzzImg.src = "/backgrounds/WBuzzerUp.png";
             },
             100
         );
     }
-
 
     socket.on(
         "resumeBuzzing",
@@ -3954,198 +2750,142 @@
         }
     );
 
-
     socket.on(
         "buzzAccepted",
         data => {
-
-            currentBuzzPlayer =
-                data;
-
-
-            window.lastBuzzedPlayerName =
-                data.playerName;
-
-
-            const character =
-                characters.find(
-                    c =>
-                        c.name ===
-                        data.character
-                );
-
-
-            /*
-                HOST
-            */
+            currentBuzzPlayer = data;
+            window.lastBuzzedPlayerName = data.playerName;
+            const character = characters.find(c => c.name === data.character);
 
             if (isHost) {
-
-                const inner =
-                    document.getElementById(
-                        "hostClueInner"
-                    );
-
-                const judgement =
-                    document.getElementById(
-                        "hostJudgementArea"
-                    );
-
-                const question =
-                    document.getElementById(
-                        "hostJudgementQuestion"
-                    );
-
-                const enableBtn =
-                    document.getElementById(
-                        "enableBuzzerBtn"
-                    );
-
+                const inner = document.getElementById("hostClueInner");
+                const judgement = document.getElementById("hostJudgementArea");
+                const question = document.getElementById("hostJudgementQuestion");
+                const enableBtn =  document.getElementById("enableBuzzerBtn");
 
                 if (inner) {
-
-                    inner.classList.add(
-                        "flipped"
-                    );
+                    inner.classList.add("flipped");
                 }
 
-
-                hostAnswerShowing =
-                    true;
-
+                hostAnswerShowing = true;
 
                 if (question) {
-
-                    question.textContent =
-                        `Did Team ${data.playerName} answer correctly?`;
+                    question.textContent = `Did Team ${data.playerName} answer correctly?`;
                 }
-
 
                 if (judgement) {
-
-                    judgement.classList.add(
-                        "show"
-                    );
+                    judgement.classList.add("show");
                 }
-
 
                 if (enableBtn) {
-
-                    enableBtn.style.display =
-                        "none";
+                    enableBtn.style.display = "none";
                 }
-
 
                 return;
             }
 
-
-            /*
-                PLAYER
-            */
-
-            showPlayerScreen(
-                "answeringPage"
-            );
-
-
-            canBuzz =
-                false;
-
+            showPlayerScreen("answeringPage");
+            canBuzz = false;
 
             if (character) {
-
-                const answeringCharacter =
-                    document.getElementById(
-                        "answeringCharacter"
-                    );
-
+                const answeringCharacter = document.getElementById("answeringCharacter");
 
                 if (answeringCharacter) {
-
-                    answeringCharacter.src =
-                        character.front;
+                    answeringCharacter.src = character.front;
                 }
             }
 
-
-            const isMe =
-                data.playerId ===
-                localStorage.getItem(
-                    "playerId"
-                );
-
-
-            const answeringTitle =
-                document.getElementById(
-                    "answeringTitle"
-                );
-
-            const answeringName =
-                document.getElementById(
-                    "answeringName"
-                );
-
+            const isMe = data.playerId === localStorage.getItem("playerId");
+            const answeringTitle = document.getElementById("answeringTitle");
+            const answeringName = document.getElementById("answeringName");
 
             if (answeringTitle) {
-
-                answeringTitle.textContent =
-                    isMe
-                        ? "YOUR TURN!"
-                        : "IS ANSWERING";
+                answeringTitle.textContent = isMe? "YOUR TURN!" : "IS ANSWERING";
             }
 
-
             if (answeringName) {
-
-                answeringName.textContent =
-                    "Team " +
-                    data.playerName;
+                answeringName.textContent = "Team " + data.playerName;
             }
         }
     );
 
+    socket.on(
+        "roundComplete",
+        data => {
 
-    /* ============================================================
-       SCORE
-    ============================================================ */
+            console.log(
+                "ROUND COMPLETE:",
+                data
+            );
 
+            if (
+                isHost &&
+                data.round === 1
+            ) {
+
+                const btn =
+                    document.getElementById(
+                        "round2Btn"
+                    );
+
+                if (btn) {
+
+                    btn.style.display =
+                        "block";
+                }
+            }
+        }
+    );
+
+    socket.on(
+        "showRoundHolding",
+        data => {
+            console.log("ROUND HOLDING:", data);
+            showPlayerScreen("instructionsHoldingScreen");
+        }
+    );
+
+    socket.on(
+        "roundStarted",
+        data => {
+            currentRound = data.round;
+            console.log("ROUND STARTED:", currentRound);
+
+            if (!isHost) {
+                showPlayerScreen("instructionsHoldingScreen");
+            }
+        }
+    );
+
+    //SCORE
     function animateScoreGain(
         oldScore,
         newScore,
         earned
     ) {
-
         const value =
             document.getElementById(
                 "scoreValue"
             );
-
         const change =
             document.getElementById(
                 "scoreChange"
             );
 
-
         if (!value || !change) return;
-
 
         value.textContent =
             "$" + oldScore;
 
-
         change.textContent =
             "+" + earned;
-
 
         change.classList.remove(
             "hidden"
         );
 
-
         let current =
             oldScore;
-
 
         const timer =
             setInterval(
@@ -4195,10 +2935,6 @@
             );
     }
 
-
-    /* ============================================================
-       END SCRIPT
-    ============================================================ */
 </script>
 </body>
 </html>
