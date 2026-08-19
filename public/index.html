@@ -993,11 +993,10 @@
 </div>
 
 <!-- CLUE HOLDING SCREEN -->
-<div id="clueHoldingScreen" class="hidden">
+<div id="clueHoldingScreen" class="playerScreen hidden">
 
     <img
         id="clueHoldingImage"
-        class="fullscreenBg"
         src=""
         alt=""
     >
@@ -1672,22 +1671,96 @@
         }
     );
 
-    //CLUE HOLDING
-    /*
-    socket.on(
-        "showClueHolding",
-        () => {
-            console.log("Showing clue holding screen");
-            //const lobby = document.getElementById("lobbyUI");
+    // CLUE HOLDING SCREEN
+    socket.on("showClueHolding", () => {
 
-            //if (lobby) {
-            //    lobby.style.display = "none";
-            //}
+        console.log("SHOWING PERSONAL CLUE HOLDING SCREEN");
 
-            showPlayerScreen("clueHoldingScreen");
+        if (isHost) {
+            console.log("Host received showClueHolding - ignoring player screen.");
+            return;
         }
-    );
-    */
+
+        const lobby = document.getElementById("lobbyUI");
+
+        if (lobby) {
+            lobby.style.display = "none";
+        }
+
+        const hostControls = document.getElementById("hostControls");
+
+        if (hostControls) {
+            hostControls.classList.add("hidden");
+        }
+
+        // Get the player's selected character
+        let character = state.character;
+
+        // If state.character isn't populated, restore it from localStorage
+        if (!character) {
+            const savedCharacter = localStorage.getItem("character");
+
+            if (savedCharacter) {
+                try {
+                    character = JSON.parse(savedCharacter);
+                    state.character = character;
+                } catch (error) {
+                    console.error(
+                        "Could not parse saved character:",
+                        error
+                    );
+                }
+            }
+        }
+
+        const clueHoldingImage =
+            document.getElementById("clueHoldingImage");
+
+        if (!clueHoldingImage) {
+            console.error(
+                "clueHoldingImage element not found."
+            );
+        } else if (character) {
+
+            const characterFiles = {
+                "The Boss": "thebossclueholding.png",
+                "Janice Mowes": "janicemowesclueholding.png",
+                "Tricerex": "tricerexclueholding.png",
+                "Fancy Dancer": "fancydancerclueholding.png",
+                "Deerhead": "deerheadclueholding.png",
+                "Caity Satyr": "caitysatyrclueholding.png",
+                "The Holy Spirit": "theholyspiritclueholding.png",
+                "The Newlyweds": "thenewlywedsclueholding.png",
+                "Lorenzo": "lorenzoclueholding.png",
+                "The Guitarist": "theguitaristclueholding.png"
+            };
+
+            const filename =
+                characterFiles[character.name];
+
+            if (filename) {
+
+                clueHoldingImage.src =
+                    "/backgrounds/clueholding/" + filename;
+
+                clueHoldingImage.style.display = "block";
+
+                console.log(
+                    "Clue holding image:",
+                    clueHoldingImage.src
+                );
+
+            } else {
+
+                console.error(
+                    "No clue holding image registered for:",
+                    character.name
+                );
+            }
+        }
+
+        showPlayerScreen("clueHoldingScreen");
+    });
     //SELECT CLUE
     socket.on(
         "selectClue",
@@ -2789,6 +2862,7 @@
 
             if (screen) {
                 screen.classList.add("hidden");
+                screen.classList.remove("show");
             }
         });
     }
@@ -2803,7 +2877,7 @@
         }
 
         screen.classList.remove("hidden");
-
+        /*
         if (id === "waitingScreen") {
             requestAnimationFrame(
                 () => {
@@ -2812,6 +2886,10 @@
                 }
             );
         }
+        */
+        requestAnimationFrame(() => {
+            screen.classList.add("show");
+        });
     }
 
     function hidePlayerScreen(id) {
@@ -2915,7 +2993,7 @@
         data => {
             currentBuzzPlayer = data;
             window.lastBuzzedPlayerName = data.playerName;
-            const character = characters.find(c => c.name === data.character);
+            //const character = characters.find(c => c.name === data.character);
 
             if (isHost) {
                 const inner = document.getElementById("hostClueInner");
@@ -2944,9 +3022,9 @@
                 return;
             }
 
-            showPlayerScreen("answeringPage");
             canBuzz = false;
-
+            showPlayerScreen("answeringPage");
+            /*
             if (character) {
                 const answeringCharacter = document.getElementById("answeringCharacter");
 
@@ -2954,10 +3032,15 @@
                     answeringCharacter.src = character.front;
                 }
             }
-
-            const isMe = data.playerId === localStorage.getItem("playerId");
+            */
+            //const isMe = data.playerId === localStorage.getItem("playerId");
             const answeringTitle = document.getElementById("answeringTitle");
             const answeringName = document.getElementById("answeringName");
+
+            const answeringCharacter = document.getElementById("answeringCharacter");
+            const myPlayerId = localStorage.getItem("playerId");
+
+            const isMe = data.playerId === myPlayerId;
 
             if (answeringTitle) {
                 answeringTitle.textContent = isMe? "YOUR TURN!" : "IS ANSWERING";
@@ -2966,13 +3049,37 @@
             if (answeringName) {
                 answeringName.textContent = "Team " + data.playerName;
             }
+
+            let character = null;
+
+            if (typeof characters !== "undefined") {
+                character = characters.find(c => c.name === data.character);
+            }
+
+            if (!character) {
+                const savedCharacter = localStorage.getItem("character");
+
+                if (savedCharacter) {
+                    try {
+                        const saved = JSON.parse(savedCharacter);
+                        if (saved.name === data.character) {
+                            character = saved;
+                        }
+                    } catch (error) {
+                        console.error("Could not parse saved character:", error);
+                    }
+                }
+            }
+
+            if (character && character.front && answeringCharacter) {
+                answeringCharacter.src = character.front;
+            }
         }
     );
 
     socket.on(
         "roundComplete",
         data => {
-
             console.log("ROUND COMPLETE:", data);
 
             if (!isHost) {
