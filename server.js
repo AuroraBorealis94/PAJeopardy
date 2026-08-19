@@ -846,8 +846,11 @@ io.on("connection", (socket) => {
 
     // HOST CONTROLS
     socket.on("hostAction", (data) => {
-        if (!socket.isHost) return;
-
+        console.log("HOST ACTION RECEIVED:", data, "FROM:", socket.id, "IS HOST:", socket.isHost);
+        if (!socket.isHost) {
+            console.warn("HOST ACTION REJECTED - SOCKET IS NOT HOST:", socket.id);
+            return;
+        }
         console.log("HOST ACTION:", data);
 
         // SEND TO UNITY
