@@ -37,7 +37,7 @@ const lockedCharacters = new Set();
 
 let buzzAccepted = false;
 let currentBuzzPlayer = null;
-let currentClueValue = 0;
+//let currentClueValue = 0;
 
 // BRIDGE FROM SOCKET.IO TO WEBSOCKET
 const WebSocket = require("ws");
@@ -1020,31 +1020,45 @@ io.on("connection", (socket) => {
             }
 
             // CORRECT ANSWER
-            case "answerCorrect":
+            case "answerCorrect": {
                 console.log("HOST ACTION: answerCorrect");
 
-                if (currentBuzzPlayer) {
-                    currentBuzzPlayer.score += currentClueValue;
-
-                    // Player who buzzed gets score screen
-                    io.emit("showScoreScreen", {
-                        playerId: currentBuzzPlayer.playerId,
-                        character: currentBuzzPlayer.character,
-                        score: currentBuzzPlayer.score,
-                        earned: currentClueValue
-                    });
-
-                    // Unity gets score update
-                    broadcastToUnity({
-                        type: "showScoreScreen",
-                        playerId: currentBuzzPlayer.playerId,
-                        character: currentBuzzPlayer.character,
-                        score: currentBuzzPlayer.score,
-                        earned: currentClueValue
-                    });
+                if (!currentBuzzPlayer) {
+                    console.warn("No player to award points to.");
+                    return;
                 }
 
+                const earned = game.currentClueValue || 0;
+
+                currentBuzzPlayer.score =
+                    (currentBuzzPlayer.score || 0) + earned;
+
+                console.log(
+                    "ANSWER CORRECT:",
+                    currentBuzzPlayer.name,
+                    "earned:",
+                    earned,
+                    "new score:",
+                    currentBuzzPlayer.score
+                );
+
+                io.emit("showScoreScreen", {
+                    playerId: currentBuzzPlayer.playerId,
+                    character: currentBuzzPlayer.character,
+                    score: currentBuzzPlayer.score,
+                    earned: earned
+                });
+
+                broadcastToUnity({
+                    type: "showScoreScreen",
+                    playerId: currentBuzzPlayer.playerId,
+                    character: currentBuzzPlayer.character,
+                    score: currentBuzzPlayer.score,
+                    earned: earned
+                });
+
                 break;
+            }
 
             // CONTINUE
             case "continueClue":
@@ -1108,6 +1122,54 @@ io.on("connection", (socket) => {
                 });
 
                 break;
+
+            // DAILY DOUBLE SELECT PLAYER
+            case "dailyDoubleSelectPlayer": {
+                console.log("HOST ACTION: dailyDoubleSelectPlayer");
+                if (!game.currentClueIsDailyDouble) {
+                    console.warn("Player selection attempted on non-Daily Double.");
+                    return;
+                }
+
+                const playerId = data.playerId;
+                const player = game.players.find(p => p.playerId === playerId);
+
+                if (!player) {
+                    console.warn("Daily Double player not found:", playerId);
+                    return;
+                }
+
+                currentBuzzPlayer = player;
+                buzzAccepted = true;
+
+                console.log("DAILY DOUBLE PLAYER:", player.name);
+
+                // The selected player gets the answering screen.
+                io.to(player.socketId).emit(
+                    "dailyDoubleAnswering",
+                    {
+                        playerId: player.playerId,
+                        playerName: player.name,
+                        character: player.character
+                    }
+                );
+
+                // Everyone else gets the waiting screen.
+                game.players.forEach(otherPlayer => {
+                    if (otherPlayer.playerId === player.playerId) {
+                        return;
+                    }
+
+                    io.to(otherPlayer.socketId).emit(
+                        "dailyDoubleWaiting",
+                        {
+                            playerId: player.playerId,
+                            playerName: player.name
+                        }
+                    );
+                });
+                break;
+            }
 
             case "dailyDoubleWager": {
                 if (!game.currentClueIsDailyDouble) {

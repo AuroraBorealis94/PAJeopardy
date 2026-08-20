@@ -866,10 +866,14 @@
     }
 
     .dailyDoubleText {
+        position: absolute;
+        top: 8%;
+        left: 50%;
+        transform: translateX(-50%);
 
-        font-size:
-            clamp(50px, 12vw, 120px);
-
+        font-size: 2.2rem;
+        line-height: 1;
+        z-index: 20;
         color: gold;
 
         font-weight: bold;
@@ -888,30 +892,75 @@
         margin-top: 20px;
     }
 
+    #dailyDoublePlayerArea {
+        position: absolute;
+        bottom: 5%;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 30;
+        text-align: center;
+    }
+
+    #dailyDoublePlayerTitle {
+        font-size: 1.4rem;
+        margin-bottom: 10px;
+    }
+
+    #dailyDoublePlayerButtons {
+        display: flex;
+        gap: 10px;
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+
+    .dailyDoublePlayerBtn {
+        padding: 10px 18px;
+        font-size: 1rem;
+        cursor: pointer;
+    }
+
 /* #region Score Screen */
     #scorePage {
-        position: fixed;
-        inset: 0;
-        background-image: 
-            url('/backgrounds/WHostBG.jpg');
-        background-size: cover;
-        background-repeat: no-repeat;
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        align-items: center;
+        position: relative;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
     }
 
-    .dynamic-sprite {
-      width: 100px;  /* Match the width of ONE single frame */
-      height: 100px; /* Match the height of ONE single frame */
-      background-repeat: no-repeat;
-      background-position: 0px 0px;
+    #scoreCurrent {
+        position: absolute;
+        top: 4%;
+        left: 50%;
+        transform: translateX(-50%);
+
+        z-index: 10;
+
+        font-size: 2rem;
+        font-weight: bold;
+        white-space: nowrap;
     }
 
-    @keyframes play-dynamic-frames {
-      from { background-position: 0px 0px; }
-      to { background-position: var(--total-width) 0px; }
+    #scoreChange {
+        position: absolute;
+        top: 13%;
+        left: 58%;
+
+        z-index: 10;
+
+        font-size: 2rem;
+        font-weight: bold;
+    }
+
+    #scoreValue {
+        position: absolute;
+        top: 18%;
+        left: 50%;
+        transform: translateX(-50%);
+
+        z-index: 10;
+
+        font-size: 2.5rem;
+        font-weight: bold;
     }
 /* #endregion */
 </style>
@@ -1095,6 +1144,14 @@
             </div>
         </div>
 
+        <div id="dailyDoublePlayerArea" class="hidden">
+            <div id="dailyDoublePlayerTitle">
+                Choose a Team to Answer
+            </div>
+
+            <div id="dailyDoublePlayerButtons"></div>
+        </div>
+
         <div id="hostClueControls">
             <button
                 id="enableBuzzerBtn" onclick="hostEnableBuzzer()" style="display:none;">
@@ -1142,11 +1199,18 @@
 
 <!-- SCORE PAGE -->
 <div id="scorePage" class="hidden">
-    <!--<img id="scoreCharacter">-->
+    <div id="scoreCurrent">
+        Score: $0
+    </div>
+
     <div id="scoreSprite" class="dynamic-sprite"></div>
 
-    <div id="scoreValue">$0</div>
-    <div id="scoreChange"></div>
+    <div id="scoreChange">
+        +$0
+    </div>
+    <div id="scoreValue">
+        $0
+    </div>
 </div>
 
 <script src="/socket.io/socket.io.js"></script>
@@ -1565,10 +1629,11 @@
 
     //PLAYER LIST
     socket.on("playerList", players => {
+        window.currentPlayers = players;
         const count = document.getElementById("playerCount");
-        if (!count) return;
-
-        count.textContent = players.length + " players joined";
+        if (count) {
+            count.textContent = players.length + " players joined";
+        }
     });
 
     //LOCKED CHARACTERS
@@ -1594,67 +1659,66 @@
         }
     );
 
-    //BOARD DATA
+    // BOARD DATA
     socket.on("boardData", data => {
 
-        console.log(
-            "BOARD DATA RECEIVED:",
-            data
-        );
+        console.log("BOARD DATA RECEIVED:", data);
 
         if (!data || !data.board) {
-            console.error(
-                "Invalid boardData received."
-            );
-
+            console.error("Invalid boardData received.");
             return;
         }
 
-        currentRound =
-            parseInt(data.round) || 1;
-
-        buildHostBoard(
-            data.board
-        );
+        currentRound = parseInt(data.round) || 1;
+        buildHostBoard(data.board);
 
         if (isHost) {
-            restoreHostPage("hostBoard");
-            /*
-            restoreHostPage(
-                currentRound === 1
-                    ? "hostBoard"
-                    : "hostRound2"
-            );
-            */
+            const savedPage = localStorage.getItem("lastHostPage");
+            if (savedPage === "hostBoard") {
+                restoreHostPage("hostBoard");
+            }
         }
     });
 
-    //SCORE SCREEN
-    socket.on(
-        "showScoreScreen",
-        data => {
-            if (!data) return;
-            const character = characters.find(c => c.name === data.character);
+    // SCORE SCREEN
+    socket.on("showScoreScreen", data => {
+        if (!data) return;
+        console.log("SHOW SCORE SCREEN:", data);
 
-            if (character) {
-                const scoreSprite = document.getElementById("scoreSprite");
+        // SCORE PAGE
+        const scorePage = document.getElementById("scorePage");
 
-                if (scoreSprite) {
-                    const idleAnim = character.animations.idle;
-                    const frameWidth = 100;
-                    const totalWidth = idleAnim.frames * frameWidth;
+        const characterFiles = {
+            "The Boss": "thebossclueholding.png",
+            "Janice Mowes": "janicemowesclueholding.png",
+            "Tricerex": "tricerexclueholding.png",
+            "Fancy Dancer": "fancydancerclueholding.png",
+            "Deerhead": "deerheadclueholding.png",
+            "Caity Satyr": "caitysatyrclueholding.png",
+            "The Holy Spirit": "theholyspiritclueholding.png",
+            "The Newlyweds": "thenewlywedsclueholding.png",
+            "Lorenzo": "lorenzoclueholding.png",
+            "The Guitarist": "theguitaristclueholding.png"
+        };
 
-                    scoreSprite.style.backgroundImage = `url('${idleAnim.src}')`;
-                    scoreSprite.style.animation = `play-dynamic-frames ${idleAnim.speed} steps(${idleAnim.frames}) infinite`;
-                    scoreSprite.style.setProperty("--total-width", `-${totalWidth}px`);
-                }
+        if (scorePage) {
+            const filename = characterFiles[data.character];
+
+            if (filename) {
+                scorePage.style.backgroundImage = `url('/backgrounds/clueholding/${filename}')`;
+                scorePage.style.backgroundSize = "cover";
+                scorePage.style.backgroundPosition = "center";
+                scorePage.style.backgroundRepeat = "no-repeat";
             }
-
-            showPlayerScreen("scorePage");
-            animateScoreGain(currentScore, data.score, data.earned);
-            currentScore = data.score;
         }
-    );
+
+        // SHOW SCREEN
+        showPlayerScreen("scorePage");
+
+        // SCORE ANIMATION
+        animateScoreGain(currentScore, data.score, data.earned);
+        currentScore = data.score;
+    });
 
     //ANIMATION HOLDING
     socket.on(
@@ -2274,6 +2338,70 @@
         showPlayerScreen("clueHoldingScreen");
     }
 
+    function showDailyDoublePlayerButtons() {
+        const area = document.getElementById("dailyDoublePlayerArea");
+        const container = document.getElementById("dailyDoublePlayerButtons");
+        if (!area || !container) return;
+        container.innerHTML = "";
+        if (!window.currentPlayers || !window.currentPlayers.length) {
+            return;
+        }
+
+        window.currentPlayers.forEach(player => {
+            const button = document.createElement("button");
+            button.className = "dailyDoublePlayerBtn";
+            button.textContent = player.name;
+            button.onclick = () => {
+                socket.emit("hostAction", {
+                    type: "dailyDoubleSelectPlayer",
+                    playerId: player.playerId
+                });
+            };
+            container.appendChild(button);
+        });
+        area.classList.remove("hidden");
+    }
+
+    function hideDailyDoublePlayerButtons() {
+        const area = document.getElementById("dailyDoublePlayerArea");
+
+        if (area) {
+            area.classList.add("hidden");
+        }
+    }
+
+    function animateScoreGain(oldScore, newScore, earned){
+        const value = document.getElementById("scoreValue");
+        const change = document.getElementById("scoreChange");
+        const current = document.getElementById("scoreCurrent");
+        if (!value || !change) return;
+        if (current) {
+            current.textContent = "Score: $" + oldScore;
+        }
+
+        value.textContent = "$" + oldScore;
+        change.textContent = "+$" + earned;
+        change.classList.remove("hidden");
+        let score = oldScore;
+        const timer = setInterval(() => {
+            score += Math.max(1, Math.ceil(earned / 20));
+            if (score >= newScore) {
+                score = newScore;
+                clearInterval(timer);
+
+                if (current) {
+                    current.textContent = "Score: $" + newScore;
+                }
+
+                setTimeout(() => {
+                    change.classList.add("hidden");
+                }, 1200);
+            }
+
+            value.textContent = "$" + score;
+        }, 30);
+    }
+
     function changeCharacter() {
         const previewImage = document.getElementById("previewImage");
 
@@ -2705,7 +2833,39 @@
         inner.classList.remove("flipped");
         judgement.classList.remove("show");
         buzzersEnabled = false;
-        enableBtn.style.display = "block";
+
+        // DAILY DOUBLE
+        if (clue.clueData.dailyDouble === true) {
+
+            currentDailyDouble = clue;
+
+            if (dailyDoubleBanner) {
+                dailyDoubleBanner.classList.remove("hidden");
+            }
+
+            // Daily Doubles do NOT use the buzzer.
+            enableBtn.style.display = "none";
+
+            socket.emit("hostAction", {
+                type: "dailyDouble",
+                clueId: clue.clueData.id
+            });
+
+            showDailyDoublePlayerButtons();
+
+        } else {
+
+            currentDailyDouble = null;
+
+            if (dailyDoubleBanner) {
+                dailyDoubleBanner.classList.add("hidden");
+            }
+
+            // Normal clue gets the buzzer button.
+            enableBtn.style.display = "block";
+
+            hideDailyDoublePlayerButtons();
+        }
 
         // DAILY DOUBLE
         if (clue.clueData.dailyDouble === true) {
@@ -3035,7 +3195,7 @@
             const isMe = data.playerId === myPlayerId;
 
             if (answeringTitle) {
-                answeringTitle.textContent = isMe? "YOUR TURN!" : "IS ANSWERING";
+                answeringTitle.textContent = isMe? "ANSWER NOW!" : "IS ANSWERING";
             }
 
             if (answeringName) {
@@ -3068,6 +3228,35 @@
             }
         }
     );
+
+    socket.on("dailyDoubleAnswering", data => {
+        canBuzz = false;
+        const answeringTitle = document.getElementById("answeringTitle");
+        const answeringName = document.getElementById("answeringName");
+
+        if (answeringTitle) {
+            answeringTitle.textContent = "YOUR TURN!";
+        }
+
+        if (answeringName) {
+            answeringName.textContent = "Team " + data.playerName;
+        }
+        showPlayerScreen("answeringPage");
+    });
+
+    socket.on("dailyDoubleWaiting", data => {
+        canBuzz = false;
+        const answeringTitle = document.getElementById("answeringTitle");
+        const answeringName = document.getElementById("answeringName");
+        if (answeringTitle) {
+            answeringTitle.textContent = "IS ANSWERING";
+        }
+
+        if (answeringName) {
+            answeringName.textContent = "Team " + data.playerName;
+        }
+        showPlayerScreen("answeringPage");
+    });
 
     socket.on(
         "roundComplete",
