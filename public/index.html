@@ -1954,69 +1954,63 @@
     });
 
     //GAME STATE SYNC
-    socket.on(
-        "gameStateSync",
-        data => {
-            console.log("SYNC STATE:", data);
+    socket.on("gameStateSync",data=>{
+        console.log("SYNC STATE:",data);
 
-            if (isHost) {
-                console.log("HOST STATE SYNC RECEIVED");
-                let savedPage = localStorage.getItem("lastHostPage");
+        if(isHost){
+            console.log("HOST STATE SYNC RECEIVED:",data.state);
 
-                if (!savedPage) {
-                    savedPage = "hostJoinPg";
-                    localStorage.setItem("lastHostPage", savedPage);
-                }
-                console.log("RESTORING HOST PAGE FROM SYNC:", savedPage);
+            if(data.state==="lobby"){
                 showHostControls();
+                restoreHostPage("hostLobbyPg");
                 return;
             }
 
-            lockedSet = new Set((data.lockedCharacters || []).map(c => c.toLowerCase()));
-            updateLockedUI();
-
-            if (data.state === "lobby") {
-                const lobby = document.getElementById("lobbyUI");
-
-                if (lobby) {
-                    lobby.style.display = "block";
-                }
-
-                const waiting = document.getElementById("waitingScreen");
-
-                if (waiting) {
-                    waiting.classList.remove("show");
-                }
+            if(data.state==="playing"){
+                showHostControls();
+                restoreHostPage(localStorage.getItem("lastHostPage")||"hostBoard");
+                return;
             }
 
-            if (data.state === "playing") {
-                const lobby = document.getElementById("lobbyUI");
-
-                if (lobby) {
-                    lobby.style.display =
-                        "none";
-                }
-                showInstructionsHoldingScreen();
-            }
-
-            if (data.state === "buzzer") {
-                const lobby = document.getElementById("lobbyUI");
-
-                if (lobby) {
-                    lobby.style.display =
-                        "none";
-                }
-
-                const waiting = document.getElementById("waitingScreen");
-
-                if (waiting) {
-                    waiting.classList.add(
-                        "show"
-                    );
-                }
-            }
+            return;
         }
-    );
+
+        lockedSet=new Set((data.lockedCharacters||[]).map(c=>c.toLowerCase()));
+        updateLockedUI();
+
+        if(data.state==="lobby"){
+            hideAllPlayerScreens();
+
+            const lobby=document.getElementById("lobbyUI");
+            if(lobby){
+                lobby.style.display="block";
+                lobby.classList.remove("hidden");
+            }
+
+            const waiting=document.getElementById("waitingScreen");
+            if(waiting){
+                waiting.classList.remove("show");
+                waiting.classList.add("hidden");
+            }
+
+            restoreLobbyUI();
+            return;
+        }
+
+        if(data.state==="playing"){
+            const lobby=document.getElementById("lobbyUI");
+            if(lobby) lobby.style.display="none";
+            showInstructionsHoldingScreen();
+            return;
+        }
+
+        if(data.state==="buzzer"){
+            const lobby=document.getElementById("lobbyUI");
+            if(lobby) lobby.style.display="none";
+            showPlayerScreen("waitingScreen");
+            return;
+        }
+    });
 
     //GAME SESSION
     socket.on("gameSession",
@@ -2518,26 +2512,21 @@
     });
 
     //BECOME HOST
-    function joinAsHost() {
-        if (!currentSession) {
+    function joinAsHost(){
+        if(!currentSession){
             console.log("Cannot become host yet - session not received.");
             return;
         }
 
-        requestingHost = true;
-        isHost = true;
+        requestingHost=true;
 
-        if (!localStorage.getItem("lastHostPage")) {
-            localStorage.setItem("lastHostPage", "hostJoinPg");
+        if(!localStorage.getItem("lastHostPage")){
+            localStorage.setItem("lastHostPage","hostJoinPg");
         }
 
-        console.log("REQUESTING HOST SLOT. SESSION:", currentSession);
+        console.log("REQUESTING HOST SLOT. SESSION:",currentSession);
 
-        socket.emit("join", {
-            isHost: true
-        });
-
-        confettiBurst();
+        socket.emit("join",{isHost:true});
     }
 
     //HOST JOIN SUCCESS
@@ -2687,17 +2676,18 @@
     //HOST START GAME
     function hostStartGame() {
         console.log("HOST START GAME");
-
+        localStorage.setItem("lastHostPage","hostLobbyPg");
         socket.emit("hostAction", {
             type: "startGame"
         });
 
-        //restoreHostPage("hostLobbyPg");
+        restoreHostPage("hostLobbyPg");
     }
 
     //HOST SHOW INSTRUCTIONS
     function hostShowInstructions() {
         console.log("HOST SHOW INSTRUCTIONS");
+        localStorage.setItem("lastHostPage","hostInstructionsPg");
         socket.emit("hostAction", { type: "showInstructions" });
         restoreHostPage("hostInstructionsPg");
     }
@@ -2705,6 +2695,7 @@
     //HOST SHOW INSTRUCTION CUTSCENE
     function hostShowInstrucCutscene() {
         console.log("HOST SHOW INSTRUCTION CUTSCENE");
+        localStorage.setItem("lastHostPage","hostInstrucCutscenePg");
         /*
         socket.emit("hostAction", {
             type: "showInstrucCutscene"
@@ -2716,6 +2707,7 @@
     //HOST SHOW BOARD INTRO
     function hostShowBoardIntro() {
         console.log("HOST SHOW BOARD INTRO");
+        localStorage.setItem("lastHostPage","hostBoard");
         socket.emit("hostAction", { type: "showBoardIntro" });
         restoreHostPage("hostBoard");
     }
