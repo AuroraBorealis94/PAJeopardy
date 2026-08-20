@@ -1135,6 +1135,7 @@
 
     <div id="hostLobbyPg" class="hostPage hidden">
         <div>Wait for all contestants to join</div>
+        <br>
         <button id="instructionsBtn" onclick="hostShowInstructions()" style="display:none;">
             Let's Play!
         </button>
@@ -1142,6 +1143,7 @@
 
     <div id="hostInstructionsPg" class="hostPage hidden">
         <div>Explain gameplay instructions to contestants</div>
+        <br>
         <button id="showInstrucCutBtn" onclick="hostShowInstrucCutscene()" style="display:none;">
             Play Cutscene
         </button>
@@ -1149,6 +1151,7 @@
 
     <div id="hostInstrucCutscenePg" class="hostPage hidden">
         <div>When cutscene completes</div>
+        <br>
         <button id="showBoardIntroBtn" onclick="hostShowBoardIntro()" style="display:none;">
             Show Game Board
         </button>
@@ -1156,7 +1159,7 @@
 
     <div id="hostBoard" class="hostPage hidden">
         <div id="hostRoundLabel">
-            JEOPARDY
+            ROUND 1
         </div>
 
         <div id="hostBoardGrid"></div>
@@ -2691,7 +2694,7 @@
             type: "startGame"
         });
 
-        restoreHostPage("hostLobbyPg");
+        //restoreHostPage("hostLobbyPg");
     }
 
     //HOST SHOW INSTRUCTIONS

@@ -859,7 +859,7 @@ io.on("connection", (socket) => {
 
             broadcastToUnity({ type: "startGame", round: game.round });
             io.emit("roundStarted", { round: game.round });
-            io.emit("showInstructionsHolding");
+            //io.emit("showInstructionsHolding");
 
             setTimeout(() => {
                 const boardData = {
