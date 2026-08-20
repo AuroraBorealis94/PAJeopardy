@@ -937,7 +937,7 @@
         z-index: 0;
     }
 
-    #scoreHeader {
+    /*#scoreHeader {
         position: absolute;
 
         top: 4%;
@@ -957,7 +957,7 @@
             -2px -2px 0 #000,
             2px -2px 0 #000,
             -2px 2px 0 #000;
-    }
+    }*/
 
     #scoreChange {
         position: absolute;
@@ -993,14 +993,13 @@
     #scoreValue {
         position: absolute;
 
-        top: 28%;
+        top: 4%;
         left: 50%;
 
         transform: translateX(-50%);
-
         z-index: 5;
 
-        font-size: clamp(48px, 11vw, 110px);
+        font-size: clamp(36px, 9vw, 64px);
         font-weight: bold;
 
         white-space: nowrap;
@@ -1253,9 +1252,9 @@
 <div id="scorePage" class="hidden">
     <div id="scoreBackground"></div>
 
-    <div id="scoreHeader">
+    <!--<div id="scoreHeader">
         Score: $0
-    </div>
+    </div>-->
 
     <div id="scoreChange"></div>
 
@@ -1744,7 +1743,6 @@
         console.log("SHOW SCORE SCREEN:", data);
 
         const earned = Number(data.earned) || 0;
-
         const newScore = Number(data.score) || 0;
 
         // The score before the clue was awarded.
@@ -3335,7 +3333,7 @@
         "showRoundHolding",
         data => {
             console.log("ROUND HOLDING:", data);
-            //showPlayerScreen("instructionsHoldingScreen");
+            showPlayerScreen("instructionsHoldingScreen");
         }
     );
 
