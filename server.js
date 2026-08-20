@@ -1246,7 +1246,9 @@ io.on("connection", (socket) => {
     // DISCONNECT
     socket.on("disconnect", (reason) => {
         console.log("================================");
-        console.log("CLIENT DISCONNECTED:",socket.id,"REASON:",reason);
+        console.log("SOCKET DISCONNECTED");
+        console.log("Socket:", socket.id);
+        console.log("Reason:", reason);
         console.log("================================");
 
         // HOST DISCONNECTED
