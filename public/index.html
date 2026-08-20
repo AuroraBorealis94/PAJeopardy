@@ -2681,18 +2681,13 @@
         socket.emit("hostAction",{type:"showBoardIntro"});
     }
 
-    function hostStartRound2() {
+    function hostStartRound2(){
         console.log("HOST START ROUND 2");
+        localStorage.setItem("lastHostPage","hostBoard");
+        socket.emit("hostAction",{type:"startRound2"});
 
-        socket.emit("hostAction", {
-            type: "startRound2"
-        });
-
-        const round2Btn = document.getElementById("round2Btn");
-
-        if (round2Btn) {
-            round2Btn.style.display = "none";
-        }
+        const round2Btn=document.getElementById("round2Btn");
+        if(round2Btn) round2Btn.style.display="none";
     }
 
     function updateFinishRoundButton() {
@@ -3240,38 +3235,36 @@
         showPlayerScreen("answeringPage");
     });
 
-    socket.on(
-        "roundComplete",
-        data => {
-            console.log("ROUND COMPLETE:", data);
+    socket.on("roundComplete", data => {
+        console.log("ROUND COMPLETE:", data);
 
-            if (!isHost) {
-                showPlayerScreen("instructionsHoldingScreen");
-                return;
-            }
+        if (!isHost) {
+            showPlayerScreen("instructionsHoldingScreen");
+            return;
+        }
 
-            if (data.round === 1) {
-                const btn = document.getElementById("round2Btn");
-                if (btn) {
-                    btn.style.display = "block";
-                }
-                const finishBtn = document.getElementById("finishRoundBtn");
-                if (finishBtn) {
-                    finishBtn.style.display = "none";
-                }
-                return;
-            }
+        if(data.round === 1){
+            localStorage.setItem("lastHostPage","hostBoard");
 
-            if (data.round === 2) {
-                console.log("FINAL ROUND COMPLETE");
-                const finishBtn = document.getElementById("finishRoundBtn");
+            const btn=document.getElementById("round2Btn");
+            if(btn) btn.style.display="block";
 
-                if (finishBtn) {
-                    finishBtn.style.display = "none";
-                }
+            const finishBtn=document.getElementById("finishRoundBtn");
+            if(finishBtn) finishBtn.style.display="none";
+
+            restoreHostPage("hostBoard");
+            return;
+        }
+
+        if (data.round === 2) {
+            console.log("FINAL ROUND COMPLETE");
+            const finishBtn = document.getElementById("finishRoundBtn");
+
+            if (finishBtn) {
+                finishBtn.style.display = "none";
             }
         }
-    );
+    });
 
     socket.on(
         "showRoundHolding",
