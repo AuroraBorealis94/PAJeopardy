@@ -911,6 +911,7 @@ io.on("connection", (socket) => {
             case "showInstructions":
                 console.log("HOST ACTION: showInstructions");
                 game.hostScreen = "hostInstructionsPg";
+                game.state = "playing";
                 io.emit("showInstructionsHolding");
                 broadcastToUnity({ type: "showInstructions" });
                 break;
@@ -918,7 +919,7 @@ io.on("connection", (socket) => {
             case "showInstrucCutscene":
                 console.log("HOST ACTION: showInstrucCutscene");
                 game.hostScreen = "hostInstrucCutscenePg";
-                io.emit("showAnimHolding");
+                //io.emit("showAnimHolding");
                 broadcastToUnity({ type: "showInstrucCutscene" });
                 break;
 
