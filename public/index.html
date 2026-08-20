@@ -1300,10 +1300,11 @@
     let currentRound = 0;
     let currentDailyDouble = null;
 
-    console.log(
-        "LOCAL PLAYER ID ON LOAD:",
-        localStorage.getItem("playerId")
-    );
+    console.log("LOCAL PLAYER ID ON LOAD:", localStorage.getItem("playerId"));
+    console.log("LOCAL STORAGE HOST:",localStorage.getItem("isHost"));
+    console.log("LOCAL STORAGE HOST SESSION:",localStorage.getItem("hostSession"));
+    console.log("LOCAL STORAGE GAME SESSION:",localStorage.getItem("gameSession"));
+    console.log("LOCAL STORAGE HOST PAGE:",localStorage.getItem("lastHostPage"));
 
     //LOAD
     window.addEventListener("load", () => {
@@ -1407,9 +1408,10 @@
         tryReconnect();
     });
 
-    socket.on("disconnect", reason => {
-        console.log("SOCKET DISCONNECTED:", reason);
-        socketConnected = false;
+    socket.on("disconnect",(reason)=>{
+        console.log("SOCKET DISCONNECTED:",reason);
+        console.log("SOCKET ID:",socket.id);
+        console.log("SOCKET CONNECTED:",socket.connected);
     });
 
     socket.on("connect_error", error => {
@@ -2333,7 +2335,7 @@
             controls.classList.add("hidden");
         }
 
-        //enableCharacterSelection();
+        enableCharacterSelection();
 
         updateLockedUI();
         updateCenterCard();
@@ -2522,6 +2524,8 @@
         console.log("REQUESTING HOST SLOT. SESSION:",currentSession);
 
         socket.emit("join",{isHost:true});
+
+        confettiBurst();
     }
 
     //HOST JOIN SUCCESS
@@ -2542,7 +2546,6 @@
         localStorage.setItem("lastHostPage",savedPage);
 
         showHostControls();
-        restoreHostPage(savedPage);
 
         console.log("HOST UI RESTORED TO:",savedPage);
     }
@@ -2703,8 +2706,6 @@
         finishBtn.style.display = allUsed ? "block" : "none";
     }
 
-    // Do we really need this?
-    /*
     function enableCharacterSelection(){
         document.querySelectorAll("#characters button").forEach(button=>{
             button.disabled=false;
@@ -2719,7 +2720,7 @@
         updateLockedUI();
         updateCenterCard();
     }
-    */
+
     //BUILD HOST BOARD
     function buildHostBoard(board) {
         const hostBoard = document.getElementById("hostBoardGrid");
@@ -2758,19 +2759,7 @@
             }
         );
 
-        // ==========================================
         // CLUE VALUES
-        // ==========================================
-
-        /*
-        const values = [
-            "200",
-            "400",
-            "600",
-            "800",
-            "1000"
-        ];
-        */
         const values =
             currentRound === 2
                 ? ["400", "800", "1200", "1600", "2000"]
@@ -3022,14 +3011,13 @@
         });
     }
 
-    function hidePlayerScreen(id) {
-        const screen = document.getElementById(id);
-        if (!screen) return;
+    function hidePlayerScreen(id){
+        const screen=document.getElementById(id);
+        if(!screen) return;
 
-        if (id === "waitingScreen") {
-            screen.classList.remove("show");
-        }
+        screen.classList.remove("show");
         screen.classList.add("hidden");
+        screen.style.pointerEvents="none";
     }
 
     //INSTRUCTIONS
