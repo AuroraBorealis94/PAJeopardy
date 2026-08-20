@@ -1954,69 +1954,63 @@
     });
 
     //GAME STATE SYNC
-    socket.on(
-        "gameStateSync",
-        data => {
-            console.log("SYNC STATE:", data);
+    socket.on("gameStateSync",data=>{
+        console.log("SYNC STATE:",data);
 
-            if (isHost) {
-                console.log("HOST STATE SYNC RECEIVED");
-                let savedPage = localStorage.getItem("lastHostPage");
+        if(isHost){
+            console.log("HOST STATE SYNC RECEIVED:",data.state);
 
-                if (!savedPage) {
-                    savedPage = "hostJoinPg";
-                    localStorage.setItem("lastHostPage", savedPage);
-                }
-                console.log("RESTORING HOST PAGE FROM SYNC:", savedPage);
+            if(data.state==="lobby"){
                 showHostControls();
+                restoreHostPage("hostLobbyPg");
                 return;
             }
 
-            lockedSet = new Set((data.lockedCharacters || []).map(c => c.toLowerCase()));
-            updateLockedUI();
-
-            if (data.state === "lobby") {
-                const lobby = document.getElementById("lobbyUI");
-
-                if (lobby) {
-                    lobby.style.display = "block";
-                }
-
-                const waiting = document.getElementById("waitingScreen");
-
-                if (waiting) {
-                    waiting.classList.remove("show");
-                }
+            if(data.state==="playing"){
+                showHostControls();
+                restoreHostPage(localStorage.getItem("lastHostPage")||"hostBoard");
+                return;
             }
 
-            if (data.state === "playing") {
-                const lobby = document.getElementById("lobbyUI");
-
-                if (lobby) {
-                    lobby.style.display =
-                        "none";
-                }
-                showInstructionsHoldingScreen();
-            }
-
-            if (data.state === "buzzer") {
-                const lobby = document.getElementById("lobbyUI");
-
-                if (lobby) {
-                    lobby.style.display =
-                        "none";
-                }
-
-                const waiting = document.getElementById("waitingScreen");
-
-                if (waiting) {
-                    waiting.classList.add(
-                        "show"
-                    );
-                }
-            }
+            return;
         }
-    );
+
+        lockedSet=new Set((data.lockedCharacters||[]).map(c=>c.toLowerCase()));
+        updateLockedUI();
+
+        if(data.state==="lobby"){
+            hideAllPlayerScreens();
+
+            const lobby=document.getElementById("lobbyUI");
+            if(lobby){
+                lobby.style.display="block";
+                lobby.classList.remove("hidden");
+            }
+
+            const waiting=document.getElementById("waitingScreen");
+            if(waiting){
+                waiting.classList.remove("show");
+                waiting.classList.add("hidden");
+            }
+
+            restoreLobbyUI();
+            return;
+        }
+
+        if(data.state==="playing"){
+            const lobby=document.getElementById("lobbyUI");
+            if(lobby) lobby.style.display="none";
+            showInstructionsHoldingScreen();
+            return;
+        }
+
+        if(data.state==="buzzer"){
+            const lobby=document.getElementById("lobbyUI");
+            if(lobby) lobby.style.display="none";
+            showPlayerScreen("waitingScreen");
+            return;
+        }
+    });
 
     //GAME SESSION
     socket.on("gameSession",
@@ -2318,6 +2312,33 @@
         }
     }
 
+    function restoreLobbyUI(){
+        const lobby=document.getElementById("lobbyUI");
+        if(lobby){
+            lobby.style.display="block";
+            lobby.classList.remove("hidden");
+        }
+
+        hideAllPlayerScreens();
+
+        const waiting=document.getElementById("waitingScreen");
+        if(waiting){
+            waiting.classList.remove("show");
+            waiting.classList.add("hidden");
+        }
+
+        const controls=document.getElementById("hostControls");
+        if(controls){
+            controls.classList.remove("show");
+            controls.classList.add("hidden");
+        }
+
+        enableCharacterSelection();
+
+        updateLockedUI();
+        updateCenterCard();
+    }
+
     //WAITING
     function showWaitingScreen() {
         const lobby = document.getElementById("lobbyUI");
@@ -2408,38 +2429,6 @@
         }
     }
 
-    function animateScoreGain(oldScore, newScore, earned){
-        const value = document.getElementById("scoreValue");
-        const change = document.getElementById("scoreChange");
-        const current = document.getElementById("scoreCurrent");
-        if (!value || !change) return;
-        if (current) {
-            current.textContent = "Score: $" + oldScore;
-        }
-
-        value.textContent = "$" + oldScore;
-        change.textContent = "+$" + earned;
-        change.classList.remove("hidden");
-        let score = oldScore;
-        const timer = setInterval(() => {
-            score += Math.max(1, Math.ceil(earned / 20));
-            if (score >= newScore) {
-                score = newScore;
-                clearInterval(timer);
-
-                if (current) {
-                    current.textContent = "Score: $" + newScore;
-                }
-
-                setTimeout(() => {
-                    change.classList.add("hidden");
-                }, 1200);
-            }
-
-            value.textContent = "$" + score;
-        }, 30);
-    }
-
     function changeCharacter() {
         const previewImage = document.getElementById("previewImage");
 
@@ -2518,206 +2507,178 @@
     });
 
     //BECOME HOST
-    function joinAsHost() {
-        if (!currentSession) {
+    function joinAsHost(){
+        if(!currentSession){
             console.log("Cannot become host yet - session not received.");
             return;
         }
 
-        requestingHost = true;
-        isHost = true;
+        requestingHost=true;
 
-        if (!localStorage.getItem("lastHostPage")) {
-            localStorage.setItem("lastHostPage", "hostJoinPg");
+        if(!localStorage.getItem("lastHostPage")){
+            localStorage.setItem("lastHostPage","hostJoinPg");
         }
 
-        console.log("REQUESTING HOST SLOT. SESSION:", currentSession);
+        console.log("REQUESTING HOST SLOT. SESSION:",currentSession);
 
-        socket.emit("join", {
-            isHost: true
-        });
-
-        confettiBurst();
+        socket.emit("join",{isHost:true});
     }
 
     //HOST JOIN SUCCESS
-    function handleHostConnected() {
+    function handleHostConnected(){
         console.log("================================");
         console.log("HANDLE HOST CONNECTED");
-        console.log("Session:", currentSession);
-        console.log("Socket:", socket.id);
+        console.log("Session:",currentSession);
+        console.log("Socket:",socket.id);
         console.log("================================");
 
-        requestingHost = false;
-        isHost = true;
+        requestingHost=false;
+        isHost=true;
 
-        localStorage.setItem("isHost", "true");
-        localStorage.setItem("hostSession", currentSession);
-        localStorage.setItem("lastHostPage", "hostJoinPg");
+        localStorage.setItem("isHost","true");
+        localStorage.setItem("hostSession",currentSession);
+
+        const savedPage=localStorage.getItem("lastHostPage")||"hostJoinPg";
+        localStorage.setItem("lastHostPage",savedPage);
 
         showHostControls();
-        requestAnimationFrame(() => {
-            restoreHostPage("hostJoinPg");
-        });
+        restoreHostPage(savedPage);
 
-        console.log("HOST UI SHOULD NOW BE ON hostJoinPg");
+        console.log("HOST UI RESTORED TO:",savedPage);
     }
 
     //SHOW HOST CONTROLS
-    function showHostControls() {
-        const lobby = document.getElementById("lobbyUI");
-        const controls = document.getElementById("hostControls");
+    function showHostControls(){
+        const lobby=document.getElementById("lobbyUI");
+        const controls=document.getElementById("hostControls");
 
-        if (lobby) {
-            lobby.style.display = "none";
+        if(lobby){
+            lobby.style.display="none";
+            lobby.style.pointerEvents="none";
         }
 
-        if (!controls) {
+        if(!controls){
             console.error("Host controls container not found.");
             return;
         }
 
         controls.classList.remove("hidden");
+        controls.classList.add("show");
+        controls.style.pointerEvents="auto";
 
-        requestAnimationFrame(() => {
-            controls.classList.add("show");
-            setTimeout(() => {
-                let savedPage = localStorage.getItem("lastHostPage");
-
-                if (!savedPage) {
-                    savedPage = "hostJoinPg";
-                }
-                console.log("RESTORING HOST PAGE:", savedPage);
-                restoreHostPage(savedPage);
-            }, 50);
-        });
+        const savedPage=localStorage.getItem("lastHostPage")||"hostJoinPg";
+        restoreHostPage(savedPage);
     }
 
     //RESTORE HOST PAGE
-    function restoreHostPage(pageId) {
-        const controls = document.getElementById("hostControls");
-
-        if (!controls) {
+    function restoreHostPage(pageId){
+        const controls=document.getElementById("hostControls");
+        if(!controls){
             console.error("Host controls container not found.");
             return;
         }
 
-        const hostPages = [
-            "hostJoinPg",
-            "hostLobbyPg",
-            "hostInstructionsPg",
-            "hostInstrucCutscenePg"
-        ];
+        controls.classList.remove("hidden");
+        controls.classList.add("show");
+        controls.style.pointerEvents="auto";
 
-        // Hide all normal host pages
-        hostPages.forEach(id => {
-            const page = document.getElementById(id);
-            if (page) {
+        const hostPages=["hostJoinPg","hostLobbyPg","hostInstructionsPg","hostInstrucCutscenePg"];
+
+        hostPages.forEach(id=>{
+            const page=document.getElementById(id);
+            if(page){
                 page.classList.add("hidden");
+                page.style.pointerEvents="none";
             }
         });
 
-        // Hide host board
-        const hostBoard = document.getElementById("hostBoard");
-
-        if (hostBoard) {
-            hostBoard.style.display = "none";
+        const hostBoard=document.getElementById("hostBoard");
+        if(hostBoard){
+            hostBoard.style.display="none";
             hostBoard.classList.add("hidden");
+            hostBoard.style.pointerEvents="none";
         }
 
-        // Hide transition buttons
-        const instructionsBtn = document.getElementById("instructionsBtn");
-        const showInstrucCutBtn = document.getElementById("showInstrucCutBtn");
-        const showBoardIntroBtn = document.getElementById("showBoardIntroBtn");
+        const instructionsBtn=document.getElementById("instructionsBtn");
+        const showInstrucCutBtn=document.getElementById("showInstrucCutBtn");
+        const showBoardIntroBtn=document.getElementById("showBoardIntroBtn");
 
-        if (instructionsBtn) instructionsBtn.style.display = "none";
-        if (showInstrucCutBtn) showInstrucCutBtn.style.display = "none";
-        if (showBoardIntroBtn) showBoardIntroBtn.style.display = "none";
+        if(instructionsBtn) instructionsBtn.style.display="none";
+        if(showInstrucCutBtn) showInstrucCutBtn.style.display="none";
+        if(showBoardIntroBtn) showBoardIntroBtn.style.display="none";
 
-        // Show requested page
-        switch (pageId) {
-
+        switch(pageId){
             case "hostJoinPg":
                 document.getElementById("hostJoinPg")?.classList.remove("hidden");
+                document.getElementById("hostJoinPg").style.pointerEvents="auto";
                 break;
 
             case "hostLobbyPg":
                 document.getElementById("hostLobbyPg")?.classList.remove("hidden");
-
-                if (instructionsBtn) {
-                    instructionsBtn.style.display = "block";
-                }
+                document.getElementById("hostLobbyPg").style.pointerEvents="auto";
+                if(instructionsBtn) instructionsBtn.style.display="block";
                 break;
 
             case "hostInstructionsPg":
                 document.getElementById("hostInstructionsPg")?.classList.remove("hidden");
-
-                if (showInstrucCutBtn) {
-                    showInstrucCutBtn.style.display = "block";
-                }
+                document.getElementById("hostInstructionsPg").style.pointerEvents="auto";
+                if(showInstrucCutBtn) showInstrucCutBtn.style.display="block";
                 break;
 
             case "hostInstrucCutscenePg":
                 document.getElementById("hostInstrucCutscenePg")?.classList.remove("hidden");
-
-                if (showBoardIntroBtn) {
-                    showBoardIntroBtn.style.display = "block";
-                }
+                document.getElementById("hostInstrucCutscenePg").style.pointerEvents="auto";
+                if(showBoardIntroBtn) showBoardIntroBtn.style.display="block";
                 break;
 
             case "hostBoard":
-                if (hostBoard) {
+                if(hostBoard){
                     hostBoard.classList.remove("hidden");
-                    hostBoard.style.display = "flex";
+                    hostBoard.style.display="flex";
+                    hostBoard.style.pointerEvents="auto";
                 }
                 break;
 
             default:
-                console.warn("Unknown host page:", pageId);
-                pageId = "hostJoinPg";
-
+                pageId="hostJoinPg";
                 document.getElementById("hostJoinPg")?.classList.remove("hidden");
+                document.getElementById("hostJoinPg").style.pointerEvents="auto";
                 break;
         }
 
-        localStorage.setItem("lastHostPage", pageId);
-        console.log("HOST PAGE SAVED:", pageId);
+        localStorage.setItem("lastHostPage",pageId);
+        console.log("HOST PAGE SAVED:",pageId);
     }
 
     //HOST START GAME
-    function hostStartGame() {
+    function hostStartGame(){
         console.log("HOST START GAME");
-
-        socket.emit("hostAction", {
-            type: "startGame"
-        });
-
-        //restoreHostPage("hostLobbyPg");
+        localStorage.setItem("lastHostPage","hostLobbyPg");
+        socket.emit("hostAction",{type:"startGame"});
+        restoreHostPage("hostLobbyPg");
     }
 
     //HOST SHOW INSTRUCTIONS
-    function hostShowInstructions() {
+    function hostShowInstructions(){
         console.log("HOST SHOW INSTRUCTIONS");
-        socket.emit("hostAction", { type: "showInstructions" });
+        localStorage.setItem("lastHostPage","hostInstructionsPg");
         restoreHostPage("hostInstructionsPg");
+        socket.emit("hostAction",{type:"showInstructions"});
     }
 
     //HOST SHOW INSTRUCTION CUTSCENE
-    function hostShowInstrucCutscene() {
+    function hostShowInstrucCutscene(){
         console.log("HOST SHOW INSTRUCTION CUTSCENE");
-        /*
-        socket.emit("hostAction", {
-            type: "showInstrucCutscene"
-        });
-        */
+        localStorage.setItem("lastHostPage","hostInstrucCutscenePg");
         restoreHostPage("hostInstrucCutscenePg");
     }
 
     //HOST SHOW BOARD INTRO
-    function hostShowBoardIntro() {
+    function hostShowBoardIntro(){
         console.log("HOST SHOW BOARD INTRO");
-        socket.emit("hostAction", { type: "showBoardIntro" });
+        localStorage.setItem("lastHostPage","hostBoard");
         restoreHostPage("hostBoard");
+        socket.emit("hostAction",{type:"showBoardIntro"});
     }
 
     function hostStartRound2() {
@@ -2745,6 +2706,22 @@
         }
         const allUsed = Array.from(tiles).every(tile => tile.classList.contains("used"));
         finishBtn.style.display = allUsed ? "block" : "none";
+    }
+
+    // Do we really need this?
+    function enableCharacterSelection(){
+        document.querySelectorAll("#characters button").forEach(button=>{
+            button.disabled=false;
+            button.style.pointerEvents="auto";
+        });
+
+        document.querySelectorAll(".charCard").forEach(card=>{
+            card.disabled=false;
+            card.style.pointerEvents="auto";
+        });
+
+        updateLockedUI();
+        updateCenterCard();
     }
 
     //BUILD HOST BOARD
@@ -2874,7 +2851,6 @@
 
         // DAILY DOUBLE
         if (clue.clueData.dailyDouble === true) {
-
             currentDailyDouble = clue;
 
             if (dailyDoubleBanner) {
@@ -2890,7 +2866,6 @@
             });
 
             showDailyDoublePlayerButtons();
-
         } else {
 
             currentDailyDouble = null;
@@ -2904,30 +2879,6 @@
 
             hideDailyDoublePlayerButtons();
         }
-
-        // DAILY DOUBLE
-        if (clue.clueData.dailyDouble === true) {
-            currentDailyDouble = clue;
-
-            if (dailyDoubleBanner) {
-                dailyDoubleBanner.classList.remove("hidden");
-            }
-            console.log("DAILY DOUBLE:", clue.clueData.id);
-
-            socket.emit("hostAction", {
-                type: "dailyDouble",
-                clueId: clue.clueData.id
-            });
-
-        } else {
-
-            currentDailyDouble = null;
-
-            if (dailyDoubleBanner) {
-                dailyDoubleBanner.classList.add("hidden");
-            }
-        }
-    }
 
     //FLIP HOST CARD
     function flipHostCard() {
@@ -3035,7 +2986,6 @@
 
     //PLAYER SCREENS
     function hideAllPlayerScreens() {
-
         const screens = [
             "waitingScreen",
             "instructionsHoldingScreen",
@@ -3053,31 +3003,25 @@
             if (screen) {
                 screen.classList.add("hidden");
                 screen.classList.remove("show");
+                screen.style.pointerEvents="none";
             }
         });
     }
 
-    function showPlayerScreen(id) {
+    function showPlayerScreen(id){
         hideAllPlayerScreens();
-        const screen = document.getElementById(id);
 
-        if (!screen) {
-            console.error("Player screen not found:", id);
+        const screen=document.getElementById(id);
+
+        if(!screen){
+            console.error("Player screen not found:",id);
             return;
         }
 
         screen.classList.remove("hidden");
-        /*
-        if (id === "waitingScreen") {
-            requestAnimationFrame(
-                () => {
-                    screen.classList.add("show"
-                    );
-                }
-            );
-        }
-        */
-        requestAnimationFrame(() => {
+        screen.style.pointerEvents="auto";
+
+        requestAnimationFrame(()=>{
             screen.classList.add("show");
         });
     }
