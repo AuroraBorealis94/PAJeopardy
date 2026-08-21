@@ -1498,11 +1498,8 @@
 
         //PLAYER RECONNECT
         const playerId = localStorage.getItem("playerId");
-
         const savedName = localStorage.getItem("name");
-
         const savedCharacter = localStorage.getItem("character");
-
         const savedGameSession = localStorage.getItem("gameSession");
 
         if (!playerId || !savedName || !savedCharacter) {
@@ -1942,11 +1939,13 @@
     });
 
     //GAME STATE SYNC
-    
     socket.on("gameStateSync",data=>{
         console.log("SYNC STATE:",data);
+        console.log("GAME STATE HOST CHECK:",{isHost,isStoredHost:localStorage.getItem("isHost"),hostSession:localStorage.getItem("hostSession"),currentSession});
+        const storedIsHost=localStorage.getItem("isHost")==="true";
 
-        if(isHost){
+        if(storedIsHost){
+            isHost=true;
             console.log("HOST STATE SYNC RECEIVED:",data.state);
 
             if(data.state==="lobby"){
@@ -1964,6 +1963,8 @@
             return;
         }
 
+        isHost=false;
+
         lockedSet=new Set((data.lockedCharacters||[]).map(c=>c.toLowerCase()));
         updateLockedUI();
 
@@ -1974,6 +1975,7 @@
             if(lobby){
                 lobby.style.display="block";
                 lobby.classList.remove("hidden");
+                lobby.style.pointerEvents="auto";
             }
 
             const waiting=document.getElementById("waitingScreen");
@@ -2001,7 +2003,7 @@
         }
     });
 
-    /*
+    /* 
     socket.on( "gameStateSync", data => { 
         console.log("SYNC STATE:", data); 
         if (isHost) { 
@@ -2046,56 +2048,55 @@
         } 
     });
     */
+
     //GAME SESSION
-    socket.on("gameSession",
-        session => {
-            const savedSession = localStorage.getItem("gameSession");
-            const savedHostSession = localStorage.getItem("hostSession");
-            const storedIsHost = localStorage.getItem("isHost") === "true";
+    socket.on("gameSession", session => {
+        const savedSession = localStorage.getItem("gameSession");
+        const savedHostSession = localStorage.getItem("hostSession");
+        const storedIsHost = localStorage.getItem("isHost") === "true";
 
-            currentSession = String(session);
-            sessionReceived = true;
+        currentSession = String(session);
+        sessionReceived = true;
 
-            console.log("SERVER SESSION:", session);
-            console.log("SAVED PLAYER SESSION:", savedSession);
-            console.log("SAVED HOST SESSION:", savedHostSession);
-            console.log("STORED IS HOST:", storedIsHost);
+        console.log("SERVER SESSION:", session);
+        console.log("SAVED PLAYER SESSION:", savedSession);
+        console.log("SAVED HOST SESSION:", savedHostSession);
+        console.log("STORED IS HOST:", storedIsHost);
 
-            //HOST SESSION CHECK
-            if (storedIsHost) {
-                if (savedHostSession && String(savedHostSession) === String(session)) {
-                    isHost = true;
-                    console.log("VALID HOST SESSION. RECONNECTING...");
-                    updateHostButton();
-                } else {
-                    console.log("SERVER SESSION CHANGED. CLEARING HOST STATE.");
-                    localStorage.removeItem("isHost");
-                    localStorage.removeItem("hostSession");
-                    localStorage.removeItem("lastHostPage");
-                    localStorage.removeItem("paHostReconnectToken");
+        //HOST SESSION CHECK
+        if(storedIsHost){
+            if(savedHostSession&&String(savedHostSession)===String(session)){
+                isHost=true;
+                requestingHost=false;
+                console.log("VALID HOST SESSION. RECONNECTING...");
+                updateHostButton();
+            }else{
+                console.log("SERVER SESSION CHANGED. CLEARING HOST STATE.");
+                localStorage.removeItem("isHost");
+                localStorage.removeItem("hostSession");
+                localStorage.removeItem("lastHostPage");
+                localStorage.removeItem("paHostReconnectToken");
 
-                    isHost = false;
-                    requestingHost = false;
+                isHost=false;
+                requestingHost=false;
 
-                    updateHostButton();
-                }
+                updateHostButton();
             }
-
-            //PLAYER SESSION CHECK
-            if (savedSession && String(savedSession) !== String(session) && !storedIsHost) {
-                console.log("SERVER SESSION CHANGED. CLEARING PLAYER STATE.");
-                localStorage.removeItem("playerId");
-                localStorage.removeItem("name");
-                localStorage.removeItem("character");
-                localStorage.removeItem("hasJoined");
-                localStorage.removeItem("gameSession");
-                location.reload();
-                return;
-            }
-
-            tryReconnect();
         }
-    );
+
+        //PLAYER SESSION CHECK
+        if (savedSession && String(savedSession) !== String(session) && !storedIsHost) {
+            console.log("SERVER SESSION CHANGED. CLEARING PLAYER STATE.");
+            localStorage.removeItem("playerId");
+            localStorage.removeItem("name");
+            localStorage.removeItem("character");
+            localStorage.removeItem("hasJoined");
+            localStorage.removeItem("gameSession");
+            location.reload();
+            return;
+        }
+        tryReconnect();
+    });
 
     //ROOM CODE
     socket.on(
@@ -2571,13 +2572,14 @@
         console.log("Socket:", socket.id);
         console.log("================================");
 
-        isHost = true;
-        console.log("isHost set in JOIN SUCCESS")
+        isHost=true;
+        console.log("HOST CONFIRMED. isHost:",isHost,"stored:",localStorage.getItem("isHost"));
         requestingHost = false;
 
         localStorage.setItem("isHost", "true");
         localStorage.setItem("hostSession", currentSession);
-        localStorage.setItem("lastHostPage", "hostJoinPg");
+        const savedPage=localStorage.getItem("lastHostPage")||"hostJoinPg";
+        localStorage.setItem("lastHostPage",savedPage);
 
         showHostControls();
         requestAnimationFrame(() => {
@@ -2618,94 +2620,83 @@
     }
 
     //RESTORE HOST PAGE
-    function restoreHostPage(pageId) {
-        const controls = document.getElementById("hostControls");
-
-        if (!controls) {
+    function restoreHostPage(pageId){
+        const controls=document.getElementById("hostControls");
+        if(!controls){
             console.error("Host controls container not found.");
             return;
         }
 
-        const hostPages = [
-            "hostJoinPg",
-            "hostLobbyPg",
-            "hostInstructionsPg",
-            "hostInstrucCutscenePg"
-        ];
+        controls.classList.remove("hidden");
+        controls.classList.add("show");
+        controls.style.pointerEvents="auto";
 
-        // Hide all normal host pages
-        hostPages.forEach(id => {
-            const page = document.getElementById(id);
-            if (page) {
+        const hostPages=["hostJoinPg","hostLobbyPg","hostInstructionsPg","hostInstrucCutscenePg"];
+
+        hostPages.forEach(id=>{
+            const page=document.getElementById(id);
+            if(page){
                 page.classList.add("hidden");
+                page.style.pointerEvents="none";
             }
         });
 
-        // Hide host board
-        const hostBoard = document.getElementById("hostBoard");
-
-        if (hostBoard) {
-            hostBoard.style.display = "none";
+        const hostBoard=document.getElementById("hostBoard");
+        if(hostBoard){
+            hostBoard.style.display="none";
             hostBoard.classList.add("hidden");
+            hostBoard.style.pointerEvents="none";
         }
 
-        // Hide transition buttons
-        const instructionsBtn = document.getElementById("instructionsBtn");
-        const showInstrucCutBtn = document.getElementById("showInstrucCutBtn");
-        const showBoardIntroBtn = document.getElementById("showBoardIntroBtn");
+        const instructionsBtn=document.getElementById("instructionsBtn");
+        const showInstrucCutBtn=document.getElementById("showInstrucCutBtn");
+        const showBoardIntroBtn=document.getElementById("showBoardIntroBtn");
 
-        if (instructionsBtn) instructionsBtn.style.display = "none";
-        if (showInstrucCutBtn) showInstrucCutBtn.style.display = "none";
-        if (showBoardIntroBtn) showBoardIntroBtn.style.display = "none";
+        if(instructionsBtn) instructionsBtn.style.display="none";
+        if(showInstrucCutBtn) showInstrucCutBtn.style.display="none";
+        if(showBoardIntroBtn) showBoardIntroBtn.style.display="none";
 
-        // Show requested page
-        switch (pageId) {
-
+        switch(pageId){
             case "hostJoinPg":
                 document.getElementById("hostJoinPg")?.classList.remove("hidden");
+                document.getElementById("hostJoinPg").style.pointerEvents="auto";
                 break;
 
             case "hostLobbyPg":
                 document.getElementById("hostLobbyPg")?.classList.remove("hidden");
-
-                if (instructionsBtn) {
-                    instructionsBtn.style.display = "block";
-                }
+                document.getElementById("hostLobbyPg").style.pointerEvents="auto";
+                if(instructionsBtn) instructionsBtn.style.display="block";
                 break;
 
             case "hostInstructionsPg":
                 document.getElementById("hostInstructionsPg")?.classList.remove("hidden");
-
-                if (showInstrucCutBtn) {
-                    showInstrucCutBtn.style.display = "block";
-                }
+                document.getElementById("hostInstructionsPg").style.pointerEvents="auto";
+                if(showInstrucCutBtn) showInstrucCutBtn.style.display="block";
                 break;
 
             case "hostInstrucCutscenePg":
                 document.getElementById("hostInstrucCutscenePg")?.classList.remove("hidden");
-
-                if (showBoardIntroBtn) {
-                    showBoardIntroBtn.style.display = "block";
-                }
+                document.getElementById("hostInstrucCutscenePg").style.pointerEvents="auto";
+                if(showBoardIntroBtn) showBoardIntroBtn.style.display="block";
                 break;
 
             case "hostBoard":
-                if (hostBoard) {
+                if(hostBoard){
                     hostBoard.classList.remove("hidden");
-                    hostBoard.style.display = "flex";
+                    hostBoard.style.display="flex";
+                    hostBoard.style.pointerEvents="auto";
                 }
                 break;
 
             default:
-                console.warn("Unknown host page:", pageId);
-                pageId = "hostJoinPg";
-
+                pageId="hostJoinPg";
                 document.getElementById("hostJoinPg")?.classList.remove("hidden");
+                document.getElementById("hostJoinPg").style.pointerEvents="auto";
                 break;
         }
 
-        localStorage.setItem("lastHostPage", pageId);
-        console.log("HOST PAGE SAVED:", pageId);
+        localStorage.setItem("lastHostPage",pageId);
+        console.log("HOST PAGE SAVED:",pageId);
     }
 
     //HOST ENABLE LOBBY
@@ -3170,121 +3161,92 @@
         );
     }
 
-    socket.on(
-        "resumeBuzzing",
-        () => {
-
-            canBuzz =
-                true;
-
-
-            if (buzzImg) {
-
-                buzzImg.src =
-                    "/backgrounds/WBuzzerUp.png";
-
-                buzzImg.classList.remove(
-                    "down"
-                );
-            }
-
-
-            hideAllPlayerScreens();
-
-            showPlayerScreen(
-                "buzzerPage"
-            );
+    socket.on("resumeBuzzing", () => {
+        canBuzz = true;
+        if (buzzImg) {
+            buzzImg.src = "/backgrounds/WBuzzerUp.png";
+            buzzImg.classList.remove("down");
         }
-    );
+        hideAllPlayerScreens();
+        showPlayerScreen("buzzerPage");
+    });
 
-    socket.on(
-        "buzzAccepted",
-        data => {
-            currentBuzzPlayer = data;
-            window.lastBuzzedPlayerName = data.playerName;
-            //const character = characters.find(c => c.name === data.character);
+    socket.on("buzzAccepted", data => {
+        currentBuzzPlayer = data;
+        window.lastBuzzedPlayerName = data.playerName;
+        //const character = characters.find(c => c.name === data.character);
 
-            if (isHost) {
-                const inner = document.getElementById("hostClueInner");
-                const judgement = document.getElementById("hostJudgementArea");
-                const question = document.getElementById("hostJudgementQuestion");
-                const enableBtn =  document.getElementById("enableBuzzerBtn");
+        if (isHost) {
+            const inner = document.getElementById("hostClueInner");
+            const judgement = document.getElementById("hostJudgementArea");
+            const question = document.getElementById("hostJudgementQuestion");
+            const enableBtn =  document.getElementById("enableBuzzerBtn");
 
-                if (inner) {
-                    inner.classList.add("flipped");
-                }
-
-                hostAnswerShowing = true;
-
-                if (question) {
-                    question.textContent = `Did Team ${data.playerName} answer correctly?`;
-                }
-
-                if (judgement) {
-                    judgement.classList.add("show");
-                }
-
-                if (enableBtn) {
-                    enableBtn.style.display = "none";
-                }
-
-                return;
+            if (inner) {
+                inner.classList.add("flipped");
             }
 
-            canBuzz = false;
-            showPlayerScreen("answeringPage");
-            /*
-            if (character) {
-                const answeringCharacter = document.getElementById("answeringCharacter");
+            hostAnswerShowing = true;
 
-                if (answeringCharacter) {
-                    answeringCharacter.src = character.front;
-                }
-            }
-            */
-            //const isMe = data.playerId === localStorage.getItem("playerId");
-            const answeringTitle = document.getElementById("answeringTitle");
-            const answeringName = document.getElementById("answeringName");
-
-            const answeringCharacter = document.getElementById("answeringCharacter");
-            const myPlayerId = localStorage.getItem("playerId");
-
-            const isMe = data.playerId === myPlayerId;
-
-            if (answeringTitle) {
-                answeringTitle.textContent = isMe? "ANSWER NOW!" : "IS ANSWERING";
+            if (question) {
+                question.textContent = `Did Team ${data.playerName} answer correctly?`;
             }
 
-            if (answeringName) {
-                answeringName.textContent = "Team " + data.playerName;
+            if (judgement) {
+                judgement.classList.add("show");
             }
 
-            let character = null;
-
-            if (typeof characters !== "undefined") {
-                character = characters.find(c => c.name === data.character);
+            if (enableBtn) {
+                enableBtn.style.display = "none";
             }
 
-            if (!character) {
-                const savedCharacter = localStorage.getItem("character");
+            return;
+        }
 
-                if (savedCharacter) {
-                    try {
-                        const saved = JSON.parse(savedCharacter);
-                        if (saved.name === data.character) {
-                            character = saved;
-                        }
-                    } catch (error) {
-                        console.error("Could not parse saved character:", error);
+        canBuzz = false;
+        showPlayerScreen("answeringPage");
+
+        const answeringTitle = document.getElementById("answeringTitle");
+        const answeringName = document.getElementById("answeringName");
+
+        const answeringCharacter = document.getElementById("answeringCharacter");
+        const myPlayerId = localStorage.getItem("playerId");
+
+        const isMe = data.playerId === myPlayerId;
+
+        if (answeringTitle) {
+            answeringTitle.textContent = isMe? "ANSWER NOW!" : "IS ANSWERING";
+        }
+
+        if (answeringName) {
+            answeringName.textContent = "Team " + data.playerName;
+        }
+
+        let character = null;
+
+        if (typeof characters !== "undefined") {
+            character = characters.find(c => c.name === data.character);
+        }
+
+        if (!character) {
+            const savedCharacter = localStorage.getItem("character");
+
+            if (savedCharacter) {
+                try {
+                    const saved = JSON.parse(savedCharacter);
+                    if (saved.name === data.character) {
+                        character = saved;
                     }
+                } catch (error) {
+                    console.error("Could not parse saved character:", error);
                 }
             }
-
-            if (character && character.front && answeringCharacter) {
-                answeringCharacter.src = character.front;
-            }
         }
-    );
+
+        if (character && character.front && answeringCharacter) {
+            answeringCharacter.src = character.front;
+        }
+    });
 
     socket.on("dailyDoubleAnswering", data => {
         canBuzz = false;
@@ -3315,58 +3277,49 @@
         showPlayerScreen("answeringPage");
     });
 
-    socket.on(
-        "roundComplete",
-        data => {
-            console.log("ROUND COMPLETE:", data);
+    socket.on("roundComplete", data => {
+        console.log("ROUND COMPLETE:", data);
 
-            if (!isHost) {
-                showPlayerScreen("instructionsHoldingScreen");
-                return;
+        if (!isHost) {
+            showPlayerScreen("instructionsHoldingScreen");
+            return;
+        }
+
+        if (data.round === 1) {
+            const btn = document.getElementById("round2Btn");
+            if (btn) {
+                btn.style.display = "block";
             }
-
-            if (data.round === 1) {
-                const btn = document.getElementById("round2Btn");
-                if (btn) {
-                    btn.style.display = "block";
-                }
-                const finishBtn = document.getElementById("finishRoundBtn");
-                if (finishBtn) {
-                    finishBtn.style.display = "none";
-                }
-                return;
+            const finishBtn = document.getElementById("finishRoundBtn");
+            if (finishBtn) {
+                finishBtn.style.display = "none";
             }
+            return;
+        }
 
-            if (data.round === 2) {
-                console.log("FINAL ROUND COMPLETE");
-                const finishBtn = document.getElementById("finishRoundBtn");
+        if (data.round === 2) {
+            console.log("FINAL ROUND COMPLETE");
+            const finishBtn = document.getElementById("finishRoundBtn");
 
-                if (finishBtn) {
-                    finishBtn.style.display = "none";
-                }
+            if (finishBtn) {
+                finishBtn.style.display = "none";
             }
         }
-    );
+    });
 
-    socket.on(
-        "showRoundHolding",
-        data => {
-            console.log("ROUND HOLDING:", data);
+    socket.on("showRoundHolding", data => {
+        console.log("ROUND HOLDING:", data);
+        showPlayerScreen("instructionsHoldingScreen");
+    });
+
+    socket.on("roundStarted", data => {
+        currentRound = data.round;
+        console.log("ROUND STARTED:", currentRound);
+
+        if (!isHost) {
             showPlayerScreen("instructionsHoldingScreen");
         }
-    );
-
-    socket.on(
-        "roundStarted",
-        data => {
-            currentRound = data.round;
-            console.log("ROUND STARTED:", currentRound);
-
-            if (!isHost) {
-                showPlayerScreen("instructionsHoldingScreen");
-            }
-        }
-    );
+    });
 
     function setScoreBackground() {
         const background = document.getElementById("scoreBackground");
