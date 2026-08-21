@@ -2035,7 +2035,19 @@
         }
     });
 
+    document.addEventListener("click", e => {
+        const overlay = document.getElementById("hostClueOverlay");
 
+        if (!overlay) return;
+        if (!overlay.classList.contains("show")) return;
+
+        const card = document.getElementById("hostClueCard");
+
+        if (!card) return;
+        if (!card.contains(e.target)) return;
+
+        flipHostCard();
+    });
 
 
 
@@ -2698,19 +2710,6 @@
     }
 
 /* #region HOST */
-    document.addEventListener("click", e => {
-        const overlay = document.getElementById("hostClueOverlay");
-
-        if (!overlay) return;
-        if (!overlay.classList.contains("show")) return;
-
-        const card = document.getElementById("hostClueCard");
-
-        if (!card) return;
-        if (!card.contains(e.target)) return;
-
-        flipHostCard();
-    });
 
     //BECOME HOST
     function joinAsHost() {
