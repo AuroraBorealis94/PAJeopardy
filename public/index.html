@@ -1020,10 +1020,6 @@
 
 <!-- LOBBY SCREEN -->
 <div id="lobbyUI">
-    <!-- TITLE
-    <h1 id="h11">PA Jeopardy</h1>
-    <h1 id="h12">2026 Edition</h1>-->
-
     <!-- PREVIEW -->
     <div id="preview">
         <!-- HOST JOIN -->
@@ -1090,26 +1086,19 @@
 
 <!-- CLUE HOLDING SCREEN -->
 <div id="clueHoldingScreen" class="playerScreen hidden">
-
     <img
         id="clueHoldingImage"
-        src=""
-        alt=""
     >
-
 </div>
 
 <!-- ANIMATION HOLDING SCREEN -->
 <div id="animHoldingScreen" class="hidden">
-
     <div id="animHoldingSprite">
         <!-- Animated sprite will go here later -->
     </div>
-
 </div>
 
 <div id="dailyDoublePage" class="hidden">
-
     <div class="dailyDoubleText">
         DAILY DOUBLE!
     </div>
@@ -1117,7 +1106,6 @@
     <div class="dailyDoubleSubtext">
         Wait for the host.
     </div>
-
 </div>
 
 <!-- HOST CONTROLS -->
@@ -1126,7 +1114,7 @@
     <div id="hostJoinPg" class="hostPage">
         <div>Welcome Host! Let's meet our contestants</div>
         <br>
-        <button id="startGameBtn" onclick="hostStartGame()">
+        <button id="lobbyBtn" onclick="hostEnableLobby()">
             Go to Lobby
         </button>
     </div>
@@ -1263,6 +1251,7 @@
 </div>
 
 <script src="/socket.io/socket.io.js"></script>
+
 <script>
     //SOCKET CONNECTION
     const socket = io({
