@@ -2260,19 +2260,8 @@
             }
         );
 
-        // ==========================================
-        // CLUE VALUES
-        // ==========================================
-
         /*
-        const values = [
-            "200",
-            "400",
-            "600",
-            "800",
-            "1000"
-        ];
-        */
+        // CLUE VALUES
         const values =
             currentRound === 2
                 ? ["400", "800", "1200", "1600", "2000"]
@@ -2319,6 +2308,48 @@
                     hostBoard.appendChild(tile);
                 }
             );
+        });
+        */
+        // CLUE VALUES
+        const values = currentRound === 2
+            ? ["400", "800", "1200", "1600", "2000"]
+            : ["200", "400", "600", "800", "1000"];
+
+        values.forEach(value => {
+            board.categories.forEach(category => {
+                const clue = category.clues.find(c => c.value === value);
+                const tile = document.createElement("div");
+
+                tile.className = "hostTile";
+
+                if (!clue) {
+                    tile.classList.add("empty");
+                    hostBoard.appendChild(tile);
+                    return;
+                }
+
+                tile.innerText = "$" + value;
+                tile.dataset.clueId = clue.clueData.id;
+                tile.onclick = () => {
+                    if (tile.classList.contains("used")) {
+                        return;
+                    }
+                    currentHostClue = clue;
+                    currentHostTile = tile;
+                    currentDailyDouble = clue.clueData.dailyDouble ? clue : null;
+
+                    showHostClue(clue);
+
+                    socket.emit("hostAction", {
+                        type: "selectClue",
+                        payload: {
+                            value,
+                            clueData:clue.clueData
+                        }
+                    });
+                };
+                hostBoard.appendChild(tile);
+            });
         });
     }
 
