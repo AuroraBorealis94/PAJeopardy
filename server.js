@@ -850,15 +850,16 @@ io.on("connection", (socket) => {
         console.log("HOST ACTION:", data);
 
         // HOST STATE ACTIONS
-        if (data.type === "enableLobby") {
+        if (data.type === "startGame") {
             console.log("HOST STARTING ROUND 1");
             game.state = "playing";
             game.round = 1;
             game.hostScreen = "hostLobbyPg";
             generateBoard(1);
 
-            broadcastToUnity({ type: "enableLobby", round: game.round });
+            broadcastToUnity({ type: "startGame", round: game.round });
             io.emit("roundStarted", { round: game.round });
+            //io.emit("showInstructionsHolding");
 
             setTimeout(() => {
                 const boardData = {
