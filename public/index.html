@@ -1021,10 +1021,6 @@
 
 <!-- LOBBY SCREEN -->
 <div id="lobbyUI">
-    <!-- TITLE
-    <h1 id="h11">PA Jeopardy</h1>
-    <h1 id="h12">2026 Edition</h1>-->
-
     <!-- PREVIEW -->
     <div id="preview">
         <!-- HOST JOIN -->
@@ -1091,26 +1087,19 @@
 
 <!-- CLUE HOLDING SCREEN -->
 <div id="clueHoldingScreen" class="playerScreen hidden">
-
     <img
         id="clueHoldingImage"
-        src=""
-        alt=""
     >
-
 </div>
 
 <!-- ANIMATION HOLDING SCREEN -->
 <div id="animHoldingScreen" class="hidden">
-
     <div id="animHoldingSprite">
         <!-- Animated sprite will go here later -->
     </div>
-
 </div>
 
 <div id="dailyDoublePage" class="hidden">
-
     <div class="dailyDoubleText">
         DAILY DOUBLE!
     </div>
@@ -1118,7 +1107,6 @@
     <div class="dailyDoubleSubtext">
         Wait for the host.
     </div>
-
 </div>
 
 <!-- HOST CONTROLS -->
@@ -1127,7 +1115,7 @@
     <div id="hostJoinPg" class="hostPage">
         <div>Welcome Host! Let's meet our contestants</div>
         <br>
-        <button id="startGameBtn" onclick="hostStartGame()">
+        <button id="lobbyBtn" onclick="hostEnableLobby()">
             Go to Lobby
         </button>
     </div>
@@ -1954,6 +1942,7 @@
     });
 
     //GAME STATE SYNC
+    /*
     socket.on("gameStateSync",data=>{
         console.log("SYNC STATE:",data);
 
@@ -2010,6 +1999,50 @@
             showPlayerScreen("waitingScreen");
             return;
         }
+    });
+    */
+    socket.on( "gameStateSync", data => { 
+        console.log("SYNC STATE:", data); 
+        if (isHost) { 
+            console.log("HOST STATE SYNC RECEIVED"); 
+            let savedPage = localStorage.getItem("lastHostPage"); 
+            if (!savedPage) { 
+                savedPage = "hostJoinPg"; 
+                localStorage.setItem("lastHostPage", savedPage); 
+            } 
+            console.log("RESTORING HOST PAGE FROM SYNC:", savedPage); 
+            showHostControls(); 
+            return; 
+        } 
+        lockedSet = new Set((data.lockedCharacters || []).map(c => c.toLowerCase())); 
+        updateLockedUI(); 
+        if (data.state === "lobby") { 
+            const lobby = document.getElementById("lobbyUI"); 
+            if (lobby) { 
+                lobby.style.display = "block"; 
+            } 
+            const waiting = document.getElementById("waitingScreen");
+            if (waiting) { 
+                waiting.classList.remove("show"); 
+            } 
+        } 
+        if (data.state === "playing") { 
+            const lobby = document.getElementById("lobbyUI"); 
+            if (lobby) { 
+                lobby.style.display = "none"; 
+            } 
+            showInstructionsHoldingScreen(); 
+        } 
+        if (data.state === "buzzer") { 
+            const lobby = document.getElementById("lobbyUI"); 
+            if (lobby) { 
+                lobby.style.display = "none"; 
+            } 
+            const waiting = document.getElementById("waitingScreen"); 
+            if (waiting) { 
+                waiting.classList.add("show"); 
+            } 
+        } 
     });
 
     //GAME SESSION
@@ -2674,11 +2707,11 @@
     }
 
     //HOST START GAME
-    function hostStartGame() {
+    function hostEnableLobby() {
         console.log("HOST START GAME");
 
         socket.emit("hostAction", {
-            type: "startGame"
+            type: "enableLobby"
         });
 
         //restoreHostPage("hostLobbyPg");
