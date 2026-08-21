@@ -3,1016 +3,1014 @@
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
-
-/* #region Fonts */
-    @font-face {
-        font-family: 'Gyparody';
-        src: url('/fonts/gyparody hv.ttf') format('truetype');
-    }
-    @font-face {
-        font-family: 'Korinna';
-        src: url('/fonts/ITC Korinna Regular.otf') format('opentype');
-    }
-/* #endregion */
-
-/* #region Headers & Body */
-    h1 {
-        font-family: 'Gyparody';
-        margin: 0;
-        line-height: 1;
-    }
-
-    h2 {
-        font-family: 'Korinna';
-        font-size: 20px;
-        text-transform: uppercase;
-    }
-
-    body {
-        opacity: 0;
-        animation: fadeIn 0.4s forwards;
-        text-transform: uppercase;
-        font-family: 'Korinna';
-        font-size: 16px;
-
-        margin: 0;
-        padding-top: 40px;
-        padding-bottom: 20px;
-        color: white;
-        text-shadow: 0 0 10px rgba(0,0,0,1);
-        text-align: center;
-
-        background-color: #000000;
-
-        background-image: 
-            url('/backgrounds/WLobbyBG.png');
-
-        background-repeat: 
-            no-repeat;
-
-        background-position: 
-            top center;
-
-        background-size: 
-            100% auto;
-    }
-
-    @keyframes fadeIn {
-        to { opacity: 1; }
-    }
-/* #endregion */
-
-/* #region Join Screen */
-    #h11 {
-        background: linear-gradient(
-            45deg,
-            #a8a8a8,
-            #ffffff,
-            #ffffff,
-            #a8a8a8
-        );
-
-        text-shadow: 0 0 10px rgba(255,255,255,0.2);
-        font-size: 45px;
-        /*text-transform: uppercase;*/
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-
-        background-clip: text;
-    }
-
-    #h12 {
-        background: linear-gradient(
-            45deg,
-            #ff9139,
-            #ffe739,
-            #ff9139,
-            #ffcb39
-        );
-
-        text-shadow: 0 0 10px rgba(255,255,255,0.2);
-        font-size: 30px;
-        /*text-transform: uppercase;*/
-        padding-bottom: 5px;
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-
-        background-clip: text;
-    }
-
-    #characters {
-        display: flex;
-        overflow-x: auto;
-        gap: 18px;
-        padding: 20px 0;
-        width: 100%;
-        max-width: 100%;
-        min-height: 180px;
-        align-items: center;
-    }
-
-    #characters::before,
-    #characters::after {
-        content: "";
-        flex: 0 0 calc(50% - 70px);
-    }
-
-    #characters::-webkit-scrollbar {
-        display: none;
-    }
-
-    #characters button {
-        font-family: 'Korinna', serif;
-        position: relative;
-        overflow: hidden;
-
-        background: white;
-        border: 2px solid #ccc;
-        border-radius: 10px;
-
-        padding: 0;
-        cursor: pointer;
-
-        scroll-behavior: smooth;
-    }
-
-    .charCard {
-        flex: 0 0 clamp(110px, 30vw, 140px);
-        scroll-snap-align: center;
-        perspective: 800px;
-        transition: transform 0.3s ease, opacity 0.3s ease;
-        opacity: 0.6;
-        transform: scale(0.9);
-        position:relative;
-    }
-
-    .charCard.center {
-        opacity: 1;
-        transform: scale(1.25);
-        z-index: 10;
-    }
-
-    .cardInner {
-        width: 100%;
-        aspect-ratio: 3 / 4;
-        transition: transform 0.5s ease;
-        transform-style: preserve-3d;
-    }
-
-    .charCard.selected .cardInner {
-        transform: rotateY(180deg);
-    }
-
-    .cardFront, .cardBack {
-        position: absolute;
-        width: 100%;
-        height: 100%;
-        backface-visibility: hidden;
-        object-fit: cover;
-        border-radius: 10px;
-        overflow: hidden;
-    }
-
-    .cardFront img,
-    .cardBack img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-    }
-
-    .cardBack {
-        transform: rotateY(180deg);
-    }
-
-    .charCard:active {
-        transform: scale(0.95);
-    }
-
-    .charCard.selected {
-        animation: bounceSelect 0.3s ease;
-    }
-
-    .carouselNav {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        gap: 18px;
-
-        width: 100%;
-        min-height: 80px;
-    }
-
-    #hostBtn {
-        position: absolute;
-        left: 50%;
-        top: 80%;
-        transform: translate(-50%, -50%);
-        z-index: 20;
-
-        font-family: 'Korinna';
-        font-size: 22px;
-        text-transform: uppercase;
-        padding: 12px 28px;
-
-        background: linear-gradient(135deg, #ffcc00, #ff6600);
-        cursor: pointer;
-
-        border: 1px solid #fff;
-        border-radius: 12px;
-        box-shadow: 0 0 15px rgba(255, 140, 0, 0.6);
-        transition: all 0.2s ease;
-    }
-
-    #preview {
-        font-family: 'Korinna';
-        font-size: 18px;
-        height: 220px;
-        position: relative;
-        display: flex;
-        flex-direction: column;
-        justify-content: flex-end;
-        align-items: center;
-        padding-top: 10px;
-    }
-
-    #previewCharacterBox {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        margin: 0 auto;
-    }
-
-    #previewImage {
-        width: 120px;
-        aspect-ratio: 3 / 4;
-        object-fit: cover;
-        display: none;
-    }
-
-    #previewName {
-        color: orange;
-    }
-
-    .previewHidden {
-        visibility: hidden;
-    }
-
-    .previewVisible {
-        visibility: visible;
-    }
-
-    #joinBtn {
-        font-family: 'Korinna', serif;
-        font-size: 24px;
-        text-transform: uppercase;
-        padding: 10px 35px;
-
-        background: linear-gradient(135deg, #ffcc00, #ff6600);
-        color: black;
-
-        border: 1px solid #fff;
-        border-radius: 12px;
-
-        cursor: pointer;
-        box-shadow: 0 0 15px rgba(255, 140, 0, 0.6);
-        transition: all 0.2s ease;
-    }
-
-    #joinBtn:hover {
-        transform: scale(1.05);
-        box-shadow: 0 0 25px rgba(255, 140, 0, 0.9);
-    }
-
-    #joinBtn:active {
-        transform: scale(0.98);
-    }
-
-    #joinBtn:disabled {
-        background: gray;
-        transform: none;
-        box-shadow: none;
-    }
-
-    #enterBtn {
-        font-family: 'Korinna', serif;
-        text-transform: uppercase;
-        background: linear-gradient(135deg, #ffcc00, #ff6600);
-        color: black;
-
-        border: 1px solid #fff;
-        border-radius: 4px;
-        box-shadow: 0 0 15px rgba(255, 140, 0, 0.6);
-    }
-
-    #prevBtn, #nextBtn {
-        position: relative;
-        z-index: 999;
-
-        background: linear-gradient(135deg, #ffcc00, #ff6600);
-        color: black;
-
-        border: 1px solid #fff;
-        border-radius: 4px;
-    }
-
-    .charCard.locked {
-        filter: grayscale(1);
-        opacity: 0.3;
-        cursor: not-allowed;
-    }
-/* #endregion */
-
-/* #region Waiting Screen */
-    #waitingScreen {
-        position: fixed;
-        inset: 0;
-        background-image: 
-            url('/backgrounds/WHostBG.jpg');
-        background-size: cover;
-        background-repeat: no-repeat;
-
-        color: white;
-
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        align-items: center;
-
-        opacity: 0;
-        pointer-events: none;
-        transition: opacity 0.5s ease;
-    }
-
-    #waitingScreen.show {
-        opacity: 1;
-        pointer-events: auto;
-    }
-
-    #waitingCharacter img {
-        width: 140px;
-        margin-top: 20px;
-    }
-
-    .hidden{
-        display:none !important;
-    }
-
-    #waitingCharacter img {
-        transform: scale(0.9);
-        opacity: 0;
-        transition: all 0.4s ease;
-    }
-
-    #waitingScreen.show #waitingCharacter img {
-        transform: scale(1);
-        opacity: 1;
-    }
-
-    #waitingName {
-        color: orange;
-    }
-
-    #changeCharacterBtn {
-        font-family: 'Korinna', serif;
-        text-transform: uppercase;
-        background: linear-gradient(135deg, #ffcc00, #ff6600);
-        color: black;
-
-        border: 1px solid #fff;
-        border-radius: 4px;
-        box-shadow: 0 0 15px rgba(255, 140, 0, 0.6);
-    }
-/* #endregion */
-
-/* #region Holding Screens */
-    #instructionsHoldingScreen {
-        position: fixed;
-        inset: 0;
-
-        background-image: url('/backgrounds/instrucholding.png');
-        background-size: cover;
-        background-position: center;
-        background-repeat: no-repeat;
-
-        z-index: 5000;
-
-        display: block;
-    }
-
-    #clueHoldingScreen {
-        position: fixed;
-        background-size: cover;
-        background-repeat: no-repeat;
-        inset: 0;
-        z-index: 5000;
-    }
-/* #endregion */
-
-/* #region Animation Holding Screen */
-    #animHoldingScreen {
-        position: fixed;
-        inset: 0;
-
-        background-image:
-            url('/backgrounds/WHostBG.jpg');
-
-        background-size: cover;
-        background-position: center;
-        background-repeat: no-repeat;
-
-        display: flex;
-        justify-content: center;
-        align-items: center;
-
-        z-index: 5000;
-    }
-
-    #animHoldingSprite {
-        width: 300px;
-        height: 300px;
-
-        display: flex;
-        justify-content: center;
-        align-items: center;
-    }
-/* #endregion */
-
-/* #region Host Controls */
-    #hostControls {
-        position: fixed;
-        inset: 0;
-        background-image: 
-            url('/backgrounds/WHostBG.jpg');
-        background-size: cover;
-        background-repeat: no-repeat;
-        color: white;
-        padding-top: 140px;
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        align-items: center;
-        gap: 20px;
-        z-index: 5000;
-        opacity: 0;
-        pointer-events: none;
-        transition: opacity 0.4s ease;
-    }
-
-    #hostLogo {
-        position: absolute;
-        top: 20px;
-
-        left: 50%;
-        transform: translateX(-50%);
-        z-index: 1;
-    }
-
-    #hostControls.show {
-        opacity: 1;
-        pointer-events: auto;
-    }
-
-    #hostControls button {
-        font-family: 'Korinna';
-        font-size: 24px;
-        text-transform: uppercase;
-
-        padding: 14px 28px;
-        overflow-y: auto;
-        overflow-x: hidden;
-
-        background: linear-gradient(135deg, #ffcc00, #ff6600);
-        cursor: pointer;
-
-        border: 1px solid #fff;
-        border-radius: 12px;
-        box-shadow: 0 0 15px rgba(255, 140, 0, 0.6);
-        transition: all 0.2s ease;
-    }
-
-    .hostPage {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: 20px;
-    }
-
-    .hidden {
-        display: none !important;
-    }
-
-    .hostCategory {
-        display: contents;
-    }
-
-    .hostHeader {
-        background: #0b1c7a;
-        color: white;
-        font-weight: bold;
-        padding: 6px;
-        text-align: center;
-
-        font-size: clamp(0.55rem, 2vw, 1rem);
-        text-transform: uppercase;
-        overflow-wrap: break-word;
-    }
-
-    .hostTile {
-        background: #52878a;
-        color: gold;
-
-        padding: 10px;
-        text-align: center;
-        cursor: pointer;
-        border-radius: 6px;
-
-        aspect-ratio: 1 / 1;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        font-size: clamp(0.55rem, 2.6vw, 1.5rem);
-        text-transform: uppercase;
-        /*font-weight: bold;*/
-        overflow: hidden;
-    }
-
-    .hostTile.used {
-        opacity: 0.3;
-        pointer-events: none;
-    }
-
-    #hostBoard {
-        display: none;
-        width: 100%;
-        max-width: 100vw;
-        padding: 4px;
-        box-sizing: border-box;
-        margin-top: 20px;
-        z-index: 10;
-
-        flex-direction: column;
-        align-items: center;
-        gap: 18px;
-    }
-
-    #hostRoundLabel {
-        font-family: 'Gyparody';
-        font-size: clamp(28px, 5vw, 52px);
-        color: white;
-
-        text-align: center;
-
-        margin-bottom: 4px;
-
-        text-shadow:
-            0 0 8px rgba(255,255,255,0.5),
-            0 0 18px rgba(255,180,0,0.5);
-    }
-
-    #hostBoardGrid {
-        display: grid;
-        grid-template-columns:
-            repeat(6, minmax(0, 1fr));
-
-        gap: 4px;
-
-        width: 100%;
-    }
-
-    #finishRoundBtn,
-    #round2Btn {
-        flex-shrink: 0;
-    }
-/* #endregion */
-
-/* #region Clue Overlay */
-    #hostClueOverlay {
-        position: fixed;
-        inset: 0;
-        background: rgba(0,0,0,0.85);
-
-        /*display: none;*/
-        flex-direction: column;
-        justify-content: center;
-        align-items: center;
-        z-index: 9999;
-
-        display: flex;
-        opacity: 0;
-        pointer-events: none;
-
-        transition:
-            background 0.35s ease,
-            opacity 0.35s ease;
-    }
-
-    #hostClueOverlay.show {
-        /*display: flex;*/
-        opacity: 1;
-        pointer-events: auto;
-
-        background: rgba(0,0,0,0.85);
-    }
-
-    #hostClueCard {
-        width: min(90vw, 700px);
-        height: min(60vh, 450px);
-        perspective: 1200px;
-
-        transform: scale(0.65);
-        opacity: 0;
-
-        transition:
-            transform 0.45s cubic-bezier(.2,.9,.2,1),
-            opacity 0.35s ease;
-    }
-
-    #hostClueOverlay.show #hostClueCard {
-        transform: scale(1);
-        opacity: 1;
-    }
-
-    #dailyDoubleBanner {
-        position: fixed;
-        top: 15%;
-        left: 50%;
-        transform: translateX(-50%);
-        z-index: 10000;
-        font-size: clamp(40px, 8vw, 100px);
-        color: gold;
-        font-weight: bold;
-        text-shadow:
-            0 0 20px #000;
-        pointer-events: none;
-    }
-
-    #dailyDoubleBanner:not(.hidden) {
-        display: block;
-    }
-
-    #hostClueInner {
-        width: 100%;
-        height: 100%;
-
-        position: relative;
-
-        transform-style: preserve-3d;
-        transition: transform 0.6s ease;
-    }
-
-    #hostClueInner.flipped {
-        transform: rotateY(180deg);
-    }
-
-    .hostClueFace {
-        position: absolute;
-        inset: 0;
-
-        backface-visibility: hidden;
-
-        background: #52878a;
-
-        border: 4px solid gold;
-        border-radius: 18px;
-
-        display: flex;
-        justify-content: center;
-        align-items: center;
-
-        padding: 30px;
-        box-sizing: border-box;
-
-        text-align: center;
-
-        color: white;
-        font-size: clamp(24px, 4vw, 42px);
-    }
-
-    #hostClueBack {
-        transform: rotateY(180deg);
-    }
-
-    #hostClueControls {
-        margin-top: 22px;
-
-        display: flex;
-        gap: 16px;
-
-        justify-content: center;
-        align-items: center;
-    }
-
-    #hostClueControls button {
-        font-size: 22px;
-        padding: 12px 26px;
-    }
-
-    #hostJudgementArea {
-        margin-top: 22px;
-
-        opacity: 0;
-        transform: translateY(10px);
-
-        pointer-events: none;
-
-        transition:
-            opacity 0.25s ease,
-            transform 0.25s ease;
-    }
-
-    #hostJudgementArea.show {
-        opacity: 1;
-        transform: translateY(0);
-
-        pointer-events: auto;
-    }
-
-    #hostJudgementQuestion {
-        font-size: 24px;
-        margin-bottom: 14px;
-    }
-
-    #hostJudgementButtons {
-        display: flex;
-        gap: 16px;
-        justify-content: center;
-    }
-
-    #hostJudgementButtons button {
-        font-size: 22px;
-        padding: 12px 26px;
-    }
-/* #endregion */
-
-/* #region Buzzer Screen */
-    #buzzerPage{
-        position:fixed;
-        inset:0;
-        display:flex;
-        justify-content:center;
-        align-items:center;
-        overflow:hidden;
-    }
-
-    #buzzerBackground{
-        position:absolute;
-        inset:0;
-        width:100%;
-        height:100%;
-        object-fit:cover;
-    }
-
-    #buzzButton{
-        position:absolute;
-        left:50%;
-        top:60%;
-        transform:translate(-50%,-50%);
-
-        background:none; 
-        border:none; 
-        padding:0; 
-        cursor:pointer; 
-        z-index:2;
-    }
-
-    #buzzImg{
-        width:min(80vw,420px);
-
-        transition:
-            transform .08s ease,
-            filter .08s ease;
-
-        user-select:none;
-        -webkit-user-drag:none;
-    }
-
-    #buzzImg.down{
-        transform:translateY(12px) scale(.98);
-        filter:brightness(.9);
-    }
-/* #endregion */
-
-/* #region Answering Wait Screen */
-    #answeringPage{
-        position: fixed;
-        inset: 0;
-        background-image: 
-            url('/backgrounds/WHostBG.jpg');
-        background-size: cover;
-        background-repeat: no-repeat;
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        align-items: center;
-        z-index: 5000;
-    }
-
-    #answeringCharacter{
-        width:220px;
-        max-width:50vw;
-        margin-bottom:25px;
-    }
-
-    #answeringTitle{
-        font-size:54px;
-        color:gold;
-        margin-bottom:20px;
-    }
-
-    #answeringName{
-        font-size:40px;
-        font-weight:bold;
-        margin-bottom:20px;
-    }
-
-    .fullscreenBg{
-        position:absolute;
-        inset:0;
-        width:100%;
-        height:100%;
-        object-fit:cover;
-    }
-
-    #answeringText{
-        position:relative;
-
-        color:white;
-        text-align:center;
-    }
-/* #endregion */
-
-    #dailyDoublePage {
-
-        position: fixed;
-
-        inset: 0;
-
-        background:
-            url('/backgrounds/WHostBG.jpg')
-            center / cover;
-
-        display: flex;
-
-        flex-direction: column;
-
-        justify-content: center;
-
-        align-items: center;
-
-        text-align: center;
-
-        z-index: 6000;
-    }
-
-    .dailyDoubleText {
-        position: absolute;
-        top: 8%;
-        left: 50%;
-        transform: translateX(-50%);
-
-        font-size: 2.2rem;
-        line-height: 1;
-        z-index: 20;
-        color: gold;
-
-        font-weight: bold;
-
-        text-shadow:
-            0 0 25px black;
-    }
-
-    .dailyDoubleSubtext {
-
-        font-size:
-            clamp(22px, 5vw, 50px);
-
-        color: white;
-
-        margin-top: 20px;
-    }
-
-    #dailyDoublePlayerArea {
-        position: absolute;
-        bottom: 5%;
-        left: 50%;
-        transform: translateX(-50%);
-        z-index: 30;
-        text-align: center;
-    }
-
-    #dailyDoublePlayerTitle {
-        font-size: 1.4rem;
-        margin-bottom: 10px;
-    }
-
-    #dailyDoublePlayerButtons {
-        display: flex;
-        gap: 10px;
-        justify-content: center;
-        flex-wrap: wrap;
-    }
-
-    .dailyDoublePlayerBtn {
-        padding: 10px 18px;
-        font-size: 1rem;
-        cursor: pointer;
-    }
-
-/* #region Score Screen */
-    #scorePage {
-        position: fixed;
-        inset: 0;
-        overflow: hidden;
-    }
-
-    #scoreBackground {
-        position: absolute;
-        inset: 0;
-
-        background-position: center;
-        background-size: cover;
-        background-repeat: no-repeat;
-
-        z-index: 0;
-    }
-
-    /*#scoreHeader {
-        position: absolute;
-
-        top: 4%;
-        left: 50%;
-
-        transform: translateX(-50%);
-
-        z-index: 5;
-
-        font-size: clamp(28px, 6vw, 58px);
-        font-weight: bold;
-
-        white-space: nowrap;
-
-        text-shadow:
-            2px 2px 0 #000,
-            -2px -2px 0 #000,
-            2px -2px 0 #000,
-            -2px 2px 0 #000;
-    }*/
-
-    #scoreChange {
-        position: absolute;
-
-        top: 18%;
-        left: 57%;
-
-        z-index: 5;
-
-        font-size: clamp(24px, 5vw, 48px);
-        font-weight: bold;
-
-        white-space: nowrap;
-
-        opacity: 1;
-
-        transition:
-            opacity 0.4s ease,
-            transform 0.4s ease;
-
-        text-shadow:
-            2px 2px 0 #000,
-            -2px -2px 0 #000,
-            2px -2px 0 #000,
-            -2px 2px 0 #000;
-    }
-
-    #scoreChange.hidden {
-        opacity: 0;
-        transform: translateY(-15px);
-    }
-
-    #scoreValue {
-        position: absolute;
-
-        top: 4%;
-        left: 50%;
-
-        transform: translateX(-50%);
-        z-index: 5;
-
-        font-size: clamp(36px, 9vw, 64px);
-        font-weight: bold;
-
-        white-space: nowrap;
-
-        text-shadow:
-            3px 3px 0 #000,
-            -3px -3px 0 #000,
-            3px -3px 0 #000,
-            -3px 3px 0 #000;
-    }
-/* #endregion */
+    /* #region Fonts */
+        @font-face {
+            font-family: 'Gyparody';
+            src: url('/fonts/gyparody hv.ttf') format('truetype');
+        }
+        @font-face {
+            font-family: 'Korinna';
+            src: url('/fonts/ITC Korinna Regular.otf') format('opentype');
+        }
+    /* #endregion */
+
+    /* #region Headers & Body */
+        h1 {
+            font-family: 'Gyparody';
+            margin: 0;
+            line-height: 1;
+        }
+
+        h2 {
+            font-family: 'Korinna';
+            font-size: 20px;
+            text-transform: uppercase;
+        }
+
+        body {
+            opacity: 0;
+            animation: fadeIn 0.4s forwards;
+            text-transform: uppercase;
+            font-family: 'Korinna';
+            font-size: 16px;
+
+            margin: 0;
+            padding-top: 40px;
+            padding-bottom: 20px;
+            color: white;
+            text-shadow: 0 0 10px rgba(0,0,0,1);
+            text-align: center;
+
+            background-color: #000000;
+
+            background-image: 
+                url('/backgrounds/WLobbyBG.png');
+
+            background-repeat: 
+                no-repeat;
+
+            background-position: 
+                top center;
+
+            background-size: 
+                100% auto;
+        }
+
+        @keyframes fadeIn {
+            to { opacity: 1; }
+        }
+    /* #endregion */
+
+    /* #region Join Screen */
+        #h11 {
+            background: linear-gradient(
+                45deg,
+                #a8a8a8,
+                #ffffff,
+                #ffffff,
+                #a8a8a8
+            );
+
+            text-shadow: 0 0 10px rgba(255,255,255,0.2);
+            font-size: 45px;
+            /*text-transform: uppercase;*/
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+
+            background-clip: text;
+        }
+
+        #h12 {
+            background: linear-gradient(
+                45deg,
+                #ff9139,
+                #ffe739,
+                #ff9139,
+                #ffcb39
+            );
+
+            text-shadow: 0 0 10px rgba(255,255,255,0.2);
+            font-size: 30px;
+            /*text-transform: uppercase;*/
+            padding-bottom: 5px;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+
+            background-clip: text;
+        }
+
+        #characters {
+            display: flex;
+            overflow-x: auto;
+            gap: 18px;
+            padding: 20px 0;
+            width: 100%;
+            max-width: 100%;
+            min-height: 180px;
+            align-items: center;
+        }
+
+        #characters::before,
+        #characters::after {
+            content: "";
+            flex: 0 0 calc(50% - 70px);
+        }
+
+        #characters::-webkit-scrollbar {
+            display: none;
+        }
+
+        #characters button {
+            font-family: 'Korinna', serif;
+            position: relative;
+            overflow: hidden;
+
+            background: white;
+            border: 2px solid #ccc;
+            border-radius: 10px;
+
+            padding: 0;
+            cursor: pointer;
+
+            scroll-behavior: smooth;
+        }
+
+        .charCard {
+            flex: 0 0 clamp(110px, 30vw, 140px);
+            scroll-snap-align: center;
+            perspective: 800px;
+            transition: transform 0.3s ease, opacity 0.3s ease;
+            opacity: 0.6;
+            transform: scale(0.9);
+            position:relative;
+        }
+
+        .charCard.center {
+            opacity: 1;
+            transform: scale(1.25);
+            z-index: 10;
+        }
+
+        .cardInner {
+            width: 100%;
+            aspect-ratio: 3 / 4;
+            transition: transform 0.5s ease;
+            transform-style: preserve-3d;
+        }
+
+        .charCard.selected .cardInner {
+            transform: rotateY(180deg);
+        }
+
+        .cardFront, .cardBack {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            object-fit: cover;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .cardFront img,
+        .cardBack img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .cardBack {
+            transform: rotateY(180deg);
+        }
+
+        .charCard:active {
+            transform: scale(0.95);
+        }
+
+        .charCard.selected {
+            animation: bounceSelect 0.3s ease;
+        }
+
+        .carouselNav {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 18px;
+
+            width: 100%;
+            min-height: 80px;
+        }
+
+        #hostBtn {
+            position: absolute;
+            left: 50%;
+            top: 80%;
+            transform: translate(-50%, -50%);
+            z-index: 20;
+
+            font-family: 'Korinna';
+            font-size: 22px;
+            text-transform: uppercase;
+            padding: 12px 28px;
+
+            background: linear-gradient(135deg, #ffcc00, #ff6600);
+            cursor: pointer;
+
+            border: 1px solid #fff;
+            border-radius: 12px;
+            box-shadow: 0 0 15px rgba(255, 140, 0, 0.6);
+            transition: all 0.2s ease;
+        }
+
+        #preview {
+            font-family: 'Korinna';
+            font-size: 18px;
+            height: 220px;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            align-items: center;
+            padding-top: 10px;
+        }
+
+        #previewCharacterBox {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto;
+        }
+
+        #previewImage {
+            width: 120px;
+            aspect-ratio: 3 / 4;
+            object-fit: cover;
+            display: none;
+        }
+
+        #previewName {
+            color: orange;
+        }
+
+        .previewHidden {
+            visibility: hidden;
+        }
+
+        .previewVisible {
+            visibility: visible;
+        }
+
+        #joinBtn {
+            font-family: 'Korinna', serif;
+            font-size: 24px;
+            text-transform: uppercase;
+            padding: 10px 35px;
+
+            background: linear-gradient(135deg, #ffcc00, #ff6600);
+            color: black;
+
+            border: 1px solid #fff;
+            border-radius: 12px;
+
+            cursor: pointer;
+            box-shadow: 0 0 15px rgba(255, 140, 0, 0.6);
+            transition: all 0.2s ease;
+        }
+
+        #joinBtn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 25px rgba(255, 140, 0, 0.9);
+        }
+
+        #joinBtn:active {
+            transform: scale(0.98);
+        }
+
+        #joinBtn:disabled {
+            background: gray;
+            transform: none;
+            box-shadow: none;
+        }
+
+        #enterBtn {
+            font-family: 'Korinna', serif;
+            text-transform: uppercase;
+            background: linear-gradient(135deg, #ffcc00, #ff6600);
+            color: black;
+
+            border: 1px solid #fff;
+            border-radius: 4px;
+            box-shadow: 0 0 15px rgba(255, 140, 0, 0.6);
+        }
+
+        #prevBtn, #nextBtn {
+            position: relative;
+            z-index: 999;
+
+            background: linear-gradient(135deg, #ffcc00, #ff6600);
+            color: black;
+
+            border: 1px solid #fff;
+            border-radius: 4px;
+        }
+
+        .charCard.locked {
+            filter: grayscale(1);
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+    /* #endregion */
+
+    /* #region Waiting Screen */
+        #waitingScreen {
+            position: fixed;
+            inset: 0;
+            background-image: 
+                url('/backgrounds/WHostBG.jpg');
+            background-size: cover;
+            background-repeat: no-repeat;
+
+            color: white;
+
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.5s ease;
+        }
+
+        #waitingScreen.show {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        #waitingCharacter img {
+            width: 140px;
+            margin-top: 20px;
+        }
+
+        .hidden{
+            display:none !important;
+        }
+
+        #waitingCharacter img {
+            transform: scale(0.9);
+            opacity: 0;
+            transition: all 0.4s ease;
+        }
+
+        #waitingScreen.show #waitingCharacter img {
+            transform: scale(1);
+            opacity: 1;
+        }
+
+        #waitingName {
+            color: orange;
+        }
+
+        #changeCharacterBtn {
+            font-family: 'Korinna', serif;
+            text-transform: uppercase;
+            background: linear-gradient(135deg, #ffcc00, #ff6600);
+            color: black;
+
+            border: 1px solid #fff;
+            border-radius: 4px;
+            box-shadow: 0 0 15px rgba(255, 140, 0, 0.6);
+        }
+    /* #endregion */
+
+    /* #region Holding Screens */
+        #instructionsHoldingScreen {
+            position: fixed;
+            inset: 0;
+
+            background-image: url('/backgrounds/instrucholding.png');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+
+            z-index: 5000;
+
+            display: block;
+        }
+
+        #clueHoldingScreen {
+            position: fixed;
+            background-size: cover;
+            background-repeat: no-repeat;
+            inset: 0;
+            z-index: 5000;
+        }
+    /* #endregion */
+
+    /* #region Animation Holding Screen */
+        #animHoldingScreen {
+            position: fixed;
+            inset: 0;
+
+            background-image:
+                url('/backgrounds/WHostBG.jpg');
+
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+
+            display: flex;
+            justify-content: center;
+            align-items: center;
+
+            z-index: 5000;
+        }
+
+        #animHoldingSprite {
+            width: 300px;
+            height: 300px;
+
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+    /* #endregion */
+
+    /* #region Host Controls */
+        #hostControls {
+            position: fixed;
+            inset: 0;
+            background-image: 
+                url('/backgrounds/WHostBG.jpg');
+            background-size: cover;
+            background-repeat: no-repeat;
+            color: white;
+            padding-top: 140px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 20px;
+            z-index: 5000;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.4s ease;
+        }
+
+        #hostLogo {
+            position: absolute;
+            top: 20px;
+
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1;
+        }
+
+        #hostControls.show {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        #hostControls button {
+            font-family: 'Korinna';
+            font-size: 24px;
+            text-transform: uppercase;
+
+            padding: 14px 28px;
+            overflow-y: auto;
+            overflow-x: hidden;
+
+            background: linear-gradient(135deg, #ffcc00, #ff6600);
+            cursor: pointer;
+
+            border: 1px solid #fff;
+            border-radius: 12px;
+            box-shadow: 0 0 15px rgba(255, 140, 0, 0.6);
+            transition: all 0.2s ease;
+        }
+
+        .hostPage {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .hostCategory {
+            display: contents;
+        }
+
+        .hostHeader {
+            background: #0b1c7a;
+            color: white;
+            font-weight: bold;
+            padding: 6px;
+            text-align: center;
+
+            font-size: clamp(0.55rem, 2vw, 1rem);
+            text-transform: uppercase;
+            overflow-wrap: break-word;
+        }
+
+        .hostTile {
+            background: #52878a;
+            color: gold;
+
+            padding: 10px;
+            text-align: center;
+            cursor: pointer;
+            border-radius: 6px;
+
+            aspect-ratio: 1 / 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: clamp(0.55rem, 2.6vw, 1.5rem);
+            text-transform: uppercase;
+            /*font-weight: bold;*/
+            overflow: hidden;
+        }
+
+        .hostTile.used {
+            opacity: 0.3;
+            pointer-events: none;
+        }
+
+        #hostBoard {
+            display: none;
+            width: 100%;
+            max-width: 100vw;
+            padding: 4px;
+            box-sizing: border-box;
+            margin-top: 20px;
+            z-index: 10;
+
+            flex-direction: column;
+            align-items: center;
+            gap: 18px;
+        }
+
+        #hostRoundLabel {
+            font-family: 'Gyparody';
+            font-size: clamp(28px, 5vw, 52px);
+            color: white;
+
+            text-align: center;
+
+            margin-bottom: 4px;
+
+            text-shadow:
+                0 0 8px rgba(255,255,255,0.5),
+                0 0 18px rgba(255,180,0,0.5);
+        }
+
+        #hostBoardGrid {
+            display: grid;
+            grid-template-columns:
+                repeat(6, minmax(0, 1fr));
+
+            gap: 4px;
+
+            width: 100%;
+        }
+
+        #finishRoundBtn,
+        #round2Btn {
+            flex-shrink: 0;
+        }
+    /* #endregion */
+
+    /* #region Clue Overlay */
+        #hostClueOverlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.85);
+
+            /*display: none;*/
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+
+            display: flex;
+            opacity: 0;
+            pointer-events: none;
+
+            transition:
+                background 0.35s ease,
+                opacity 0.35s ease;
+        }
+
+        #hostClueOverlay.show {
+            /*display: flex;*/
+            opacity: 1;
+            pointer-events: auto;
+
+            background: rgba(0,0,0,0.85);
+        }
+
+        #hostClueCard {
+            width: min(90vw, 700px);
+            height: min(60vh, 450px);
+            perspective: 1200px;
+
+            transform: scale(0.65);
+            opacity: 0;
+
+            transition:
+                transform 0.45s cubic-bezier(.2,.9,.2,1),
+                opacity 0.35s ease;
+        }
+
+        #hostClueOverlay.show #hostClueCard {
+            transform: scale(1);
+            opacity: 1;
+        }
+
+        #dailyDoubleBanner {
+            position: fixed;
+            top: 15%;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 10000;
+            font-size: clamp(40px, 8vw, 100px);
+            color: gold;
+            font-weight: bold;
+            text-shadow:
+                0 0 20px #000;
+            pointer-events: none;
+        }
+
+        #dailyDoubleBanner:not(.hidden) {
+            display: block;
+        }
+
+        #hostClueInner {
+            width: 100%;
+            height: 100%;
+
+            position: relative;
+
+            transform-style: preserve-3d;
+            transition: transform 0.6s ease;
+        }
+
+        #hostClueInner.flipped {
+            transform: rotateY(180deg);
+        }
+
+        .hostClueFace {
+            position: absolute;
+            inset: 0;
+
+            backface-visibility: hidden;
+
+            background: #52878a;
+
+            border: 4px solid gold;
+            border-radius: 18px;
+
+            display: flex;
+            justify-content: center;
+            align-items: center;
+
+            padding: 30px;
+            box-sizing: border-box;
+
+            text-align: center;
+
+            color: white;
+            font-size: clamp(24px, 4vw, 42px);
+        }
+
+        #hostClueBack {
+            transform: rotateY(180deg);
+        }
+
+        #hostClueControls {
+            margin-top: 22px;
+
+            display: flex;
+            gap: 16px;
+
+            justify-content: center;
+            align-items: center;
+        }
+
+        #hostClueControls button {
+            font-size: 22px;
+            padding: 12px 26px;
+        }
+
+        #hostJudgementArea {
+            margin-top: 22px;
+
+            opacity: 0;
+            transform: translateY(10px);
+
+            pointer-events: none;
+
+            transition:
+                opacity 0.25s ease,
+                transform 0.25s ease;
+        }
+
+        #hostJudgementArea.show {
+            opacity: 1;
+            transform: translateY(0);
+
+            pointer-events: auto;
+        }
+
+        #hostJudgementQuestion {
+            font-size: 24px;
+            margin-bottom: 14px;
+        }
+
+        #hostJudgementButtons {
+            display: flex;
+            gap: 16px;
+            justify-content: center;
+        }
+
+        #hostJudgementButtons button {
+            font-size: 22px;
+            padding: 12px 26px;
+        }
+    /* #endregion */
+
+    /* #region Buzzer Screen */
+        #buzzerPage{
+            position:fixed;
+            inset:0;
+            display:flex;
+            justify-content:center;
+            align-items:center;
+            overflow:hidden;
+        }
+
+        #buzzerBackground{
+            position:absolute;
+            inset:0;
+            width:100%;
+            height:100%;
+            object-fit:cover;
+        }
+
+        #buzzButton{
+            position:absolute;
+            left:50%;
+            top:60%;
+            transform:translate(-50%,-50%);
+
+            background:none; 
+            border:none; 
+            padding:0; 
+            cursor:pointer; 
+            z-index:2;
+        }
+
+        #buzzImg{
+            width:min(80vw,420px);
+
+            transition:
+                transform .08s ease,
+                filter .08s ease;
+
+            user-select:none;
+            -webkit-user-drag:none;
+        }
+
+        #buzzImg.down{
+            transform:translateY(12px) scale(.98);
+            filter:brightness(.9);
+        }
+    /* #endregion */
+
+    /* #region Answering Wait Screen */
+        #answeringPage{
+            position: fixed;
+            inset: 0;
+            background-image: 
+                url('/backgrounds/WHostBG.jpg');
+            background-size: cover;
+            background-repeat: no-repeat;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 5000;
+        }
+
+        #answeringCharacter{
+            width:220px;
+            max-width:50vw;
+            margin-bottom:25px;
+        }
+
+        #answeringTitle{
+            font-size:54px;
+            color:gold;
+            margin-bottom:20px;
+        }
+
+        #answeringName{
+            font-size:40px;
+            font-weight:bold;
+            margin-bottom:20px;
+        }
+
+        .fullscreenBg{
+            position:absolute;
+            inset:0;
+            width:100%;
+            height:100%;
+            object-fit:cover;
+        }
+
+        #answeringText{
+            position:relative;
+
+            color:white;
+            text-align:center;
+        }
+    /* #endregion */
+
+        #dailyDoublePage {
+
+            position: fixed;
+
+            inset: 0;
+
+            background:
+                url('/backgrounds/WHostBG.jpg')
+                center / cover;
+
+            display: flex;
+
+            flex-direction: column;
+
+            justify-content: center;
+
+            align-items: center;
+
+            text-align: center;
+
+            z-index: 6000;
+        }
+
+        .dailyDoubleText {
+            position: absolute;
+            top: 8%;
+            left: 50%;
+            transform: translateX(-50%);
+
+            font-size: 2.2rem;
+            line-height: 1;
+            z-index: 20;
+            color: gold;
+
+            font-weight: bold;
+
+            text-shadow:
+                0 0 25px black;
+        }
+
+        .dailyDoubleSubtext {
+
+            font-size:
+                clamp(22px, 5vw, 50px);
+
+            color: white;
+
+            margin-top: 20px;
+        }
+
+        #dailyDoublePlayerArea {
+            position: absolute;
+            bottom: 5%;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 30;
+            text-align: center;
+        }
+
+        #dailyDoublePlayerTitle {
+            font-size: 1.4rem;
+            margin-bottom: 10px;
+        }
+
+        #dailyDoublePlayerButtons {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .dailyDoublePlayerBtn {
+            padding: 10px 18px;
+            font-size: 1rem;
+            cursor: pointer;
+        }
+
+    /* #region Score Screen */
+        #scorePage {
+            position: fixed;
+            inset: 0;
+            overflow: hidden;
+        }
+
+        #scoreBackground {
+            position: absolute;
+            inset: 0;
+
+            background-position: center;
+            background-size: cover;
+            background-repeat: no-repeat;
+
+            z-index: 0;
+        }
+
+        /*#scoreHeader {
+            position: absolute;
+
+            top: 4%;
+            left: 50%;
+
+            transform: translateX(-50%);
+
+            z-index: 5;
+
+            font-size: clamp(28px, 6vw, 58px);
+            font-weight: bold;
+
+            white-space: nowrap;
+
+            text-shadow:
+                2px 2px 0 #000,
+                -2px -2px 0 #000,
+                2px -2px 0 #000,
+                -2px 2px 0 #000;
+        }*/
+
+        #scoreChange {
+            position: absolute;
+
+            top: 18%;
+            left: 57%;
+
+            z-index: 5;
+
+            font-size: clamp(24px, 5vw, 48px);
+            font-weight: bold;
+
+            white-space: nowrap;
+
+            opacity: 1;
+
+            transition:
+                opacity 0.4s ease,
+                transform 0.4s ease;
+
+            text-shadow:
+                2px 2px 0 #000,
+                -2px -2px 0 #000,
+                2px -2px 0 #000,
+                -2px 2px 0 #000;
+        }
+
+        #scoreChange.hidden {
+            opacity: 0;
+            transform: translateY(-15px);
+        }
+
+        #scoreValue {
+            position: absolute;
+
+            top: 4%;
+            left: 50%;
+
+            transform: translateX(-50%);
+            z-index: 5;
+
+            font-size: clamp(36px, 9vw, 64px);
+            font-weight: bold;
+
+            white-space: nowrap;
+
+            text-shadow:
+                3px 3px 0 #000,
+                -3px -3px 0 #000,
+                3px -3px 0 #000,
+                -3px 3px 0 #000;
+        }
+    /* #endregion */
 </style>
-
 
 <!-- HTML -->
     <title>Jeopardy Lobby</title>
@@ -1252,6 +1250,7 @@
 </div>
 
 <script src="/socket.io/socket.io.js"></script>
+
 <script>
     //SOCKET CONNECTION
     const socket = io({
@@ -2412,488 +2411,488 @@
         updateLockedUI();
     }
 
-/* #region HOST */
-    document.addEventListener("click", e => {
-        const overlay = document.getElementById("hostClueOverlay");
+    /* #region HOST */
+        document.addEventListener("click", e => {
+            const overlay = document.getElementById("hostClueOverlay");
 
-        if (!overlay) return;
-        if (!overlay.classList.contains("show")) return;
+            if (!overlay) return;
+            if (!overlay.classList.contains("show")) return;
 
-        const card = document.getElementById("hostClueCard");
+            const card = document.getElementById("hostClueCard");
 
-        if (!card) return;
-        if (!card.contains(e.target)) return;
+            if (!card) return;
+            if (!card.contains(e.target)) return;
 
-        flipHostCard();
-    });
-
-    //BECOME HOST
-    function joinAsHost(){
-        if(!currentSession){
-            console.log("Cannot become host yet - session not received.");
-            return;
-        }
-
-        requestingHost=true;
-        //isHost=true;
-        if(!localStorage.getItem("lastHostPage")){
-            localStorage.setItem("lastHostPage","hostJoinPg");
-        }
-
-        console.log("REQUESTING HOST SLOT. SESSION:",currentSession);
-
-        socket.emit("join",{isHost:true});
-    }
-
-    //HOST JOIN SUCCESS
-    function handleHostConnected() {
-        console.log("================================");
-        console.log("HANDLE HOST CONNECTED");
-        console.log("Session:", currentSession);
-        console.log("Socket:", socket.id);
-        console.log("================================");
-
-        isHost=true;
-        console.log("HOST CONFIRMED. isHost:",isHost,"stored:",localStorage.getItem("isHost"));
-        requestingHost = false;
-
-        localStorage.setItem("isHost", "true");
-        localStorage.setItem("hostSession", currentSession);
-        const savedPage=localStorage.getItem("lastHostPage")||"hostJoinPg";
-        localStorage.setItem("lastHostPage",savedPage);
-
-        showHostControls();
-        requestAnimationFrame(() => {
-            restoreHostPage("hostJoinPg");
+            flipHostCard();
         });
 
-        console.log("HOST UI SHOULD NOW BE ON hostJoinPg");
-    }
-
-    //SHOW HOST CONTROLS
-    function showHostControls() {
-        const lobby = document.getElementById("lobbyUI");
-        const controls = document.getElementById("hostControls");
-
-        if (lobby) {
-            lobby.style.display = "none";
-        }
-
-        if (!controls) {
-            console.error("Host controls container not found.");
-            return;
-        }
-
-        controls.classList.remove("hidden");
-
-        requestAnimationFrame(() => {
-            controls.classList.add("show");
-            setTimeout(() => {
-                let savedPage = localStorage.getItem("lastHostPage");
-
-                if (!savedPage) {
-                    savedPage = "hostJoinPg";
-                }
-                console.log("RESTORING HOST PAGE:", savedPage);
-                restoreHostPage(savedPage);
-            }, 50);
-        });
-    }
-
-    //RESTORE HOST PAGE
-    function restoreHostPage(pageId){
-        const controls=document.getElementById("hostControls");
-        if(!controls){
-            console.error("Host controls container not found.");
-            return;
-        }
-
-        controls.classList.remove("hidden");
-        controls.classList.add("show");
-        controls.style.pointerEvents="auto";
-
-        const hostPages=["hostJoinPg","hostLobbyPg","hostInstructionsPg","hostInstrucCutscenePg"];
-
-        hostPages.forEach(id=>{
-            const page=document.getElementById(id);
-            if(page){
-                page.classList.add("hidden");
-                page.style.pointerEvents="none";
+        //BECOME HOST
+        function joinAsHost(){
+            if(!currentSession){
+                console.log("Cannot become host yet - session not received.");
+                return;
             }
-        });
 
-        const hostBoard=document.getElementById("hostBoard");
-        if(hostBoard){
-            hostBoard.style.display="none";
-            hostBoard.classList.add("hidden");
-            hostBoard.style.pointerEvents="none";
+            requestingHost=true;
+            //isHost=true;
+            if(!localStorage.getItem("lastHostPage")){
+                localStorage.setItem("lastHostPage","hostJoinPg");
+            }
+
+            console.log("REQUESTING HOST SLOT. SESSION:",currentSession);
+
+            socket.emit("join",{isHost:true});
         }
 
-        const instructionsBtn=document.getElementById("instructionsBtn");
-        const showInstrucCutBtn=document.getElementById("showInstrucCutBtn");
-        const showBoardIntroBtn=document.getElementById("showBoardIntroBtn");
+        //HOST JOIN SUCCESS
+        function handleHostConnected() {
+            console.log("================================");
+            console.log("HANDLE HOST CONNECTED");
+            console.log("Session:", currentSession);
+            console.log("Socket:", socket.id);
+            console.log("================================");
 
-        if(instructionsBtn) instructionsBtn.style.display="none";
-        if(showInstrucCutBtn) showInstrucCutBtn.style.display="none";
-        if(showBoardIntroBtn) showBoardIntroBtn.style.display="none";
+            isHost=true;
+            console.log("HOST CONFIRMED. isHost:",isHost,"stored:",localStorage.getItem("isHost"));
+            requestingHost = false;
 
-        switch(pageId){
-            case "hostJoinPg":
-                document.getElementById("hostJoinPg")?.classList.remove("hidden");
-                document.getElementById("hostJoinPg").style.pointerEvents="auto";
-                break;
+            localStorage.setItem("isHost", "true");
+            localStorage.setItem("hostSession", currentSession);
+            const savedPage=localStorage.getItem("lastHostPage")||"hostJoinPg";
+            localStorage.setItem("lastHostPage",savedPage);
 
-            case "hostLobbyPg":
-                document.getElementById("hostLobbyPg")?.classList.remove("hidden");
-                document.getElementById("hostLobbyPg").style.pointerEvents="auto";
-                if(instructionsBtn) instructionsBtn.style.display="block";
-                break;
-
-            case "hostInstructionsPg":
-                document.getElementById("hostInstructionsPg")?.classList.remove("hidden");
-                document.getElementById("hostInstructionsPg").style.pointerEvents="auto";
-                if(showInstrucCutBtn) showInstrucCutBtn.style.display="block";
-                break;
-
-            case "hostInstrucCutscenePg":
-                document.getElementById("hostInstrucCutscenePg")?.classList.remove("hidden");
-                document.getElementById("hostInstrucCutscenePg").style.pointerEvents="auto";
-                if(showBoardIntroBtn) showBoardIntroBtn.style.display="block";
-                break;
-
-            case "hostBoard":
-                if(hostBoard){
-                    hostBoard.classList.remove("hidden");
-                    hostBoard.style.display="flex";
-                    hostBoard.style.pointerEvents="auto";
-                }
-                break;
-
-            default:
-                pageId="hostJoinPg";
-                document.getElementById("hostJoinPg")?.classList.remove("hidden");
-                document.getElementById("hostJoinPg").style.pointerEvents="auto";
-                break;
-        }
-
-        localStorage.setItem("lastHostPage",pageId);
-        console.log("HOST PAGE SAVED:",pageId);
-    }
-
-    //HOST ENABLE LOBBY
-    function hostEnableLobby() {
-        console.log("HOST ENABLE LOBBY");
-        localStorage.setItem("lastHostPage","hostLobbyPg");
-        socket.emit("hostAction",{type:"startGame"});
-        restoreHostPage("hostLobbyPg");
-    }
-
-    //HOST SHOW INSTRUCTIONS
-    function hostShowInstructions() {
-        console.log("HOST SHOW INSTRUCTIONS");
-        localStorage.setItem("lastHostPage","hostInstructionsPg");
-        restoreHostPage("hostInstructionsPg");
-        socket.emit("hostAction",{type:"showInstructions"});
-    }
-
-    //HOST SHOW INSTRUCTION CUTSCENE
-    function hostShowInstrucCutscene() {
-        console.log("HOST SHOW INSTRUCTION CUTSCENE");
-        localStorage.setItem("lastHostPage","hostInstrucCutscenePg");
-        restoreHostPage("hostInstrucCutscenePg");
-    }
-
-    //HOST SHOW BOARD INTRO
-    function hostShowBoardIntro() {
-        console.log("HOST SHOW BOARD INTRO");
-        localStorage.setItem("lastHostPage","hostBoard");
-        restoreHostPage("hostBoard");
-        socket.emit("hostAction",{type:"showBoardIntro"});
-    }
-
-    function hostStartRound2() {
-        console.log("HOST START ROUND 2");
-
-        socket.emit("hostAction", {
-            type: "startRound2"
-        });
-
-        const round2Btn = document.getElementById("round2Btn");
-
-        if (round2Btn) {
-            round2Btn.style.display = "none";
-        }
-    }
-
-    function updateFinishRoundButton() {
-        const finishBtn = document.getElementById("finishRoundBtn");
-        if (!finishBtn) return;
-        const tiles = document.querySelectorAll("#hostBoardGrid .hostTile:not(.empty)");
-
-        if (!tiles.length) {
-            finishBtn.style.display = "none";
-            return;
-        }
-        const allUsed = Array.from(tiles).every(tile => tile.classList.contains("used"));
-        finishBtn.style.display = allUsed ? "block" : "none";
-    }
-
-    //BUILD HOST BOARD
-    function buildHostBoard(board) {
-        const hostBoard = document.getElementById("hostBoardGrid");
-
-        if (!hostBoard) {
-            console.error("hostBoardGrid element not found.");
-            return;
-        }
-
-        hostBoard.innerHTML = "";
-        const finishBtn = document.getElementById("finishRoundBtn");
-        const round2Btn = document.getElementById("round2Btn");
-
-        if (finishBtn) {
-            finishBtn.style.display = "none";
-        }
-
-        if (round2Btn) {
-            round2Btn.style.display = "none";
-        }
-        const roundLabel = document.getElementById("hostRoundLabel");
-
-        if (roundLabel) {
-            roundLabel.textContent = currentRound === 2
-                ? "DOUBLE JEOPARDY"
-                : "JEOPARDY";
-        }
-
-        board.categories.forEach(category => {
-            const header = document.createElement("div");
-            header.className = "hostHeader";
-            header.innerText = category.categoryName;
-            hostBoard.appendChild(header);
-        }
-
-        // CLUE VALUES
-        const values = currentRound === 2
-            ? ["400", "800", "1200", "1600", "2000"]
-            : ["200", "400", "600", "800", "1000"];
-
-        values.forEach(value => {
-            board.categories.forEach(category => {
-                const clue = category.clues.find(c => c.value === value);
-                const tile = document.createElement("div");
-
-                tile.className = "hostTile";
-
-                if (!clue) {
-                    tile.classList.add("empty");
-                    hostBoard.appendChild(tile);
-                    return;
-                }
-
-                tile.innerText = "$" + value;
-                tile.dataset.clueId = clue.clueData.id;
-                tile.onclick = () => {
-                    if (tile.classList.contains("used")) {
-                        return;
-                    }
-                    currentHostClue = clue;
-                    currentHostTile = tile;
-                    currentDailyDouble = clue.clueData.dailyDouble ? clue : null;
-
-                    showHostClue(clue);
-
-                    socket.emit("hostAction", {
-                        type: "selectClue",
-                        payload: {
-                            value,
-                            clueData:clue.clueData
-                        }
-                    });
-                };
-                hostBoard.appendChild(tile);
+            showHostControls();
+            requestAnimationFrame(() => {
+                restoreHostPage("hostJoinPg");
             });
-        });
-    }
 
-    //SHOW HOST CLUE
-    function showHostClue(clue) {
-        hostAnswerShowing = false;
-        const clueText = document.getElementById("hostClueText");
-        const answerText = document.getElementById("hostAnswerText");
-        const overlay = document.getElementById("hostClueOverlay");
-        const inner = document.getElementById("hostClueInner");
-        const judgement = document.getElementById("hostJudgementArea");
-        const enableBtn = document.getElementById("enableBuzzerBtn");
-        const dailyDoubleBanner = document.getElementById("dailyDoubleBanner");
-        if (!clue || !clue.clueData) {
-            console.error("Invalid clue passed to showHostClue");
-            return;
+            console.log("HOST UI SHOULD NOW BE ON hostJoinPg");
         }
 
-        clueText.textContent = clue.clueData.clue;
-        answerText.textContent = clue.clueData.answer;
+        //SHOW HOST CONTROLS
+        function showHostControls() {
+            const lobby = document.getElementById("lobbyUI");
+            const controls = document.getElementById("hostControls");
 
-        overlay.classList.remove("hidden");
-        overlay.classList.add("show");
-
-        inner.classList.remove("flipped");
-        judgement.classList.remove("show");
-        buzzersEnabled = false;
-
-        // DAILY DOUBLE
-        if (clue.clueData.dailyDouble === true) {
-            currentDailyDouble = clue;
-
-            if (dailyDoubleBanner) {
-                dailyDoubleBanner.classList.remove("hidden");
+            if (lobby) {
+                lobby.style.display = "none";
             }
 
-            // Daily Doubles do NOT use the buzzer.
-            enableBtn.style.display = "none";
-
-            socket.emit("hostAction", {
-                type: "dailyDouble",
-                clueId: clue.clueData.id
-            });
-            showDailyDoublePlayerButtons();
-        } else {
-            currentDailyDouble = null;
-
-            if (dailyDoubleBanner) {
-                dailyDoubleBanner.classList.add("hidden");
+            if (!controls) {
+                console.error("Host controls container not found.");
+                return;
             }
-            // Normal clue gets the buzzer button.
-            enableBtn.style.display = "block";
-            hideDailyDoublePlayerButtons();
-        }
 
-        // DAILY DOUBLE
-        if (clue.clueData.dailyDouble === true) {
-            currentDailyDouble = clue;
-
-            if (dailyDoubleBanner) {
-                dailyDoubleBanner.classList.remove("hidden");
-            }
-            console.log("DAILY DOUBLE:", clue.clueData.id);
-
-            socket.emit("hostAction", {
-                type: "dailyDouble",
-                clueId: clue.clueData.id
-            });
-        } else {
-
-            currentDailyDouble = null;
-
-            if (dailyDoubleBanner) {
-                dailyDoubleBanner.classList.add("hidden");
-            }
-        }
-    }
-
-    //FLIP HOST CARD
-    function flipHostCard() {
-        const inner = document.getElementById("hostClueInner");
-        const judgement = document.getElementById("hostJudgementArea");
-        const enableBtn = document.getElementById("enableBuzzerBtn");
-        hostAnswerShowing = !hostAnswerShowing;
-
-        inner.classList.toggle("flipped", hostAnswerShowing);
-
-        if (hostAnswerShowing) {
-            if (currentBuzzPlayer) {
-                judgement.classList.add("show");
-            }
-            enableBtn.style.display = buzzersEnabled ? "none" : "block";
-        } else {
-            enableBtn.style.display = buzzersEnabled ? "none" : "block";
-        }
-    }
-
-    //HOST REVEAL
-    function hostReveal() {
-        flipHostCard();
-    }
-
-    //HOST ANSWER CORRECT
-    function hostAnswerCorrect() {
-        socket.emit("hostAction", {
-            type: "answerCorrect"
-        });
-
-        closeHostClue();
-    }
-
-    //HOST CONTINUE
-    function hostContinue() {
-        socket.emit("hostAction", {
-            type: "continueClue"
-        });
-
-        closeHostClue();
-    }
-
-    //HOST ANSWER WRONG
-    function hostAnswerWrong() {
-        console.log("ANSWER WRONG");
-        document.getElementById("hostJudgementArea").classList.remove("show");
-        document.getElementById("hostClueInner").classList.remove("flipped");
-
-        hostAnswerShowing = false;
-        currentBuzzPlayer = null;
-
-        socket.emit("hostAction", {
-            type: "resumeBuzzing"
-        });
-    }
-
-    //CLOSE HOST CLUE
-    function closeHostClue() {
-        document.getElementById("enableBuzzerBtn").style.display = "none";
-        document.getElementById("hostClueOverlay").classList.remove("show");
-        document.getElementById("hostJudgementArea").classList.remove("show");
-        document.getElementById("hostClueInner").classList.remove("flipped");
-
-        const dailyDoubleBanner = document.getElementById("dailyDoubleBanner");
-
-        if (dailyDoubleBanner) {
-            dailyDoubleBanner.classList.add("hidden");
-        }
-
-        currentBuzzPlayer = null;
-        hostAnswerShowing = false;
-        currentDailyDouble = null;
-
-        if (currentHostTile) {
-            currentHostTile.classList.add("used");
+            controls.classList.remove("hidden");
 
             requestAnimationFrame(() => {
-                updateFinishRoundButton();
+                controls.classList.add("show");
+                setTimeout(() => {
+                    let savedPage = localStorage.getItem("lastHostPage");
+
+                    if (!savedPage) {
+                        savedPage = "hostJoinPg";
+                    }
+                    console.log("RESTORING HOST PAGE:", savedPage);
+                    restoreHostPage(savedPage);
+                }, 50);
             });
         }
-    }
 
-    //ENABLE BUZZER
-    function hostEnableBuzzer() {
-        buzzersEnabled = true;
-        document.getElementById("enableBuzzerBtn").style.display = "none";
-
-        socket.emit("hostAction", {
-            type: "resumeBuzzing"
-        });
-    }
-
-    //HOST FINISH ROUND
-    function hostFinishRound() {
-        socket.emit(
-            "hostAction",
-            {
-                type:
-                    "roundComplete"
+        //RESTORE HOST PAGE
+        function restoreHostPage(pageId){
+            const controls=document.getElementById("hostControls");
+            if(!controls){
+                console.error("Host controls container not found.");
+                return;
             }
-        );
-    }
-/* #endregion */
+
+            controls.classList.remove("hidden");
+            controls.classList.add("show");
+            controls.style.pointerEvents="auto";
+
+            const hostPages=["hostJoinPg","hostLobbyPg","hostInstructionsPg","hostInstrucCutscenePg"];
+
+            hostPages.forEach(id=>{
+                const page=document.getElementById(id);
+                if(page){
+                    page.classList.add("hidden");
+                    page.style.pointerEvents="none";
+                }
+            });
+
+            const hostBoard=document.getElementById("hostBoard");
+            if(hostBoard){
+                hostBoard.style.display="none";
+                hostBoard.classList.add("hidden");
+                hostBoard.style.pointerEvents="none";
+            }
+
+            const instructionsBtn=document.getElementById("instructionsBtn");
+            const showInstrucCutBtn=document.getElementById("showInstrucCutBtn");
+            const showBoardIntroBtn=document.getElementById("showBoardIntroBtn");
+
+            if(instructionsBtn) instructionsBtn.style.display="none";
+            if(showInstrucCutBtn) showInstrucCutBtn.style.display="none";
+            if(showBoardIntroBtn) showBoardIntroBtn.style.display="none";
+
+            switch(pageId){
+                case "hostJoinPg":
+                    document.getElementById("hostJoinPg")?.classList.remove("hidden");
+                    document.getElementById("hostJoinPg").style.pointerEvents="auto";
+                    break;
+
+                case "hostLobbyPg":
+                    document.getElementById("hostLobbyPg")?.classList.remove("hidden");
+                    document.getElementById("hostLobbyPg").style.pointerEvents="auto";
+                    if(instructionsBtn) instructionsBtn.style.display="block";
+                    break;
+
+                case "hostInstructionsPg":
+                    document.getElementById("hostInstructionsPg")?.classList.remove("hidden");
+                    document.getElementById("hostInstructionsPg").style.pointerEvents="auto";
+                    if(showInstrucCutBtn) showInstrucCutBtn.style.display="block";
+                    break;
+
+                case "hostInstrucCutscenePg":
+                    document.getElementById("hostInstrucCutscenePg")?.classList.remove("hidden");
+                    document.getElementById("hostInstrucCutscenePg").style.pointerEvents="auto";
+                    if(showBoardIntroBtn) showBoardIntroBtn.style.display="block";
+                    break;
+
+                case "hostBoard":
+                    if(hostBoard){
+                        hostBoard.classList.remove("hidden");
+                        hostBoard.style.display="flex";
+                        hostBoard.style.pointerEvents="auto";
+                    }
+                    break;
+
+                default:
+                    pageId="hostJoinPg";
+                    document.getElementById("hostJoinPg")?.classList.remove("hidden");
+                    document.getElementById("hostJoinPg").style.pointerEvents="auto";
+                    break;
+            }
+
+            localStorage.setItem("lastHostPage",pageId);
+            console.log("HOST PAGE SAVED:",pageId);
+        }
+
+        //HOST ENABLE LOBBY
+        function hostEnableLobby() {
+            console.log("HOST ENABLE LOBBY");
+            localStorage.setItem("lastHostPage","hostLobbyPg");
+            socket.emit("hostAction",{type:"startGame"});
+            restoreHostPage("hostLobbyPg");
+        }
+
+        //HOST SHOW INSTRUCTIONS
+        function hostShowInstructions() {
+            console.log("HOST SHOW INSTRUCTIONS");
+            localStorage.setItem("lastHostPage","hostInstructionsPg");
+            restoreHostPage("hostInstructionsPg");
+            socket.emit("hostAction",{type:"showInstructions"});
+        }
+
+        //HOST SHOW INSTRUCTION CUTSCENE
+        function hostShowInstrucCutscene() {
+            console.log("HOST SHOW INSTRUCTION CUTSCENE");
+            localStorage.setItem("lastHostPage","hostInstrucCutscenePg");
+            restoreHostPage("hostInstrucCutscenePg");
+        }
+
+        //HOST SHOW BOARD INTRO
+        function hostShowBoardIntro() {
+            console.log("HOST SHOW BOARD INTRO");
+            localStorage.setItem("lastHostPage","hostBoard");
+            restoreHostPage("hostBoard");
+            socket.emit("hostAction",{type:"showBoardIntro"});
+        }
+
+        function hostStartRound2() {
+            console.log("HOST START ROUND 2");
+
+            socket.emit("hostAction", {
+                type: "startRound2"
+            });
+
+            const round2Btn = document.getElementById("round2Btn");
+
+            if (round2Btn) {
+                round2Btn.style.display = "none";
+            }
+        }
+
+        function updateFinishRoundButton() {
+            const finishBtn = document.getElementById("finishRoundBtn");
+            if (!finishBtn) return;
+            const tiles = document.querySelectorAll("#hostBoardGrid .hostTile:not(.empty)");
+
+            if (!tiles.length) {
+                finishBtn.style.display = "none";
+                return;
+            }
+            const allUsed = Array.from(tiles).every(tile => tile.classList.contains("used"));
+            finishBtn.style.display = allUsed ? "block" : "none";
+        }
+
+        //BUILD HOST BOARD
+        function buildHostBoard(board) {
+            const hostBoard = document.getElementById("hostBoardGrid");
+
+            if (!hostBoard) {
+                console.error("hostBoardGrid element not found.");
+                return;
+            }
+
+            hostBoard.innerHTML = "";
+            const finishBtn = document.getElementById("finishRoundBtn");
+            const round2Btn = document.getElementById("round2Btn");
+
+            if (finishBtn) {
+                finishBtn.style.display = "none";
+            }
+
+            if (round2Btn) {
+                round2Btn.style.display = "none";
+            }
+            const roundLabel = document.getElementById("hostRoundLabel");
+
+            if (roundLabel) {
+                roundLabel.textContent = currentRound === 2
+                    ? "DOUBLE JEOPARDY"
+                    : "JEOPARDY";
+            }
+
+            board.categories.forEach(category => {
+                const header = document.createElement("div");
+                header.className = "hostHeader";
+                header.innerText = category.categoryName;
+                hostBoard.appendChild(header);
+            }
+
+            // CLUE VALUES
+            const values = currentRound === 2
+                ? ["400", "800", "1200", "1600", "2000"]
+                : ["200", "400", "600", "800", "1000"];
+
+            values.forEach(value => {
+                board.categories.forEach(category => {
+                    const clue = category.clues.find(c => c.value === value);
+                    const tile = document.createElement("div");
+
+                    tile.className = "hostTile";
+
+                    if (!clue) {
+                        tile.classList.add("empty");
+                        hostBoard.appendChild(tile);
+                        return;
+                    }
+
+                    tile.innerText = "$" + value;
+                    tile.dataset.clueId = clue.clueData.id;
+                    tile.onclick = () => {
+                        if (tile.classList.contains("used")) {
+                            return;
+                        }
+                        currentHostClue = clue;
+                        currentHostTile = tile;
+                        currentDailyDouble = clue.clueData.dailyDouble ? clue : null;
+
+                        showHostClue(clue);
+
+                        socket.emit("hostAction", {
+                            type: "selectClue",
+                            payload: {
+                                value,
+                                clueData:clue.clueData
+                            }
+                        });
+                    };
+                    hostBoard.appendChild(tile);
+                });
+            });
+        }
+
+        //SHOW HOST CLUE
+        function showHostClue(clue) {
+            hostAnswerShowing = false;
+            const clueText = document.getElementById("hostClueText");
+            const answerText = document.getElementById("hostAnswerText");
+            const overlay = document.getElementById("hostClueOverlay");
+            const inner = document.getElementById("hostClueInner");
+            const judgement = document.getElementById("hostJudgementArea");
+            const enableBtn = document.getElementById("enableBuzzerBtn");
+            const dailyDoubleBanner = document.getElementById("dailyDoubleBanner");
+            if (!clue || !clue.clueData) {
+                console.error("Invalid clue passed to showHostClue");
+                return;
+            }
+
+            clueText.textContent = clue.clueData.clue;
+            answerText.textContent = clue.clueData.answer;
+
+            overlay.classList.remove("hidden");
+            overlay.classList.add("show");
+
+            inner.classList.remove("flipped");
+            judgement.classList.remove("show");
+            buzzersEnabled = false;
+
+            // DAILY DOUBLE
+            if (clue.clueData.dailyDouble === true) {
+                currentDailyDouble = clue;
+
+                if (dailyDoubleBanner) {
+                    dailyDoubleBanner.classList.remove("hidden");
+                }
+
+                // Daily Doubles do NOT use the buzzer.
+                enableBtn.style.display = "none";
+
+                socket.emit("hostAction", {
+                    type: "dailyDouble",
+                    clueId: clue.clueData.id
+                });
+                showDailyDoublePlayerButtons();
+            } else {
+                currentDailyDouble = null;
+
+                if (dailyDoubleBanner) {
+                    dailyDoubleBanner.classList.add("hidden");
+                }
+                // Normal clue gets the buzzer button.
+                enableBtn.style.display = "block";
+                hideDailyDoublePlayerButtons();
+            }
+
+            // DAILY DOUBLE
+            if (clue.clueData.dailyDouble === true) {
+                currentDailyDouble = clue;
+
+                if (dailyDoubleBanner) {
+                    dailyDoubleBanner.classList.remove("hidden");
+                }
+                console.log("DAILY DOUBLE:", clue.clueData.id);
+
+                socket.emit("hostAction", {
+                    type: "dailyDouble",
+                    clueId: clue.clueData.id
+                });
+            } else {
+
+                currentDailyDouble = null;
+
+                if (dailyDoubleBanner) {
+                    dailyDoubleBanner.classList.add("hidden");
+                }
+            }
+        }
+
+        //FLIP HOST CARD
+        function flipHostCard() {
+            const inner = document.getElementById("hostClueInner");
+            const judgement = document.getElementById("hostJudgementArea");
+            const enableBtn = document.getElementById("enableBuzzerBtn");
+            hostAnswerShowing = !hostAnswerShowing;
+
+            inner.classList.toggle("flipped", hostAnswerShowing);
+
+            if (hostAnswerShowing) {
+                if (currentBuzzPlayer) {
+                    judgement.classList.add("show");
+                }
+                enableBtn.style.display = buzzersEnabled ? "none" : "block";
+            } else {
+                enableBtn.style.display = buzzersEnabled ? "none" : "block";
+            }
+        }
+
+        //HOST REVEAL
+        function hostReveal() {
+            flipHostCard();
+        }
+
+        //HOST ANSWER CORRECT
+        function hostAnswerCorrect() {
+            socket.emit("hostAction", {
+                type: "answerCorrect"
+            });
+
+            closeHostClue();
+        }
+
+        //HOST CONTINUE
+        function hostContinue() {
+            socket.emit("hostAction", {
+                type: "continueClue"
+            });
+
+            closeHostClue();
+        }
+
+        //HOST ANSWER WRONG
+        function hostAnswerWrong() {
+            console.log("ANSWER WRONG");
+            document.getElementById("hostJudgementArea").classList.remove("show");
+            document.getElementById("hostClueInner").classList.remove("flipped");
+
+            hostAnswerShowing = false;
+            currentBuzzPlayer = null;
+
+            socket.emit("hostAction", {
+                type: "resumeBuzzing"
+            });
+        }
+
+        //CLOSE HOST CLUE
+        function closeHostClue() {
+            document.getElementById("enableBuzzerBtn").style.display = "none";
+            document.getElementById("hostClueOverlay").classList.remove("show");
+            document.getElementById("hostJudgementArea").classList.remove("show");
+            document.getElementById("hostClueInner").classList.remove("flipped");
+
+            const dailyDoubleBanner = document.getElementById("dailyDoubleBanner");
+
+            if (dailyDoubleBanner) {
+                dailyDoubleBanner.classList.add("hidden");
+            }
+
+            currentBuzzPlayer = null;
+            hostAnswerShowing = false;
+            currentDailyDouble = null;
+
+            if (currentHostTile) {
+                currentHostTile.classList.add("used");
+
+                requestAnimationFrame(() => {
+                    updateFinishRoundButton();
+                });
+            }
+        }
+
+        //ENABLE BUZZER
+        function hostEnableBuzzer() {
+            buzzersEnabled = true;
+            document.getElementById("enableBuzzerBtn").style.display = "none";
+
+            socket.emit("hostAction", {
+                type: "resumeBuzzing"
+            });
+        }
+
+        //HOST FINISH ROUND
+        function hostFinishRound() {
+            socket.emit(
+                "hostAction",
+                {
+                    type:
+                        "roundComplete"
+                }
+            );
+        }
+    /* #endregion */
 
     //PLAYER SCREENS
     function hideAllPlayerScreens() {
