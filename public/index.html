@@ -2181,6 +2181,108 @@
         restoreHostPage("hostLobbyPg");
     }
 
+    //HOST SHOW INSTRUCTIONS
+    function hostShowInstructions() {
+        console.log("HOST SHOW INSTRUCTIONS");
+        localStorage.setItem("lastHostPage","hostInstructionsPg");
+        restoreHostPage("hostInstructionsPg");
+        socket.emit("hostAction",{type:"showInstructions"});
+    }
+
+    //HOST SHOW INSTRUCTION CUTSCENE
+    function hostShowInstrucCutscene() {
+        console.log("HOST SHOW INSTRUCTION CUTSCENE");
+        localStorage.setItem("lastHostPage","hostInstrucCutscenePg");
+        restoreHostPage("hostInstrucCutscenePg");
+    }
+
+    //HOST SHOW BOARD INTRO
+    function hostShowBoardIntro() {
+        console.log("HOST SHOW BOARD INTRO");
+        localStorage.setItem("lastHostPage","hostBoard");
+        restoreHostPage("hostBoard");
+        socket.emit("hostAction",{type:"showBoardIntro"});
+    }
+
+    //BUILD HOST BOARD
+    function buildHostBoard(board) {
+        const hostBoard = document.getElementById("hostBoardGrid");
+
+        if (!hostBoard) {
+            console.error("hostBoardGrid element not found.");
+            return;
+        }
+
+        hostBoard.innerHTML = "";
+        const finishBtn = document.getElementById("finishRoundBtn");
+        const round2Btn = document.getElementById("round2Btn");
+
+        if (finishBtn) {
+            finishBtn.style.display = "none";
+        }
+
+        if (round2Btn) {
+            round2Btn.style.display = "none";
+        }
+        const roundLabel = document.getElementById("hostRoundLabel");
+
+        if (roundLabel) {
+            roundLabel.textContent = currentRound === 2
+                ? "DOUBLE JEOPARDY"
+                : "JEOPARDY";
+        }
+
+        board.categories.forEach(category => {
+            const header = document.createElement("div");
+            header.className = "hostHeader";
+            header.innerText = category.categoryName;
+            hostBoard.appendChild(header);
+        }
+
+        // CLUE VALUES
+        const values = currentRound === 2
+            ? ["400", "800", "1200", "1600", "2000"]
+            : ["200", "400", "600", "800", "1000"];
+
+        values.forEach(value => {
+            board.categories.forEach(category => {
+                const clue = category.clues.find(c => c.value === value);
+                const tile = document.createElement("div");
+
+                tile.className = "hostTile";
+
+                if (!clue) {
+                    tile.classList.add("empty");
+                    hostBoard.appendChild(tile);
+                    return;
+                }
+
+                tile.innerText = "$" + value;
+                tile.dataset.clueId = clue.clueData.id;
+                tile.onclick = () => {
+                    if (tile.classList.contains("used")) {
+                        return;
+                    }
+                    currentHostClue = clue;
+                    currentHostTile = tile;
+                    currentDailyDouble = clue.clueData.dailyDouble ? clue : null;
+
+                    showHostClue(clue);
+
+                    socket.emit("hostAction", {
+                        type: "selectClue",
+                        payload: {
+                            value,
+                            clueData:clue.clueData
+                        }
+                    });
+                };
+                hostBoard.appendChild(tile);
+            });
+        });
+    }
+
+
 
 
 
@@ -2751,31 +2853,6 @@
     }
 
 /* #region HOST */
-    //HOST SHOW INSTRUCTIONS
-    function hostShowInstructions() {
-        console.log("HOST SHOW INSTRUCTIONS");
-        socket.emit("hostAction", { type: "showInstructions" });
-        restoreHostPage("hostInstructionsPg");
-    }
-
-    //HOST SHOW INSTRUCTION CUTSCENE
-    function hostShowInstrucCutscene() {
-        console.log("HOST SHOW INSTRUCTION CUTSCENE");
-        /*
-        socket.emit("hostAction", {
-            type: "showInstrucCutscene"
-        });
-        */
-        restoreHostPage("hostInstrucCutscenePg");
-    }
-
-    //HOST SHOW BOARD INTRO
-    function hostShowBoardIntro() {
-        console.log("HOST SHOW BOARD INTRO");
-        socket.emit("hostAction", { type: "showBoardIntro" });
-        restoreHostPage("hostBoard");
-    }
-
     function hostStartRound2() {
         console.log("HOST START ROUND 2");
 
@@ -2801,106 +2878,6 @@
         }
         const allUsed = Array.from(tiles).every(tile => tile.classList.contains("used"));
         finishBtn.style.display = allUsed ? "block" : "none";
-    }
-
-    //BUILD HOST BOARD
-    function buildHostBoard(board) {
-        const hostBoard = document.getElementById("hostBoardGrid");
-
-        if (!hostBoard) {
-            console.error("hostBoardGrid element not found.");
-            return;
-        }
-
-        hostBoard.innerHTML = "";
-        const finishBtn = document.getElementById("finishRoundBtn");
-        const round2Btn = document.getElementById("round2Btn");
-
-        if (finishBtn) {
-            finishBtn.style.display = "none";
-        }
-
-        if (round2Btn) {
-            round2Btn.style.display = "none";
-        }
-        const roundLabel = document.getElementById("hostRoundLabel");
-
-        if (roundLabel) {
-            roundLabel.textContent =
-                currentRound === 2
-                    ? "DOUBLE JEOPARDY"
-                    : "JEOPARDY";
-        }
-
-        board.categories.forEach(
-            category => {
-                const header = document.createElement("div");
-                header.className = "hostHeader";
-                header.innerText = category.categoryName;
-                hostBoard.appendChild(header);
-            }
-        );
-
-        // ==========================================
-        // CLUE VALUES
-        // ==========================================
-
-        /*
-        const values = [
-            "200",
-            "400",
-            "600",
-            "800",
-            "1000"
-        ];
-        */
-        const values =
-            currentRound === 2
-                ? ["400", "800", "1200", "1600", "2000"]
-                : ["200", "400", "600", "800", "1000"];
-
-        values.forEach(value => {
-            board.categories.forEach(
-                category => {
-                    const clue = category.clues.find(c => c.value === value);
-                    const tile = document.createElement("div");
-
-                    tile.className = "hostTile";
-
-                    if (!clue) {
-                        tile.classList.add("empty");
-                        hostBoard.appendChild(tile);
-                        return;
-                    }
-
-                    tile.innerText = "$" + value;
-                    tile.dataset.clueId = clue.clueData.id;
-                    tile.onclick = () => {
-                        if (tile.classList.contains("used")) {
-                            return;
-                        }
-                        currentHostClue = clue;
-                        currentHostTile = tile;
-                        currentDailyDouble = clue.clueData.dailyDouble ? clue : null;
-
-                        showHostClue(clue);
-
-                        socket.emit(
-                            "hostAction",
-                            {
-                                type: "selectClue",
-                                payload: {
-                                    value,
-                                    clueData:clue.clueData
-                                }
-                            }
-                        );
-                    };
-
-                    hostBoard.appendChild(tile);
-                }
-            );
-        });
     }
 
     //SHOW HOST CLUE
