@@ -1064,12 +1064,15 @@ io.on("connection", (socket) => {
             // CONTINUE
             case "continueClue":
                 console.log("HOST ACTION: continueClue");
-                io.emit("showScoreScreen");
-
-                broadcastToUnity({
-                    type: "showScoreScreen"
+                game.currentClueId=null;
+                game.currentClueValue=0;
+                game.currentClueIsDailyDouble=false;
+                buzzAccepted=false;
+                currentBuzzPlayer=null;
+                game.players.forEach(player=>{
+                    io.to(player.socketId).emit("showClueHolding");
                 });
-
+                broadcastToUnity({type:"showClueHolding"});
                 break;
 
             // REVEAL ANSWER
