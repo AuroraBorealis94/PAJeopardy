@@ -1942,7 +1942,7 @@
     });
 
     //GAME STATE SYNC
-    
+    /*
     socket.on("gameStateSync",data=>{
         console.log("SYNC STATE:",data);
 
@@ -2000,8 +2000,7 @@
             return;
         }
     });
-
-    /*
+    */
     socket.on( "gameStateSync", data => { 
         console.log("SYNC STATE:", data); 
         if (isHost) { 
@@ -2045,7 +2044,7 @@
             } 
         } 
     });
-    */
+
     //GAME SESSION
     socket.on("gameSession",
         session => {
@@ -2553,7 +2552,7 @@
         }
 
         requestingHost=true;
-        //isHost=true;
+        isHost=true;
         if(!localStorage.getItem("lastHostPage")){
             localStorage.setItem("lastHostPage","hostJoinPg");
         }
@@ -2571,9 +2570,8 @@
         console.log("Socket:", socket.id);
         console.log("================================");
 
-        isHost = true;
-        console.log("isHost set in JOIN SUCCESS")
         requestingHost = false;
+        isHost = true;
 
         localStorage.setItem("isHost", "true");
         localStorage.setItem("hostSession", currentSession);
@@ -2708,35 +2706,40 @@
         console.log("HOST PAGE SAVED:", pageId);
     }
 
-    //HOST ENABLE LOBBY
+    //HOST START GAME
     function hostEnableLobby() {
-        console.log("HOST ENABLE LOBBY");
-        localStorage.setItem("lastHostPage","hostLobbyPg");
-        socket.emit("hostAction",{type:"startGame"});
-        restoreHostPage("hostLobbyPg");
+        console.log("HOST START GAME");
+
+        socket.emit("hostAction", {
+            type: "enableLobby"
+        });
+
+        //restoreHostPage("hostLobbyPg");
     }
 
     //HOST SHOW INSTRUCTIONS
     function hostShowInstructions() {
         console.log("HOST SHOW INSTRUCTIONS");
-        localStorage.setItem("lastHostPage","hostInstructionsPg");
+        socket.emit("hostAction", { type: "showInstructions" });
         restoreHostPage("hostInstructionsPg");
-        socket.emit("hostAction",{type:"showInstructions"});
     }
 
     //HOST SHOW INSTRUCTION CUTSCENE
     function hostShowInstrucCutscene() {
         console.log("HOST SHOW INSTRUCTION CUTSCENE");
-        localStorage.setItem("lastHostPage","hostInstrucCutscenePg");
+        /*
+        socket.emit("hostAction", {
+            type: "showInstrucCutscene"
+        });
+        */
         restoreHostPage("hostInstrucCutscenePg");
     }
 
     //HOST SHOW BOARD INTRO
     function hostShowBoardIntro() {
         console.log("HOST SHOW BOARD INTRO");
-        localStorage.setItem("lastHostPage","hostBoard");
+        socket.emit("hostAction", { type: "showBoardIntro" });
         restoreHostPage("hostBoard");
-        socket.emit("hostAction",{type:"showBoardIntro"});
     }
 
     function hostStartRound2() {
