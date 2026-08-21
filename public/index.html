@@ -2048,7 +2048,50 @@
 
         flipHostCard();
     });
+    
+    //BECOME HOST
+    function joinAsHost(){
+        if(!currentSession){
+            console.log("Cannot become host yet - session not received.");
+            return;
+        }
+        requestingHost=true;
+        if(!localStorage.getItem("lastHostPage")){
+            localStorage.setItem("lastHostPage","hostJoinPg");
+        }
+        console.log("REQUESTING HOST SLOT. SESSION:",currentSession);
+        socket.emit("join",{isHost:true});
+    }
 
+    //SHOW HOST CONTROLS
+    function showHostControls() {
+        const lobby = document.getElementById("lobbyUI");
+        const controls = document.getElementById("hostControls");
+
+        if (lobby) {
+            lobby.style.display = "none";
+        }
+
+        if (!controls) {
+            console.error("Host controls container not found.");
+            return;
+        }
+
+        controls.classList.remove("hidden");
+
+        requestAnimationFrame(() => {
+            controls.classList.add("show");
+            setTimeout(() => {
+                let savedPage = localStorage.getItem("lastHostPage");
+
+                if (!savedPage) {
+                    savedPage = "hostJoinPg";
+                }
+                console.log("RESTORING HOST PAGE:", savedPage);
+                restoreHostPage(savedPage);
+            }, 50);
+        });
+    }
 
 
 
@@ -2710,83 +2753,6 @@
     }
 
 /* #region HOST */
-
-    //BECOME HOST
-    function joinAsHost() {
-        if (!currentSession) {
-            console.log("Cannot become host yet - session not received.");
-            return;
-        }
-
-        requestingHost = true;
-        isHost = true;
-
-        if (!localStorage.getItem("lastHostPage")) {
-            localStorage.setItem("lastHostPage", "hostJoinPg");
-        }
-
-        console.log("REQUESTING HOST SLOT. SESSION:", currentSession);
-
-        socket.emit("join", {
-            isHost: true
-        });
-
-        confettiBurst();
-    }
-
-    //HOST JOIN SUCCESS
-    function handleHostConnected() {
-        console.log("================================");
-        console.log("HANDLE HOST CONNECTED");
-        console.log("Session:", currentSession);
-        console.log("Socket:", socket.id);
-        console.log("================================");
-
-        requestingHost = false;
-        isHost = true;
-
-        localStorage.setItem("isHost", "true");
-        localStorage.setItem("hostSession", currentSession);
-        localStorage.setItem("lastHostPage", "hostJoinPg");
-
-        showHostControls();
-        requestAnimationFrame(() => {
-            restoreHostPage("hostJoinPg");
-        });
-
-        console.log("HOST UI SHOULD NOW BE ON hostJoinPg");
-    }
-
-    //SHOW HOST CONTROLS
-    function showHostControls() {
-        const lobby = document.getElementById("lobbyUI");
-        const controls = document.getElementById("hostControls");
-
-        if (lobby) {
-            lobby.style.display = "none";
-        }
-
-        if (!controls) {
-            console.error("Host controls container not found.");
-            return;
-        }
-
-        controls.classList.remove("hidden");
-
-        requestAnimationFrame(() => {
-            controls.classList.add("show");
-            setTimeout(() => {
-                let savedPage = localStorage.getItem("lastHostPage");
-
-                if (!savedPage) {
-                    savedPage = "hostJoinPg";
-                }
-                console.log("RESTORING HOST PAGE:", savedPage);
-                restoreHostPage(savedPage);
-            }, 50);
-        });
-    }
-
     //RESTORE HOST PAGE
     function restoreHostPage(pageId) {
         const controls = document.getElementById("hostControls");
