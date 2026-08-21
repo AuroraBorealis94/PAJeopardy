@@ -2867,388 +2867,312 @@
         }
     /* #endregion */
 
+        /* #region PLAYER SCREENS */
+        function hideAllPlayerScreens() {
+            const screens = [
+                "waitingScreen",
+                "instructionsHoldingScreen",
+                "clueHoldingScreen",
+                "animHoldingScreen",
+                "dailyDoublePage",
+                "buzzerPage",
+                "answeringPage",
+                "scorePage"
+            ];
 
+            screens.forEach(id => {
+                const screen = document.getElementById(id);
 
-
-
-
-
-    //WAITING
-    function showWaitingScreen() {
-        const lobby = document.getElementById("lobbyUI");
-
-        if (lobby) {
-            lobby.style.display = "none";
-        }
-
-        if (state.character?.front) {
-            const waitingImage = document.getElementById("waitingImage");
-
-            if (waitingImage) {
-                waitingImage.src = state.character.front;
-            }
-        }
-
-        const waitingName = document.getElementById("waitingName");
-
-        if (waitingName) {
-            waitingName.textContent = state.name;
-        }
-
-        showPlayerScreen("waitingScreen");
-    }
-
-    function showInstructionsHoldingScreen() {
-        const lobby = document.getElementById("lobbyUI");
-
-        if (lobby) {
-            lobby.style.display = "none";
-        }
-        showPlayerScreen("instructionsHoldingScreen");
-    }
-
-    function showClueHoldingScreen() {
-        const image = document.getElementById("clueHoldingImage");
-
-        if (!image) {
-            console.error("clueHoldingImage not found.");
-            return;
-        }
-
-        if (!state.character || !state.character.name) {
-            console.error("No character available for clue holding screen.");
-            return;
-        }
-
-        const characterName = state.character.name.toLowerCase().replace(/\s+/g, "");
-        const imagePath = `/backgrounds/clueholding/${characterName}clueholding.png`;
-        console.log("SHOWING CLUE HOLDING SCREEN:", imagePath);
-
-        image.src = imagePath;
-        image.onerror = () => {
-            console.error("Could not load clue holding image:", imagePath);
-        };
-        showPlayerScreen("clueHoldingScreen");
-    }
-
-    function showDailyDoublePlayerButtons() {
-        const area = document.getElementById("dailyDoublePlayerArea");
-        const container = document.getElementById("dailyDoublePlayerButtons");
-        if (!area || !container) return;
-        container.innerHTML = "";
-        if (!window.currentPlayers || !window.currentPlayers.length) {
-            return;
-        }
-
-        window.currentPlayers.forEach(player => {
-            const button = document.createElement("button");
-            button.className = "dailyDoublePlayerBtn";
-            button.textContent = player.name;
-            button.onclick = () => {
-                socket.emit("hostAction", {
-                    type: "dailyDoubleSelectPlayer",
-                    playerId: player.playerId
-                });
-            };
-            container.appendChild(button);
-        });
-        area.classList.remove("hidden");
-    }
-
-    function hideDailyDoublePlayerButtons() {
-        const area = document.getElementById("dailyDoublePlayerArea");
-
-        if (area) {
-            area.classList.add("hidden");
-        }
-    }
-
-    function animateScoreGain(oldScore, newScore, earned){
-        const value = document.getElementById("scoreValue");
-        const change = document.getElementById("scoreChange");
-        const current = document.getElementById("scoreCurrent");
-        if (!value || !change) return;
-        if (current) {
-            current.textContent = "Score: $" + oldScore;
-        }
-
-        value.textContent = "$" + oldScore;
-        change.textContent = "+$" + earned;
-        change.classList.remove("hidden");
-        let score = oldScore;
-        const timer = setInterval(() => {
-            score += Math.max(1, Math.ceil(earned / 20));
-            if (score >= newScore) {
-                score = newScore;
-                clearInterval(timer);
-
-                if (current) {
-                    current.textContent = "Score: $" + newScore;
+                if (screen) {
+                    screen.classList.add("hidden");
+                    screen.classList.remove("show");
                 }
-
-                setTimeout(() => {
-                    change.classList.add("hidden");
-                }, 1200);
-            }
-
-            value.textContent = "$" + score;
-        }, 30);
-    }
-
-    function changeCharacter() {
-        const previewImage = document.getElementById("previewImage");
-
-        if (previewImage) {
-            previewImage.style.display = "none";
-        }
-
-        const playerId = localStorage.getItem("playerId");
-        if (!playerId) return;
-
-        socket.emit(
-            "leavePlayer",
-            {
-                playerId
-            }
-        );
-
-        localStorage.removeItem("character");
-        localStorage.removeItem("hasJoined");
-
-        state.character = null;
-        hidePlayerScreen("waitingScreen");
-
-        const lobby = document.getElementById("lobbyUI");
-
-        if (lobby) {
-            lobby.style.display = "block";
-        }
-
-        document.querySelectorAll(".charCard")
-            .forEach(card => {
-
-                card.disabled =
-                    false;
-
-                card.style.pointerEvents =
-                    "";
             });
-
-        const joinBtn = document.getElementById("joinBtn");
-
-        if (joinBtn) {
-            joinBtn.disabled = false;
-            joinBtn.innerText = "Join Game";
-            joinBtn.style.opacity = "1";
         }
 
-        const name = document.getElementById("name");
-        const enterBtn = document.getElementById("enterBtn");
-
-        if (name) {
-            name.disabled = false;
-        }
-
-        if (enterBtn) {
-            enterBtn.disabled = false;
-        }
-
-        updatePreview();
-        updateLockedUI();
-    }
-
-/* #region HOST */
-
-    //HOST SHOW BOARD INTRO
-    function hostShowBoardIntro() {
-        console.log("HOST SHOW BOARD INTRO");
-        socket.emit("hostAction", { type: "showBoardIntro" });
-        restoreHostPage("hostBoard");
-    }
-/* #endregion */
-
-    //PLAYER SCREENS
-    function hideAllPlayerScreens() {
-
-        const screens = [
-            "waitingScreen",
-            "instructionsHoldingScreen",
-            "clueHoldingScreen",
-            "animHoldingScreen",
-            "dailyDoublePage",
-            "buzzerPage",
-            "answeringPage",
-            "scorePage"
-        ];
-
-        screens.forEach(id => {
+        function showPlayerScreen(id) {
+            hideAllPlayerScreens();
             const screen = document.getElementById(id);
 
-            if (screen) {
-                screen.classList.add("hidden");
+            if (!screen) {
+                console.error("Player screen not found:", id);
+                return;
+            }
+
+            screen.classList.remove("hidden");
+            requestAnimationFrame(() => {
+                screen.classList.add("show");
+            });
+        }
+
+        function hidePlayerScreen(id) {
+            const screen = document.getElementById(id);
+            if (!screen) return;
+
+            if (id === "waitingScreen") {
                 screen.classList.remove("show");
             }
-        });
-    }
-
-    function showPlayerScreen(id) {
-        hideAllPlayerScreens();
-        const screen = document.getElementById(id);
-
-        if (!screen) {
-            console.error("Player screen not found:", id);
-            return;
+            screen.classList.add("hidden");
         }
 
-        screen.classList.remove("hidden");
-        /*
-        if (id === "waitingScreen") {
-            requestAnimationFrame(
-                () => {
-                    screen.classList.add("show"
-                    );
-                }
-            );
-        }
-        */
-        requestAnimationFrame(() => {
-            screen.classList.add("show");
-        });
-    }
+        // WAITING SCREEN
+        function showWaitingScreen() {
+            const lobby = document.getElementById("lobbyUI");
 
-    function hidePlayerScreen(id) {
-        const screen = document.getElementById(id);
-        if (!screen) return;
+            if (lobby) {
+                lobby.style.display = "none";
+            }
 
-        if (id === "waitingScreen") {
-            screen.classList.remove("show");
-        }
-        screen.classList.add("hidden");
-    }
+            if (state.character?.front) {
+                const waitingImage = document.getElementById("waitingImage");
 
-
-    function pressBuzzButton() {
-        if (!canBuzz) return;
-        canBuzz = false;
-        if (buzzImg) {
-            buzzImg.classList.add("down");
-            buzzImg.src = "/backgrounds/WBuzzerDown.png";
-        }
-        if (navigator.vibrate) {
-            navigator.vibrate(20);
-        }
-
-        socket.emit("buzz");
-        setTimeout(
-            () => {
-                if (!buzzImg) return;
-                buzzImg.classList.remove("down");
-                buzzImg.src = "/backgrounds/WBuzzerUp.png";
-            },
-            100
-        );
-    }
-
-    function setScoreBackground() {
-        const background = document.getElementById("scoreBackground");
-        if (!background) return;
-        let character = state.character;
-
-        if (!character) {
-            const savedCharacter = localStorage.getItem("character");
-
-            if (savedCharacter) {
-                try {
-                    character = JSON.parse(savedCharacter);
-                    state.character = character;
-
-                } catch (error) {
-                    console.error("Could not parse saved character:", error);
+                if (waitingImage) {
+                    waitingImage.src = state.character.front;
                 }
             }
+
+            const waitingName = document.getElementById("waitingName");
+
+            if (waitingName) {
+                waitingName.textContent = state.name;
+            }
+
+            showPlayerScreen("waitingScreen");
+        }
+    
+        function changeCharacter() {
+            const previewImage = document.getElementById("previewImage");
+
+            if (previewImage) {
+                previewImage.style.display = "none";
+            }
+
+            const playerId = localStorage.getItem("playerId");
+            if (!playerId) return;
+
+            socket.emit(
+                "leavePlayer",
+                {
+                    playerId
+                }
+            );
+
+            localStorage.removeItem("character");
+            localStorage.removeItem("hasJoined");
+
+            state.character = null;
+            hidePlayerScreen("waitingScreen");
+
+            const lobby = document.getElementById("lobbyUI");
+
+            if (lobby) {
+                lobby.style.display = "block";
+            }
+
+            document.querySelectorAll(".charCard")
+                .forEach(card => {
+
+                    card.disabled =
+                        false;
+
+                    card.style.pointerEvents =
+                        "";
+                });
+
+            const joinBtn = document.getElementById("joinBtn");
+
+            if (joinBtn) {
+                joinBtn.disabled = false;
+                joinBtn.innerText = "Join Game";
+                joinBtn.style.opacity = "1";
+            }
+
+            const name = document.getElementById("name");
+            const enterBtn = document.getElementById("enterBtn");
+
+            if (name) {
+                name.disabled = false;
+            }
+
+            if (enterBtn) {
+                enterBtn.disabled = false;
+            }
+
+            updatePreview();
+            updateLockedUI();
         }
 
-        if (!character || !character.name) {
-            console.warn("No character available for score background.");
-            return;
+        // INSTRUCTIONS HOLDING SCREEN
+        function showInstructionsHoldingScreen() {
+            const lobby = document.getElementById("lobbyUI");
+
+            if (lobby) {
+                lobby.style.display = "none";
+            }
+            showPlayerScreen("instructionsHoldingScreen");
         }
 
-        const characterFiles = {
-            "The Boss": "thebossclueholding.png",
-            "Janice Mowes": "janicemowesclueholding.png",
-            "Tricerex": "tricerexclueholding.png",
-            "Fancy Dancer": "fancydancerclueholding.png",
-            "Deerhead": "deerheadclueholding.png",
-            "Caity Satyr": "caitysatyrclueholding.png",
-            "The Holy Spirit": "theholyspiritclueholding.png",
-            "The Newlyweds": "thenewlywedsclueholding.png",
-            "Lorenzo": "lorenzoclueholding.png",
-            "The Guitarist": "theguitaristclueholding.png"
-        };
+        // CLUE HOLDING SCREEN
+        function showClueHoldingScreen() {
+            const image = document.getElementById("clueHoldingImage");
 
-        const filename = characterFiles[character.name];
+            if (!image) {
+                console.error("clueHoldingImage not found.");
+                return;
+            }
 
-        if (!filename) {
-            console.warn("No score background for:", character.name);
-            return;
+            if (!state.character || !state.character.name) {
+                console.error("No character available for clue holding screen.");
+                return;
+            }
+
+            const characterName = state.character.name.toLowerCase().replace(/\s+/g, "");
+            const imagePath = `/backgrounds/clueholding/${characterName}clueholding.png`;
+            console.log("SHOWING CLUE HOLDING SCREEN:", imagePath);
+
+            image.src = imagePath;
+            image.onerror = () => {
+                console.error("Could not load clue holding image:", imagePath);
+            };
+            showPlayerScreen("clueHoldingScreen");
         }
 
-        background.style.backgroundImage = `url('/backgrounds/clueholding/${filename}')`;
-    }
+        // BUZZER SCREEN
+        function pressBuzzButton() {
+            if (!canBuzz) return;
+            canBuzz = false;
+            if (buzzImg) {
+                buzzImg.classList.add("down");
+                buzzImg.src = "/backgrounds/WBuzzerDown.png";
+            }
+            if (navigator.vibrate) {
+                navigator.vibrate(20);
+            }
 
-    //SCORE
-    function animateScoreGain(oldScore, newScore, earned) {
-        const header = document.getElementById("scoreHeader");
-        const value = document.getElementById("scoreValue");
-        const change = document.getElementById("scoreChange");
-
-        if (!header || !value || !change) {
-            return;
+            socket.emit("buzz");
+            setTimeout(
+                () => {
+                    if (!buzzImg) return;
+                    buzzImg.classList.remove("down");
+                    buzzImg.src = "/backgrounds/WBuzzerUp.png";
+                },
+                100
+            );
         }
 
-        oldScore = Number(oldScore) || 0;
-        newScore = Number(newScore) || 0;
-        earned = Number(earned) || 0;
+        // SCORE GAIN SCREEN
+        function setScoreBackground() {
+            const background = document.getElementById("scoreBackground");
+            if (!background) return;
+            let character = state.character;
 
-        // Header immediately shows the final/current score.
-        header.textContent = "Score: $" + newScore;
+            if (!character) {
+                const savedCharacter = localStorage.getItem("character");
 
-        // Start the large number at the old score.
-        value.textContent = "$" + oldScore;
+                if (savedCharacter) {
+                    try {
+                        character = JSON.parse(savedCharacter);
+                        state.character = character;
 
-        // Show the points earned.
-        if (earned > 0) {
+                    } catch (error) {
+                        console.error("Could not parse saved character:", error);
+                    }
+                }
+            }
+
+            if (!character || !character.name) {
+                console.warn("No character available for score background.");
+                return;
+            }
+
+            const characterFiles = {
+                "The Boss": "thebossclueholding.png",
+                "Janice Mowes": "janicemowesclueholding.png",
+                "Tricerex": "tricerexclueholding.png",
+                "Fancy Dancer": "fancydancerclueholding.png",
+                "Deerhead": "deerheadclueholding.png",
+                "Caity Satyr": "caitysatyrclueholding.png",
+                "The Holy Spirit": "theholyspiritclueholding.png",
+                "The Newlyweds": "thenewlywedsclueholding.png",
+                "Lorenzo": "lorenzoclueholding.png",
+                "The Guitarist": "theguitaristclueholding.png"
+            };
+
+            const filename = characterFiles[character.name];
+
+            if (!filename) {
+                console.warn("No score background for:", character.name);
+                return;
+            }
+
+            background.style.backgroundImage = `url('/backgrounds/clueholding/${filename}')`;
+        }
+
+        function animateScoreGain(oldScore, newScore, earned){
+            const value = document.getElementById("scoreValue");
+            const change = document.getElementById("scoreChange");
+            const current = document.getElementById("scoreCurrent");
+            if (!value || !change) return;
+            if (current) {
+                current.textContent = "Score: $" + oldScore;
+            }
+
+            value.textContent = "$" + oldScore;
             change.textContent = "+$" + earned;
             change.classList.remove("hidden");
-
-        } else {
-            change.textContent = "";
-            change.classList.add("hidden");
-        }
-
-        let current = oldScore;
-        const difference = newScore - oldScore;
-
-        if (difference <= 0) {
-            value.textContent = "$" + newScore;
-            return;
-        }
-
-        const step = Math.max(1, Math.ceil(difference / 20));
-        const timer =
-            setInterval(() => {
-                current += step;
-                if (current >= newScore) {
-                    current = newScore;
+            let score = oldScore;
+            const timer = setInterval(() => {
+                score += Math.max(1, Math.ceil(earned / 20));
+                if (score >= newScore) {
+                    score = newScore;
                     clearInterval(timer);
+
+                    if (current) {
+                        current.textContent = "Score: $" + newScore;
+                    }
+
                     setTimeout(() => {
                         change.classList.add("hidden");
                     }, 1200);
                 }
-                value.textContent = "$" + current;
-            }, 30);
-    }
 
+                value.textContent = "$" + score;
+            }, 30);
+        }
+
+        // DAILY DOUBLE FUNCTIONS
+        function showDailyDoublePlayerButtons() {
+            const area = document.getElementById("dailyDoublePlayerArea");
+            const container = document.getElementById("dailyDoublePlayerButtons");
+            if (!area || !container) return;
+            container.innerHTML = "";
+            if (!window.currentPlayers || !window.currentPlayers.length) {
+                return;
+            }
+
+            window.currentPlayers.forEach(player => {
+                const button = document.createElement("button");
+                button.className = "dailyDoublePlayerBtn";
+                button.textContent = player.name;
+                button.onclick = () => {
+                    socket.emit("hostAction", {
+                        type: "dailyDoubleSelectPlayer",
+                        playerId: player.playerId
+                    });
+                };
+                container.appendChild(button);
+            });
+            area.classList.remove("hidden");
+        }
+
+        function hideDailyDoublePlayerButtons() {
+            const area = document.getElementById("dailyDoublePlayerArea");
+
+            if (area) {
+                area.classList.add("hidden");
+            }
+        }
+    /* #endregion */
 </script>
 </body>
 </html>
