@@ -1699,7 +1699,134 @@
         joinBtn.innerText = "Join Game";
         joinBtn.style.opacity = "1";
     });
+    
+    // BOARD DATA
+    socket.on("boardData", data => {
+        console.log("BOARD DATA RECEIVED:", data);
 
+        if (!data || !data.board) {
+            console.error("Invalid boardData received.");
+            return;
+        }
+
+        currentRound = parseInt(data.round) || 1;
+        buildHostBoard(data.board);
+
+        if (isHost) {
+            const savedPage = localStorage.getItem("lastHostPage");
+            if (savedPage === "hostBoard") {
+                restoreHostPage("hostBoard");
+            }
+        }
+    });
+
+    // SCORE SCREEN
+    socket.on("showScoreScreen", data => {
+        if (!data) return;
+        const myPlayerId = localStorage.getItem("playerId");
+
+        // Only the player who earned the points
+        // should receive the score animation.
+        if (data.playerId && data.playerId !== myPlayerId) {
+            return;
+        }
+        console.log("SHOW SCORE SCREEN:", data);
+
+        const earned = Number(data.earned) || 0;
+        const newScore = Number(data.score) || 0;
+
+        // The score before the clue was awarded.
+        const oldScore = newScore - earned;
+
+        setScoreBackground();
+        showPlayerScreen("scorePage");
+        animateScoreGain(
+            oldScore,
+            newScore,
+            earned
+        );
+        currentScore = newScore;
+    });
+
+    // ANIMATION HOLDING SCREEN
+    socket.on("showAnimHolding", () => {
+        console.log("Showing animation holding screen");
+        const lobby = document.getElementById("lobbyUI");
+
+        if (lobby) {
+            lobby.style.display = "none";
+        }
+
+        showPlayerScreen("animHoldingScreen");
+    });
+
+    // CLUE HOLDING SCREEN
+    socket.on("showClueHolding", () => {
+        console.log("SHOWING PERSONAL CLUE HOLDING SCREEN");
+
+        if (isHost) {
+            console.log("Host received showClueHolding - ignoring player screen.");
+            return;
+        }
+        const lobby = document.getElementById("lobbyUI");
+
+        if (lobby) {
+            lobby.style.display = "none";
+        }
+
+        const hostControls = document.getElementById("hostControls");
+
+        if (hostControls) {
+            hostControls.classList.add("hidden");
+        }
+
+        // Get the player's selected character
+        let character = state.character;
+
+        // If state.character isn't populated, restore it from localStorage
+        if (!character) {
+            const savedCharacter = localStorage.getItem("character");
+
+            if (savedCharacter) {
+                try {
+                    character = JSON.parse(savedCharacter);
+                    state.character = character;
+                } catch (error) {
+                    console.error("Could not parse saved character:", error);
+                }
+            }
+        }
+
+        const clueHoldingImage = document.getElementById("clueHoldingImage");
+
+        if (!clueHoldingImage) {
+            console.error("clueHoldingImage element not found.");
+        } else if (character) {
+            const characterFiles = {
+                "The Boss": "thebossclueholding.png",
+                "Janice Mowes": "janicemowesclueholding.png",
+                "Tricerex": "tricerexclueholding.png",
+                "Fancy Dancer": "fancydancerclueholding.png",
+                "Deerhead": "deerheadclueholding.png",
+                "Caity Satyr": "caitysatyrclueholding.png",
+                "The Holy Spirit": "theholyspiritclueholding.png",
+                "The Newlyweds": "thenewlywedsclueholding.png",
+                "Lorenzo": "lorenzoclueholding.png",
+                "The Guitarist": "theguitaristclueholding.png"
+            };
+
+            const filename = characterFiles[character.name];
+
+            if (filename) {
+                clueHoldingImage.src = "/backgrounds/clueholding/" + filename;
+                clueHoldingImage.style.display = "block";
+                console.log("Clue holding image:", clueHoldingImage.src);
+            } else {
+                console.error("No clue holding image registered for:", character.name);
+            }
+        }
+        showPlayerScreen("clueHoldingScreen");
+    });
 
 
 
@@ -1873,70 +2000,6 @@
             isHost: false
         });
     }
-
-    // BOARD DATA
-    socket.on("boardData", data => {
-
-        console.log("BOARD DATA RECEIVED:", data);
-
-        if (!data || !data.board) {
-            console.error("Invalid boardData received.");
-            return;
-        }
-
-        currentRound = parseInt(data.round) || 1;
-        buildHostBoard(data.board);
-
-        if (isHost) {
-            const savedPage = localStorage.getItem("lastHostPage");
-            if (savedPage === "hostBoard") {
-                restoreHostPage("hostBoard");
-            }
-        }
-    });
-
-    // SCORE SCREEN
-    socket.on("showScoreScreen", data => {
-        if (!data) return;
-        const myPlayerId = localStorage.getItem("playerId");
-
-        // Only the player who earned the points
-        // should receive the score animation.
-        if (data.playerId && data.playerId !== myPlayerId) {
-            return;
-        }
-        console.log("SHOW SCORE SCREEN:", data);
-
-        const earned = Number(data.earned) || 0;
-        const newScore = Number(data.score) || 0;
-
-        // The score before the clue was awarded.
-        const oldScore = newScore - earned;
-
-        setScoreBackground();
-        showPlayerScreen("scorePage");
-        animateScoreGain(
-            oldScore,
-            newScore,
-            earned
-        );
-        currentScore = newScore;
-    });
-
-    //ANIMATION HOLDING
-    socket.on(
-        "showAnimHolding",
-        () => {
-            console.log("Showing animation holding screen");
-            const lobby = document.getElementById("lobbyUI");
-
-            if (lobby) {
-                lobby.style.display = "none";
-            }
-
-            showPlayerScreen("animHoldingScreen");
-        }
-    );
 
     // CLUE HOLDING SCREEN
     socket.on("showClueHolding", () => {
