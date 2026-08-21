@@ -41,19 +41,7 @@
             text-shadow: 0 0 10px rgba(0,0,0,1);
             text-align: center;
 
-            background-color: #000000;
-
-            background-image: 
-                url('/backgrounds/WLobbyBG.png');
-
-            background-repeat: 
-                no-repeat;
-
-            background-position: 
-                top center;
-
-            background-size: 
-                100% auto;
+            background-color: black;
         }
 
         @keyframes fadeIn {
@@ -97,6 +85,13 @@
             -webkit-text-fill-color: transparent;
 
             background-clip: text;
+        }
+
+        #lobbyUI {
+            background-image: url('/backgrounds/WLobbyBG.png');
+            background-repeat: no-repeat;
+            background-position: top center;
+            background-size: 100% auto;
         }
 
         #characters {
@@ -388,7 +383,8 @@
         #instructionsHoldingScreen {
             position: fixed;
             inset: 0;
-
+            width: 100vw;
+            height: 100vh;
             background-image: url('/backgrounds/instrucholding.png');
             background-size: cover;
             background-position: center;
@@ -402,7 +398,10 @@
         #clueHoldingScreen {
             position: fixed;
             background-size: cover;
+            background-position: center;
             background-repeat: no-repeat;
+            width: 100vw;
+            height: 100vh;
             inset: 0;
             z-index: 5000;
         }
@@ -412,7 +411,8 @@
         #animHoldingScreen {
             position: fixed;
             inset: 0;
-
+            width: 100vw;
+            height: 100vh;
             background-image:
                 url('/backgrounds/WHostBG.jpg');
 
