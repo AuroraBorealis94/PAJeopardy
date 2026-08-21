@@ -1946,6 +1946,94 @@
         }
     });
 
+    // DAILY DOUBLE
+    socket.on("dailyDouble", data => {
+        console.log("DAILY DOUBLE RECEIVED:", data);
+        if (!isHost) {
+            showPlayerScreen("dailyDoublePage");
+            return;
+        }
+        // HOST SCREEN
+        const banner = document.getElementById("dailyDoubleBanner");
+
+        if (banner) {
+            banner.classList.remove("hidden");
+        }
+    });
+
+    socket.on("dailyDoubleAnswering", data => {
+        canBuzz = false;
+        const answeringTitle = document.getElementById("answeringTitle");
+        const answeringName = document.getElementById("answeringName");
+
+        if (answeringTitle) {
+            answeringTitle.textContent = "YOUR TURN!";
+        }
+
+        if (answeringName) {
+            answeringName.textContent = "Team " + data.playerName;
+        }
+        showPlayerScreen("answeringPage");
+    });
+
+    socket.on("dailyDoubleWaiting", data => {
+        canBuzz = false;
+        const answeringTitle = document.getElementById("answeringTitle");
+        const answeringName = document.getElementById("answeringName");
+        if (answeringTitle) {
+            answeringTitle.textContent = "IS ANSWERING";
+        }
+
+        if (answeringName) {
+            answeringName.textContent = "Team " + data.playerName;
+        }
+        showPlayerScreen("answeringPage");
+    });
+
+    // ROUNDS
+    socket.on("roundComplete", data => {
+        console.log("ROUND COMPLETE:", data);
+
+        if (!isHost) {
+            showPlayerScreen("instructionsHoldingScreen");
+            return;
+        }
+
+        if (data.round === 1) {
+            const btn = document.getElementById("round2Btn");
+            if (btn) {
+                btn.style.display = "block";
+            }
+            const finishBtn = document.getElementById("finishRoundBtn");
+            if (finishBtn) {
+                finishBtn.style.display = "none";
+            }
+            return;
+        }
+
+        if (data.round === 2) {
+            console.log("FINAL ROUND COMPLETE");
+            const finishBtn = document.getElementById("finishRoundBtn");
+
+            if (finishBtn) {
+                finishBtn.style.display = "none";
+            }
+        }
+    });
+
+    socket.on("showRoundHolding", data => {
+        console.log("ROUND HOLDING:", data);
+        showPlayerScreen("instructionsHoldingScreen");
+    });
+
+    socket.on("roundStarted", data => {
+        currentRound = data.round;
+        console.log("ROUND STARTED:", currentRound);
+
+        if (!isHost) {
+            showPlayerScreen("instructionsHoldingScreen");
+        }
+    });
 
 
 
@@ -1980,27 +2068,6 @@
         btn.style.display = "block";
         btn.classList.remove("hidden");
     }
-
-    socket.on("dailyDouble", data => {
-        console.log("DAILY DOUBLE RECEIVED:", data);
-
-        if (!isHost) {
-            // PLAYER DEVICE
-            showPlayerScreen(
-                "dailyDoublePage"
-            );
-
-            return;
-        }
-
-        // HOST SCREEN
-        const banner =
-            document.getElementById("dailyDoubleBanner");
-
-        if (banner) {
-            banner.classList.remove("hidden");
-        }
-    });
 
     //RECONNECT
     function tryReconnect() {
@@ -3242,88 +3309,6 @@
             100
         );
     }
-
-    socket.on("dailyDoubleAnswering", data => {
-        canBuzz = false;
-        const answeringTitle = document.getElementById("answeringTitle");
-        const answeringName = document.getElementById("answeringName");
-
-        if (answeringTitle) {
-            answeringTitle.textContent = "YOUR TURN!";
-        }
-
-        if (answeringName) {
-            answeringName.textContent = "Team " + data.playerName;
-        }
-        showPlayerScreen("answeringPage");
-    });
-
-    socket.on("dailyDoubleWaiting", data => {
-        canBuzz = false;
-        const answeringTitle = document.getElementById("answeringTitle");
-        const answeringName = document.getElementById("answeringName");
-        if (answeringTitle) {
-            answeringTitle.textContent = "IS ANSWERING";
-        }
-
-        if (answeringName) {
-            answeringName.textContent = "Team " + data.playerName;
-        }
-        showPlayerScreen("answeringPage");
-    });
-
-    socket.on(
-        "roundComplete",
-        data => {
-            console.log("ROUND COMPLETE:", data);
-
-            if (!isHost) {
-                showPlayerScreen("instructionsHoldingScreen");
-                return;
-            }
-
-            if (data.round === 1) {
-                const btn = document.getElementById("round2Btn");
-                if (btn) {
-                    btn.style.display = "block";
-                }
-                const finishBtn = document.getElementById("finishRoundBtn");
-                if (finishBtn) {
-                    finishBtn.style.display = "none";
-                }
-                return;
-            }
-
-            if (data.round === 2) {
-                console.log("FINAL ROUND COMPLETE");
-                const finishBtn = document.getElementById("finishRoundBtn");
-
-                if (finishBtn) {
-                    finishBtn.style.display = "none";
-                }
-            }
-        }
-    );
-
-    socket.on(
-        "showRoundHolding",
-        data => {
-            console.log("ROUND HOLDING:", data);
-            showPlayerScreen("instructionsHoldingScreen");
-        }
-    );
-
-    socket.on(
-        "roundStarted",
-        data => {
-            currentRound = data.round;
-            console.log("ROUND STARTED:", currentRound);
-
-            if (!isHost) {
-                showPlayerScreen("instructionsHoldingScreen");
-            }
-        }
-    );
 
     function setScoreBackground() {
         const background = document.getElementById("scoreBackground");
