@@ -1493,6 +1493,103 @@
             display the room code on the host/player UI.
         */
     });
+    
+    // JOIN SUCCESS
+    socket.on("joinSuccess", data => {
+        console.log(
+            "JOIN SUCCESS:",
+            data,
+            "isHost:",
+            isHost,
+            "requestingHost:",
+            requestingHost
+        );
+
+        const joiningAsHost=requestingHost||isHost||localStorage.getItem("isHost")==="true";
+
+        // HOST
+        if (joiningAsHost) {
+            requestingHost = false;
+            isHost = true;
+            localStorage.setItem("isHost", "true");
+
+            if (currentSession) {
+                localStorage.setItem("hostSession", currentSession);
+            }
+            console.log("HOST SLOT CONFIRMED.", "SESSION:", currentSession);
+            let savedPage = localStorage.getItem("lastHostPage");
+
+            if (!savedPage) {
+                savedPage = "hostJoinPg";
+                localStorage.setItem("lastHostPage", savedPage);
+            }
+            console.log("HOST PAGE TO RESTORE:", savedPage);
+            showHostControls();
+            return;
+        }
+
+        // PLAYER
+        localStorage.setItem("gameSession", currentSession);
+        localStorage.setItem("hasJoined", "true");
+
+        const joinBtn = document.getElementById("joinBtn");
+
+        if (joinBtn) {
+            joinBtn.disabled = true;
+            joinBtn.innerText = "Joined";
+            joinBtn.style.opacity = "0.6";
+        }
+
+        const nameInput = document.getElementById("name");
+        const enterBtn = document.getElementById("enterBtn");
+
+        if (nameInput) nameInput.disabled = true;
+        if (enterBtn) enterBtn.disabled = true;
+
+        document.querySelectorAll("#characters button").forEach(b => { b.disabled = true; b.style.pointerEvents = "none";});
+        const alreadyJoined = document.getElementById("waitingScreen")?.classList.contains("show");
+
+        if (!alreadyJoined) {
+            confettiBurst();
+
+            setTimeout(() => {
+                showWaitingScreen();
+            }, 300);
+        } else {
+            showWaitingScreen();
+        }
+    });
+
+    // HOST RECONNECT TOKEN
+    socket.on("hostReconnectToken", token => {
+        console.log("Received host reconnect token");
+        localStorage.setItem("paHostReconnectToken", token);
+    });
+
+    // HOST STATUS
+    socket.on("hostStatus", taken => {
+        console.log("HOST STATUS FROM SERVER:", taken);
+        serverHostTaken = !!taken;
+        updateHostButton();
+    });
+
+    // HOST TAKEN
+    socket.on("hostTaken", () => {
+        console.warn("HOST SLOT WAS REJECTED.");
+        requestingHost = false;
+        isHost = false;
+
+        localStorage.removeItem("isHost");
+        localStorage.removeItem("hostSession");
+        localStorage.removeItem("lastHostPage");
+
+        alert("The host slot is already taken.");
+        updateHostButton();
+    });
+
+
+
+
 
 
 
@@ -1524,13 +1621,6 @@
         btn.style.display = "block";
         btn.classList.remove("hidden");
     }
-
-    //HOST RECONNECT TOKEN
-    socket.on("hostReconnectToken", token => {
-        console.log("Received host reconnect token");
-
-        localStorage.setItem("paHostReconnectToken", token);
-    });
 
     socket.on("dailyDouble", data => {
         console.log("DAILY DOUBLE RECEIVED:", data);
@@ -1668,27 +1758,6 @@
             isHost: false
         });
     }
-
-    //HOST STATUS
-    socket.on("hostStatus", taken => {
-        console.log("HOST STATUS FROM SERVER:", taken);
-        serverHostTaken = !!taken;
-        updateHostButton();
-    });
-
-    //HOST TAKEN
-    socket.on("hostTaken", () => {
-        console.warn("HOST SLOT WAS REJECTED.");
-        requestingHost = false;
-        isHost = false;
-
-        localStorage.removeItem("isHost");
-        localStorage.removeItem("hostSession");
-        localStorage.removeItem("lastHostPage");
-
-        alert("The host slot is already taken.");
-        updateHostButton();
-    });
 
     //CHARACTER LIST
     socket.on("characterList", chars => {
@@ -1985,73 +2054,6 @@
             });
         }
     );
-
-    //JOIN SUCCESS
-   socket.on("joinSuccess", data => {
-        console.log(
-            "JOIN SUCCESS:",
-            data,
-            "isHost:",
-            isHost,
-            "requestingHost:",
-            requestingHost
-        );
-
-        const joiningAsHost = requestingHost || isHost;
-
-        // HOST
-        if (joiningAsHost) {
-            requestingHost = false;
-            isHost = true;
-            localStorage.setItem("isHost", "true");
-
-            if (currentSession) {
-                localStorage.setItem("hostSession", currentSession);
-            }
-            console.log("HOST SLOT CONFIRMED.", "SESSION:", currentSession);
-            let savedPage = localStorage.getItem("lastHostPage");
-
-            if (!savedPage) {
-                savedPage = "hostJoinPg";
-                localStorage.setItem("lastHostPage", savedPage);
-            }
-            console.log("HOST PAGE TO RESTORE:", savedPage);
-            showHostControls();
-            return;
-        }
-
-        // PLAYER
-        localStorage.setItem("gameSession", currentSession);
-        localStorage.setItem("hasJoined", "true");
-
-        const joinBtn = document.getElementById("joinBtn");
-
-        if (joinBtn) {
-            joinBtn.disabled = true;
-            joinBtn.innerText = "Joined";
-            joinBtn.style.opacity = "0.6";
-        }
-
-        const nameInput = document.getElementById("name");
-        const enterBtn = document.getElementById("enterBtn");
-
-        if (nameInput) nameInput.disabled = true;
-        if (enterBtn) enterBtn.disabled = true;
-
-        document.querySelectorAll("#characters button").forEach(b => { b.disabled = true; b.style.pointerEvents = "none";});
-        const alreadyJoined = document.getElementById("waitingScreen")?.classList.contains("show");
-
-        if (!alreadyJoined) {
-            confettiBurst();
-
-            setTimeout(() => {
-                showWaitingScreen();
-            }, 300);
-        } else {
-            showWaitingScreen();
-        }
-    });
-
 
     //JOIN FUNCTIONS
     function setName() {
