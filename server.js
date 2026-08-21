@@ -1000,15 +1000,14 @@ io.on("connection", (socket) => {
                     console.log("Clue:", clueId);
                     console.log("================================");
 
-                    io.emit(
-                        "dailyDouble",
-                        {
-                            round: game.round,
+                    game.players.forEach(player=>{
+                        io.to(player.socketId).emit("dailyDouble",{
+                            round:game.round,
                             clueId,
                             value:game.currentClueValue,
-                            clueData: clue
-                        }
-                    );
+                            clueData:clue
+                        });
+                    });
 
                     broadcastToUnity({
                         type: "dailyDouble",
@@ -1231,11 +1230,19 @@ io.on("connection", (socket) => {
             return;
 
         currentBuzzPlayer = player;
-
+        /*
         io.emit("buzzAccepted", {
             playerId: player.playerId,
             playerName: player.name,
             character: player.character
+        });
+        */
+        game.players.forEach(player=>{
+            io.to(player.socketId).emit("buzzAccepted",{
+                playerId: player.playerId,
+                playerName: player.name,
+                character: player.character
+            });
         });
 
         broadcastToUnity({
