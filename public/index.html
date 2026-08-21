@@ -2516,15 +2516,7 @@
         btn.classList.remove("hidden");
     }
 
-
-
-
-
-
-
-
-
-    //RECONNECT
+    // RECONNECT
     function tryReconnect() {
         if (!socketConnected) {
             console.log("Reconnect waiting for socket...");
@@ -2590,11 +2582,8 @@
 
         //PLAYER RECONNECT
         const playerId = localStorage.getItem("playerId");
-
         const savedName = localStorage.getItem("name");
-
         const savedCharacter = localStorage.getItem("character");
-
         const savedGameSession = localStorage.getItem("gameSession");
 
         if (!playerId || !savedName || !savedCharacter) {
@@ -2639,6 +2628,12 @@
             isHost: false
         });
     }
+
+
+
+
+
+
 
     //JOIN FUNCTIONS
     function setName() {
