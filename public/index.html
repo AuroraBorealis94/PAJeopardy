@@ -1699,8 +1699,27 @@
         joinBtn.innerText = "Join Game";
         joinBtn.style.opacity = "1";
     });
-    
+    /*
     // BOARD DATA
+    socket.on("boardData", data => {
+        console.log("BOARD DATA RECEIVED:", data);
+
+        if (!data || !data.board) {
+            console.error("Invalid boardData received.");
+            return;
+        }
+
+        currentRound = parseInt(data.round) || 1;
+        buildHostBoard(data.board);
+
+        if (isHost) {
+            const savedPage = localStorage.getItem("lastHostPage");
+            if (savedPage === "hostBoard") {
+                restoreHostPage("hostBoard");
+            }
+        }
+    });
+    */
     socket.on("boardData", data => {
         console.log("BOARD DATA RECEIVED:", data);
 
