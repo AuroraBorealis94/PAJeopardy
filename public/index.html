@@ -1429,72 +1429,70 @@
         }
     });
 
-    /*
-    //GAME STATE SYNC
-    socket.on(
-        "gameStateSync",
-        data => {
-            console.log("SYNC STATE:", data);
+    // GAME SESSION
+    socket.on("gameSession", session => {
+        const savedSession = localStorage.getItem("gameSession");
+        const savedHostSession = localStorage.getItem("hostSession");
+        const storedIsHost = localStorage.getItem("isHost") === "true";
 
-            if (isHost) {
-                console.log("HOST STATE SYNC RECEIVED");
-                let savedPage = localStorage.getItem("lastHostPage");
+        currentSession = String(session);
+        sessionReceived = true;
 
-                if (!savedPage) {
-                    savedPage = "hostJoinPg";
-                    localStorage.setItem("lastHostPage", savedPage);
-                }
-                console.log("RESTORING HOST PAGE FROM SYNC:", savedPage);
-                showHostControls();
-                return;
-            }
+        console.log("SERVER SESSION:", session);
+        console.log("SAVED PLAYER SESSION:", savedSession);
+        console.log("SAVED HOST SESSION:", savedHostSession);
+        console.log("STORED IS HOST:", storedIsHost);
 
-            lockedSet = new Set((data.lockedCharacters || []).map(c => c.toLowerCase()));
-            updateLockedUI();
+        //HOST SESSION CHECK
+        if(storedIsHost){
+            if(savedHostSession&&String(savedHostSession)===String(session)){
+                isHost=true;
+                requestingHost=false;
+                console.log("VALID HOST SESSION. RECONNECTING...");
+                updateHostButton();
+            }else{
+                console.log("SERVER SESSION CHANGED. CLEARING HOST STATE.");
+                localStorage.removeItem("isHost");
+                localStorage.removeItem("hostSession");
+                localStorage.removeItem("lastHostPage");
+                localStorage.removeItem("paHostReconnectToken");
 
-            if (data.state === "lobby") {
-                const lobby = document.getElementById("lobbyUI");
+                isHost=false;
+                requestingHost=false;
 
-                if (lobby) {
-                    lobby.style.display = "block";
-                }
-
-                const waiting = document.getElementById("waitingScreen");
-
-                if (waiting) {
-                    waiting.classList.remove("show");
-                }
-            }
-
-            if (data.state === "playing") {
-                const lobby = document.getElementById("lobbyUI");
-
-                if (lobby) {
-                    lobby.style.display =
-                        "none";
-                }
-                showInstructionsHoldingScreen();
-            }
-
-            if (data.state === "buzzer") {
-                const lobby = document.getElementById("lobbyUI");
-
-                if (lobby) {
-                    lobby.style.display =
-                        "none";
-                }
-
-                const waiting = document.getElementById("waitingScreen");
-
-                if (waiting) {
-                    waiting.classList.add(
-                        "show"
-                    );
-                }
+                updateHostButton();
             }
         }
-    );
-    */
+
+        //PLAYER SESSION CHECK
+        if (savedSession && String(savedSession) !== String(session) && !storedIsHost) {
+            console.log("SERVER SESSION CHANGED. CLEARING PLAYER STATE.");
+            localStorage.removeItem("playerId");
+            localStorage.removeItem("name");
+            localStorage.removeItem("character");
+            localStorage.removeItem("hasJoined");
+            localStorage.removeItem("gameSession");
+            location.reload();
+            return;
+        }
+        tryReconnect();
+    });
+    
+    // RESET SERVER
+    socket.on("forceReset", () => {
+        console.log("Session expired, resetting");
+        localStorage.clear();
+        location.reload();
+    });
+    
+    // ROOM CODE
+    socket.on("roomCode", code => {
+        console.log("ROOM CODE:", code);
+        /*
+            Keep this listener available if you want to
+            display the room code on the host/player UI.
+        */
+    });
 
 
 
@@ -1988,16 +1986,6 @@
         }
     );
 
-    //RESET SERVER
-    socket.on(
-        "forceReset",
-        () => {
-            console.log("Session expired, resetting");
-            localStorage.clear();
-            location.reload();
-        }
-    );
-
     //JOIN SUCCESS
    socket.on("joinSuccess", data => {
         console.log(
@@ -2064,68 +2052,6 @@
         }
     });
 
-    //GAME SESSION
-    socket.on("gameSession",
-        session => {
-            const savedSession = localStorage.getItem("gameSession");
-            const savedHostSession = localStorage.getItem("hostSession");
-            const storedIsHost = localStorage.getItem("isHost") === "true";
-
-            currentSession = String(session);
-            sessionReceived = true;
-
-            console.log("SERVER SESSION:", session);
-            console.log("SAVED PLAYER SESSION:", savedSession);
-            console.log("SAVED HOST SESSION:", savedHostSession);
-            console.log("STORED IS HOST:", storedIsHost);
-
-            //HOST SESSION CHECK
-            if (storedIsHost) {
-                if (savedHostSession && String(savedHostSession) === String(session)) {
-                    isHost = true;
-                    console.log("VALID HOST SESSION. RECONNECTING...");
-                    updateHostButton();
-                } else {
-                    console.log("SERVER SESSION CHANGED. CLEARING HOST STATE.");
-                    localStorage.removeItem("isHost");
-                    localStorage.removeItem("hostSession");
-                    localStorage.removeItem("lastHostPage");
-                    localStorage.removeItem("paHostReconnectToken");
-
-                    isHost = false;
-                    requestingHost = false;
-
-                    updateHostButton();
-                }
-            }
-
-            //PLAYER SESSION CHECK
-            if (savedSession && String(savedSession) !== String(session) && !storedIsHost) {
-                console.log("SERVER SESSION CHANGED. CLEARING PLAYER STATE.");
-                localStorage.removeItem("playerId");
-                localStorage.removeItem("name");
-                localStorage.removeItem("character");
-                localStorage.removeItem("hasJoined");
-                localStorage.removeItem("gameSession");
-                location.reload();
-                return;
-            }
-
-            tryReconnect();
-        }
-    );
-
-    //ROOM CODE
-    socket.on(
-        "roomCode",
-        code => {
-            console.log("ROOM CODE:", code);
-            /*
-                Keep this listener available if you want to
-                display the room code on the host/player UI.
-            */
-        }
-    );
 
     //JOIN FUNCTIONS
     function setName() {
