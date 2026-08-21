@@ -2629,248 +2629,249 @@
         });
     }
 
+    /* #region LOBBY FUNCTIONS */
+        function setName() {
+            const nameInput = document.getElementById("name");
+            if (!nameInput) return;
+            state.name = nameInput.value.trim();
+            localStorage.setItem("name", state.name);
 
+            const teamLabel = document.getElementById("teamLabel");
 
-
-
-
-
-    //JOIN FUNCTIONS
-    function setName() {
-        const nameInput = document.getElementById("name");
-        if (!nameInput) return;
-        state.name = nameInput.value.trim();
-        localStorage.setItem("name", state.name);
-
-        const teamLabel = document.getElementById("teamLabel");
-
-        if (teamLabel) {
-            teamLabel.classList.replace(
-                "previewHidden",
-                "previewVisible"
-            );
-        }
-
-        updatePreview();
-        nameInput.value = "";
-    }
-
-    function setSelectedCard(card) {
-        document.querySelectorAll(".charCard").forEach(c => c.classList.remove("selected"));
-        card.classList.add("selected");
-        state.character = card.__charData;
-
-        localStorage.setItem("character", JSON.stringify(state.character));
-        updatePreview();
-    }
-
-    function centerOnCard(card) {
-        const container =document.getElementById("characters");
-        if (!container || !card) return;
-        const containerRect = container.getBoundingClientRect();
-        const cardRect = card.getBoundingClientRect();
-
-        const offset =
-            (
-                cardRect.left +
-                cardRect.width / 2
-            ) -
-            (
-                containerRect.left +
-                containerRect.width / 2
-            );
-
-        container.scrollBy({
-            left: offset,
-            behavior: "smooth"
-        });
-    }
-
-    function updateCenterCard() {
-        const container = document.getElementById("characters");
-        if (!container) return;
-        const cards =container.querySelectorAll(".charCard");
-        if (!cards.length) return;
-
-        const containerCenter =container.getBoundingClientRect().left + container.offsetWidth / 2;
-
-        let closest = null;
-        let closestDistance = Infinity;
-
-        cards.forEach(card => {
-            const rect = card.getBoundingClientRect();
-            const center =
-                rect.left +
-                rect.width / 2;
-            const distance =
-                Math.abs(
-                    center -
-                    containerCenter
+            if (teamLabel) {
+                teamLabel.classList.replace(
+                    "previewHidden",
+                    "previewVisible"
                 );
-            if (distance < closestDistance) {
-                closestDistance = distance;
-                closest = card;
             }
-        });
 
-        cards.forEach(c => c.classList.remove("center"));
-        if (closest) {
-            closest.classList.add("center");
-            currentIndex = realCards.indexOf(closest);
-        }
-    }
-
-    function scrollByCard(direction) {
-        if (!realCards.length) return;
-        currentIndex += direction;
-        if (currentIndex < 0) {
-            currentIndex = realCards.length - 1;
-        }
-        if (currentIndex >= realCards.length) {
-            currentIndex = 0;
+            updatePreview();
+            nameInput.value = "";
         }
 
-        const card = realCards[currentIndex];
-        if (card) {
-            centerOnCard(card);
-        }
-    }
+        function setSelectedCard(card) {
+            document.querySelectorAll(".charCard").forEach(c => c.classList.remove("selected"));
+            card.classList.add("selected");
+            state.character = card.__charData;
 
-    function updateLockedUI() {
-        document.querySelectorAll(".charCard")
-            .forEach(card => {
-                const name = card.__charData.name.toLowerCase();
-                if (lockedSet.has(name)) {
-                    card.classList.add("locked");
-                } else {
-                    card.classList.remove("locked");
+            localStorage.setItem("character", JSON.stringify(state.character));
+            updatePreview();
+        }
+
+        function centerOnCard(card) {
+            const container =document.getElementById("characters");
+            if (!container || !card) return;
+            const containerRect = container.getBoundingClientRect();
+            const cardRect = card.getBoundingClientRect();
+
+            const offset =
+                (
+                    cardRect.left +
+                    cardRect.width / 2
+                ) -
+                (
+                    containerRect.left +
+                    containerRect.width / 2
+                );
+
+            container.scrollBy({
+                left: offset,
+                behavior: "smooth"
+            });
+        }
+
+        function updateCenterCard() {
+            const container = document.getElementById("characters");
+            if (!container) return;
+            const cards =container.querySelectorAll(".charCard");
+            if (!cards.length) return;
+
+            const containerCenter =container.getBoundingClientRect().left + container.offsetWidth / 2;
+
+            let closest = null;
+            let closestDistance = Infinity;
+
+            cards.forEach(card => {
+                const rect = card.getBoundingClientRect();
+                const center =
+                    rect.left +
+                    rect.width / 2;
+                const distance =
+                    Math.abs(
+                        center -
+                        containerCenter
+                    );
+                if (distance < closestDistance) {
+                    closestDistance = distance;
+                    closest = card;
                 }
             });
-    }
 
-    function updatePreview() {
-        const previewName = document.getElementById("previewName");
-        const img = document.getElementById("previewImage");
-
-        if (previewName) {
-            previewName.textContent = state.name || "---";
-        }
-
-        if (!img) return;
-        if (state.character) {
-            img.src = state.character.front;
-            img.style.display = "block";
-        } else {
-            img.style.display = "none";
-        }
-    }
-
-    function joinGame() {
-        if (!state.name) {
-            alert("Please enter your team name first");
-            return;
-        }
-
-        if (!state.character) {
-            alert("Please choose a character");
-            return;
-        }
-
-        let playerId = localStorage.getItem("playerId");
-        if (!playerId) {
-            playerId = crypto.randomUUID();
-            localStorage.setItem("playerId", playerId);
-        }
-
-        socket.emit(
-            "join",
-            {
-                playerId,
-
-                name:
-                    state.name,
-
-                character:
-                    state.character.name,
-
-                isHost:
-                    false
+            cards.forEach(c => c.classList.remove("center"));
+            if (closest) {
+                closest.classList.add("center");
+                currentIndex = realCards.indexOf(closest);
             }
-        );
-        console.log("joinGame ran");
-    }
-
-    function confettiBurst() {
-        const images = [
-            "/confetti/confetti1.png",
-            "/confetti/confetti2.png"
-        ];
-
-        for (let i = 0; i < 50; i++) {
-            const confetti = document.createElement("img");
-            confetti.src =
-                images[
-                    Math.floor(
-                        Math.random() *
-                        images.length
-                    )
-                ];
-
-            confetti.style.position = "fixed";
-            confetti.style.left = "50%"
-            confetti.style.top = "40%";
-            confetti.style.width = "36px";
-            confetti.style.height = "36px";
-            confetti.style.zIndex = "9999"
-            confetti.style.pointerEvents = "none";
-
-            const hue =
-                Math.floor(
-                    Math.random() * 360
-                );
-
-            confetti.style.filter = `hue-rotate(${hue}deg)`;
-            document.body.appendChild(confetti);
-
-            const angle =
-                Math.random() *
-                Math.PI *
-                2;
-
-            const velocity =
-                2 +
-                Math.random() *
-                5;
-
-            let x = 0;
-            let y = 0;
-            let gravity = 0;
-
-            const interval =
-                setInterval(
-                    () => {
-                        gravity += 0.15;
-
-                        x +=
-                            Math.cos(angle) *
-                            velocity;
-
-                        y +=
-                            Math.sin(angle) *
-                            velocity +
-                            gravity;
-
-
-                        confetti.style.transform = `translate(${x}px, ${y}px) rotate(${x * 2}deg)`;
-                        if (y > window.innerHeight) {
-                            clearInterval(interval);
-                            confetti.remove();
-                        }
-                    },
-                    16
-                );
         }
-    }
+
+        function scrollByCard(direction) {
+            if (!realCards.length) return;
+            currentIndex += direction;
+            if (currentIndex < 0) {
+                currentIndex = realCards.length - 1;
+            }
+            if (currentIndex >= realCards.length) {
+                currentIndex = 0;
+            }
+
+            const card = realCards[currentIndex];
+            if (card) {
+                centerOnCard(card);
+            }
+        }
+
+        function updateLockedUI() {
+            document.querySelectorAll(".charCard")
+                .forEach(card => {
+                    const name = card.__charData.name.toLowerCase();
+                    if (lockedSet.has(name)) {
+                        card.classList.add("locked");
+                    } else {
+                        card.classList.remove("locked");
+                    }
+                });
+        }
+
+        function updatePreview() {
+            const previewName = document.getElementById("previewName");
+            const img = document.getElementById("previewImage");
+
+            if (previewName) {
+                previewName.textContent = state.name || "---";
+            }
+
+            if (!img) return;
+            if (state.character) {
+                img.src = state.character.front;
+                img.style.display = "block";
+            } else {
+                img.style.display = "none";
+            }
+        }
+
+        function joinGame() {
+            if (!state.name) {
+                alert("Please enter your team name first");
+                return;
+            }
+
+            if (!state.character) {
+                alert("Please choose a character");
+                return;
+            }
+
+            let playerId = localStorage.getItem("playerId");
+            if (!playerId) {
+                playerId = crypto.randomUUID();
+                localStorage.setItem("playerId", playerId);
+            }
+
+            socket.emit(
+                "join",
+                {
+                    playerId,
+
+                    name:
+                        state.name,
+
+                    character:
+                        state.character.name,
+
+                    isHost:
+                        false
+                }
+            );
+            console.log("joinGame ran");
+        }
+
+        function confettiBurst() {
+            const images = [
+                "/confetti/confetti1.png",
+                "/confetti/confetti2.png"
+            ];
+
+            for (let i = 0; i < 50; i++) {
+                const confetti = document.createElement("img");
+                confetti.src =
+                    images[
+                        Math.floor(
+                            Math.random() *
+                            images.length
+                        )
+                    ];
+
+                confetti.style.position = "fixed";
+                confetti.style.left = "50%"
+                confetti.style.top = "40%";
+                confetti.style.width = "36px";
+                confetti.style.height = "36px";
+                confetti.style.zIndex = "9999"
+                confetti.style.pointerEvents = "none";
+
+                const hue =
+                    Math.floor(
+                        Math.random() * 360
+                    );
+
+                confetti.style.filter = `hue-rotate(${hue}deg)`;
+                document.body.appendChild(confetti);
+
+                const angle =
+                    Math.random() *
+                    Math.PI *
+                    2;
+
+                const velocity =
+                    2 +
+                    Math.random() *
+                    5;
+
+                let x = 0;
+                let y = 0;
+                let gravity = 0;
+
+                const interval =
+                    setInterval(
+                        () => {
+                            gravity += 0.15;
+
+                            x +=
+                                Math.cos(angle) *
+                                velocity;
+
+                            y +=
+                                Math.sin(angle) *
+                                velocity +
+                                gravity;
+
+
+                            confetti.style.transform = `translate(${x}px, ${y}px) rotate(${x * 2}deg)`;
+                            if (y > window.innerHeight) {
+                                clearInterval(interval);
+                                confetti.remove();
+                            }
+                        },
+                        16
+                    );
+            }
+        }
+    /* #endregion */
+
+
+
+
+
+
 
     //WAITING
     function showWaitingScreen() {
