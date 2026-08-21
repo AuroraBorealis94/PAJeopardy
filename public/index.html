@@ -2303,6 +2303,158 @@
         });
     }
 
+    
+        //SHOW HOST CLUE
+        function showHostClue(clue) {
+            hostAnswerShowing = false;
+            const clueText = document.getElementById("hostClueText");
+            const answerText = document.getElementById("hostAnswerText");
+            const overlay = document.getElementById("hostClueOverlay");
+            const inner = document.getElementById("hostClueInner");
+            const judgement = document.getElementById("hostJudgementArea");
+            const enableBtn = document.getElementById("enableBuzzerBtn");
+            const dailyDoubleBanner = document.getElementById("dailyDoubleBanner");
+            if (!clue || !clue.clueData) {
+                console.error("Invalid clue passed to showHostClue");
+                return;
+            }
+
+            clueText.textContent = clue.clueData.clue;
+            answerText.textContent = clue.clueData.answer;
+
+            overlay.classList.remove("hidden");
+            overlay.classList.add("show");
+
+            inner.classList.remove("flipped");
+            judgement.classList.remove("show");
+            buzzersEnabled = false;
+
+            // DAILY DOUBLE
+            if (clue.clueData.dailyDouble === true) {
+                currentDailyDouble = clue;
+
+                if (dailyDoubleBanner) {
+                    dailyDoubleBanner.classList.remove("hidden");
+                }
+
+                // Daily Doubles do NOT use the buzzer.
+                enableBtn.style.display = "none";
+
+                socket.emit("hostAction", {
+                    type: "dailyDouble",
+                    clueId: clue.clueData.id
+                });
+                showDailyDoublePlayerButtons();
+            } else {
+                currentDailyDouble = null;
+
+                if (dailyDoubleBanner) {
+                    dailyDoubleBanner.classList.add("hidden");
+                }
+                // Normal clue gets the buzzer button.
+                enableBtn.style.display = "block";
+                hideDailyDoublePlayerButtons();
+            }
+        }
+
+        //FLIP HOST CARD
+        function flipHostCard() {
+            const inner = document.getElementById("hostClueInner");
+            const judgement = document.getElementById("hostJudgementArea");
+            const enableBtn = document.getElementById("enableBuzzerBtn");
+            hostAnswerShowing = !hostAnswerShowing;
+
+            inner.classList.toggle("flipped", hostAnswerShowing);
+
+            if (hostAnswerShowing) {
+                if (currentBuzzPlayer) {
+                    judgement.classList.add("show");
+                }
+                enableBtn.style.display = buzzersEnabled ? "none" : "block";
+            } else {
+                enableBtn.style.display = buzzersEnabled ? "none" : "block";
+            }
+        }
+
+        //HOST REVEAL
+        function hostReveal() {
+            flipHostCard();
+        }
+
+        //HOST ANSWER CORRECT
+        function hostAnswerCorrect() {
+            socket.emit("hostAction", {
+                type: "answerCorrect"
+            });
+
+            closeHostClue();
+        }
+
+        //HOST CONTINUE
+        function hostContinue() {
+            socket.emit("hostAction", {
+                type: "continueClue"
+            });
+
+            closeHostClue();
+        }
+
+        //HOST ANSWER WRONG
+        function hostAnswerWrong() {
+            console.log("ANSWER WRONG");
+            document.getElementById("hostJudgementArea").classList.remove("show");
+            document.getElementById("hostClueInner").classList.remove("flipped");
+
+            hostAnswerShowing = false;
+            currentBuzzPlayer = null;
+
+            socket.emit("hostAction", {
+                type: "resumeBuzzing"
+            });
+        }
+
+        //CLOSE HOST CLUE
+        function closeHostClue() {
+            document.getElementById("enableBuzzerBtn").style.display = "none";
+            document.getElementById("hostClueOverlay").classList.remove("show");
+            document.getElementById("hostJudgementArea").classList.remove("show");
+            document.getElementById("hostClueInner").classList.remove("flipped");
+
+            const dailyDoubleBanner = document.getElementById("dailyDoubleBanner");
+
+            if (dailyDoubleBanner) {
+                dailyDoubleBanner.classList.add("hidden");
+            }
+
+            currentBuzzPlayer = null;
+            hostAnswerShowing = false;
+            currentDailyDouble = null;
+
+            if (currentHostTile) {
+                currentHostTile.classList.add("used");
+
+                requestAnimationFrame(() => {
+                    updateFinishRoundButton();
+                });
+            }
+        }
+
+        //ENABLE BUZZER
+        function hostEnableBuzzer() {
+            buzzersEnabled = true;
+            document.getElementById("enableBuzzerBtn").style.display = "none";
+
+            socket.emit("hostAction", {
+                type: "resumeBuzzing"
+            });
+        }
+
+
+
+
+
+
+
 
 
 
@@ -2905,180 +3057,6 @@
         }
         const allUsed = Array.from(tiles).every(tile => tile.classList.contains("used"));
         finishBtn.style.display = allUsed ? "block" : "none";
-    }
-
-    //SHOW HOST CLUE
-    function showHostClue(clue) {
-        hostAnswerShowing = false;
-        const clueText = document.getElementById("hostClueText");
-        const answerText = document.getElementById("hostAnswerText");
-        const overlay = document.getElementById("hostClueOverlay");
-        const inner = document.getElementById("hostClueInner");
-        const judgement = document.getElementById("hostJudgementArea");
-        const enableBtn = document.getElementById("enableBuzzerBtn");
-        const dailyDoubleBanner = document.getElementById("dailyDoubleBanner");
-        if (!clue || !clue.clueData) {
-            console.error("Invalid clue passed to showHostClue");
-            return;
-        }
-
-        clueText.textContent = clue.clueData.clue;
-        answerText.textContent = clue.clueData.answer;
-
-        overlay.classList.remove("hidden");
-        overlay.classList.add("show");
-
-        inner.classList.remove("flipped");
-        judgement.classList.remove("show");
-        buzzersEnabled = false;
-
-        // DAILY DOUBLE
-        if (clue.clueData.dailyDouble === true) {
-
-            currentDailyDouble = clue;
-
-            if (dailyDoubleBanner) {
-                dailyDoubleBanner.classList.remove("hidden");
-            }
-
-            // Daily Doubles do NOT use the buzzer.
-            enableBtn.style.display = "none";
-
-            socket.emit("hostAction", {
-                type: "dailyDouble",
-                clueId: clue.clueData.id
-            });
-
-            showDailyDoublePlayerButtons();
-
-        } else {
-
-            currentDailyDouble = null;
-
-            if (dailyDoubleBanner) {
-                dailyDoubleBanner.classList.add("hidden");
-            }
-
-            // Normal clue gets the buzzer button.
-            enableBtn.style.display = "block";
-
-            hideDailyDoublePlayerButtons();
-        }
-
-        // DAILY DOUBLE
-        if (clue.clueData.dailyDouble === true) {
-            currentDailyDouble = clue;
-
-            if (dailyDoubleBanner) {
-                dailyDoubleBanner.classList.remove("hidden");
-            }
-            console.log("DAILY DOUBLE:", clue.clueData.id);
-
-            socket.emit("hostAction", {
-                type: "dailyDouble",
-                clueId: clue.clueData.id
-            });
-
-        } else {
-
-            currentDailyDouble = null;
-
-            if (dailyDoubleBanner) {
-                dailyDoubleBanner.classList.add("hidden");
-            }
-        }
-    }
-
-    //FLIP HOST CARD
-    function flipHostCard() {
-        const inner = document.getElementById("hostClueInner");
-        const judgement = document.getElementById("hostJudgementArea");
-        const enableBtn = document.getElementById("enableBuzzerBtn");
-        hostAnswerShowing = !hostAnswerShowing;
-
-        inner.classList.toggle("flipped", hostAnswerShowing);
-
-        if (hostAnswerShowing) {
-            if (currentBuzzPlayer) {
-                judgement.classList.add("show");
-            }
-            enableBtn.style.display = buzzersEnabled ? "none" : "block";
-        } else {
-            enableBtn.style.display = buzzersEnabled ? "none" : "block";
-        }
-    }
-
-    //HOST REVEAL
-    function hostReveal() {
-        flipHostCard();
-    }
-
-    //HOST ANSWER CORRECT
-    function hostAnswerCorrect() {
-        socket.emit("hostAction", {
-            type: "answerCorrect"
-        });
-
-        closeHostClue();
-    }
-
-    //HOST CONTINUE
-    function hostContinue() {
-        socket.emit("hostAction", {
-            type: "continueClue"
-        });
-
-        closeHostClue();
-    }
-
-    //HOST ANSWER WRONG
-    function hostAnswerWrong() {
-        console.log("ANSWER WRONG");
-        document.getElementById("hostJudgementArea").classList.remove("show");
-        document.getElementById("hostClueInner").classList.remove("flipped");
-
-        hostAnswerShowing = false;
-        currentBuzzPlayer = null;
-
-        socket.emit("hostAction", {
-            type: "resumeBuzzing"
-        });
-    }
-
-    //CLOSE HOST CLUE
-    function closeHostClue() {
-        document.getElementById("enableBuzzerBtn").style.display = "none";
-        document.getElementById("hostClueOverlay").classList.remove("show");
-        document.getElementById("hostJudgementArea").classList.remove("show");
-        document.getElementById("hostClueInner").classList.remove("flipped");
-
-        const dailyDoubleBanner = document.getElementById("dailyDoubleBanner");
-
-        if (dailyDoubleBanner) {
-            dailyDoubleBanner.classList.add("hidden");
-        }
-
-        currentBuzzPlayer = null;
-        hostAnswerShowing = false;
-        currentDailyDouble = null;
-
-        if (currentHostTile) {
-            currentHostTile.classList.add("used");
-
-            requestAnimationFrame(() => {
-                updateFinishRoundButton();
-            });
-        }
-    }
-
-    //ENABLE BUZZER
-    function hostEnableBuzzer() {
-        buzzersEnabled = true;
-        document.getElementById("enableBuzzerBtn").style.display = "none";
-
-        socket.emit("hostAction", {
-            type: "resumeBuzzing"
-        });
     }
 
     //HOST FINISH ROUND
