@@ -1288,32 +1288,23 @@
     let currentRound = 0;
     let currentDailyDouble = null;
 
-    console.log(
-        "LOCAL PLAYER ID ON LOAD:",
-        localStorage.getItem("playerId")
-    );
+    console.log("LOCAL PLAYER ID ON LOAD:", localStorage.getItem("playerId"));
 
-    //LOAD
+    // LOAD
     window.addEventListener("load", () => {
         console.log("PAGE LOAD");
-
         const savedName = localStorage.getItem("name");
         const savedCharacter = localStorage.getItem("character");
         const savedIsHost = localStorage.getItem("isHost");
 
         if (savedIsHost === "true") {
             isHost = true;
-
-            console.log(
-                "HOST STATE FOUND IN LOCAL STORAGE"
-            );
+            console.log("HOST STATE FOUND IN LOCAL STORAGE");
         }
 
         if (savedName) {
             state.name = savedName;
-
-            const teamLabel =
-                document.getElementById("teamLabel");
+            const teamLabel = document.getElementById("teamLabel");
 
             if (teamLabel) {
                 teamLabel.classList.replace(
@@ -1327,20 +1318,14 @@
             try {
                 state.character = JSON.parse(savedCharacter);
             } catch (error) {
-                console.error(
-                    "Could not restore character:",
-                    error
-                );
-
+                console.error("Could not restore character:", error);
                 localStorage.removeItem("character");
             }
         }
 
         //CHARACTER CAROUSEL
         const container = document.getElementById("characters");
-
         const nextBtn = document.getElementById("nextBtn");
-
         const prevBtn = document.getElementById("prevBtn");
 
         if (nextBtn) {
