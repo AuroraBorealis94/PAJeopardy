@@ -89,9 +89,17 @@
 
         #lobbyUI {
             background-image: url('/backgrounds/WLobbyBG.png');
+            position: fixed;
+            inset: 0;
+            width: 100vw;
+            height: 100vh;
+            background-size: cover;
+            background-position: center;
             background-repeat: no-repeat;
-            background-position: top center;
-            background-size: 100% auto;
+
+            z-index: 5000;
+
+            display: block;
         }
 
         #characters {
