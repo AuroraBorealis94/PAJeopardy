@@ -1586,6 +1586,121 @@
         alert("The host slot is already taken.");
         updateHostButton();
     });
+    
+    console.log("REGISTERING CHARACTER LIST LISTENER");
+
+    // CHARACTER LIST
+    socket.on("characterList", chars => {
+        console.log("CHARACTER LIST RECEIVED:",chars);
+        characters = chars;
+
+        if (state.character) {
+            const restored = chars.find(c => c.name === state.character.name);
+
+            if (restored) {
+                state.character = restored;
+            }
+        }
+
+        console.log("RECONNECT CHECK:", {
+            hasJoined: localStorage.getItem("hasJoined"),
+            name: localStorage.getItem("name"),
+            character: localStorage.getItem("character"),
+            playerId: localStorage.getItem("playerId"),
+            isHost: localStorage.getItem("isHost")
+        });
+
+        const container = document.getElementById("characters");
+        if (!container) return;
+        container.innerHTML = "";
+
+        realCards = chars.map(
+            (char, index) => {
+                const btn = document.createElement("button");
+                btn.classList.add("charCard");
+                btn.style.animation = "cardPopIn 0.5s ease";
+                const inner = document.createElement("div");
+                inner.classList.add("cardInner");
+                const front = document.createElement("div");
+                front.classList.add("cardFront");
+                const back = document.createElement("div");
+                back.classList.add("cardBack");
+                const imgFront = document.createElement("img");
+                imgFront.src = char.front;
+                const imgBack = document.createElement("img");
+                imgBack.src = char.back;
+
+                front.appendChild(imgFront);
+                back.appendChild(imgBack);
+
+                inner.appendChild(front);
+                inner.appendChild(back);
+
+                btn.appendChild(inner);
+
+                btn.__charData = char;
+                btn.__index = index;
+
+                btn.onclick = () => {
+                    if (
+                        lockedSet.has(char.name.toLowerCase())
+                    ) {
+                        return;
+                    }
+                    setSelectedCard(btn);
+                    currentIndex = index;
+                    centerOnCard(btn);
+                };
+                container.appendChild(btn);
+                return btn;
+            }
+        );
+        console.log("CARDS BUILT:",realCards.length);
+        currentIndex = 0;
+
+        requestAnimationFrame(() => {
+            updateCenterCard();
+            updateLockedUI();
+
+            if (state.character && localStorage.getItem("hasJoined") === "true"
+            ) {
+                const match = realCards.find(c => c.__charData.name === state.character.name);
+
+                if (match) {
+                    setSelectedCard(match);
+                    centerOnCard(match);
+                }
+            }
+        });
+    });
+
+    // PLAYER LIST
+    socket.on("playerList", players => {
+        window.currentPlayers = players;
+        const count = document.getElementById("playerCount");
+        if (count) {
+            count.textContent = players.length + " players joined";
+        }
+    });
+
+    // LOCKED CHARACTERS
+    socket.on("lockedCharacters", locked => {
+        lockedSet = new Set(locked.map(c => c.toLowerCase()));
+        requestAnimationFrame(updateLockedUI);
+    });
+
+    // CHARACTER TAKEN
+    socket.on("characterTaken", () => {
+        alert("That character was just taken. Please choose another.");
+        const joinBtn = document.getElementById("joinBtn");
+        if (!joinBtn) return;
+
+        joinBtn.disabled = false;
+        joinBtn.innerText = "Join Game";
+        joinBtn.style.opacity = "1";
+    });
+
+
 
 
 
@@ -1758,134 +1873,6 @@
             isHost: false
         });
     }
-
-    //CHARACTER LIST
-    socket.on("characterList", chars => {
-        characters = chars;
-
-        if (state.character) {
-            const restored = chars.find(c => c.name === state.character.name);
-
-            if (restored) {
-                state.character = restored;
-            }
-        }
-
-        console.log(
-            "RECONNECT CHECK:",
-            {
-                hasJoined:
-                    localStorage.getItem("hasJoined"),
-
-                name:
-                    localStorage.getItem("name"),
-
-                character:
-                    localStorage.getItem("character"),
-
-                playerId:
-                    localStorage.getItem("playerId"),
-
-                isHost:
-                    localStorage.getItem("isHost")
-            }
-        );
-
-        const container = document.getElementById("characters");
-        if (!container) return;
-        container.innerHTML = "";
-
-        realCards = chars.map(
-            (char, index) => {
-                const btn = document.createElement("button");
-                btn.classList.add("charCard");
-                btn.style.animation = "cardPopIn 0.5s ease";
-                const inner = document.createElement("div");
-                inner.classList.add("cardInner");
-                const front = document.createElement("div");
-                front.classList.add("cardFront");
-                const back = document.createElement("div");
-                back.classList.add("cardBack");
-                const imgFront = document.createElement("img");
-                imgFront.src = char.front;
-                const imgBack = document.createElement("img");
-                imgBack.src = char.back;
-
-                front.appendChild(imgFront);
-                back.appendChild(imgBack);
-
-                inner.appendChild(front);
-                inner.appendChild(back);
-
-                btn.appendChild(inner);
-
-                btn.__charData = char;
-                btn.__index = index;
-
-                btn.onclick = () => {
-                    if (
-                        lockedSet.has(char.name.toLowerCase())
-                    ) {
-                        return;
-                    }
-                    setSelectedCard(btn);
-                    currentIndex = index;
-                    centerOnCard(btn);
-                };
-                container.appendChild(btn);
-                return btn;
-            }
-        );
-
-        currentIndex = 0;
-
-        requestAnimationFrame(() => {
-            updateCenterCard();
-            updateLockedUI();
-
-            if (state.character && localStorage.getItem("hasJoined") === "true"
-            ) {
-                const match = realCards.find(c => c.__charData.name === state.character.name);
-
-                if (match) {
-                    setSelectedCard(match);
-                    centerOnCard(match);
-                }
-            }
-        });
-    });
-
-    //PLAYER LIST
-    socket.on("playerList", players => {
-        window.currentPlayers = players;
-        const count = document.getElementById("playerCount");
-        if (count) {
-            count.textContent = players.length + " players joined";
-        }
-    });
-
-    //LOCKED CHARACTERS
-    socket.on(
-        "lockedCharacters",
-        locked => {
-            lockedSet = new Set(locked.map(c => c.toLowerCase()));
-            requestAnimationFrame(updateLockedUI);
-        }
-    );
-
-    //CHARACTER TAKEN
-    socket.on(
-        "characterTaken",
-        () => {
-            alert("That character was just taken. Please choose another.");
-            const joinBtn = document.getElementById("joinBtn");
-            if (!joinBtn) return;
-
-            joinBtn.disabled = false;
-            joinBtn.innerText = "Join Game";
-            joinBtn.style.opacity = "1";
-        }
-    );
 
     // BOARD DATA
     socket.on("boardData", data => {
