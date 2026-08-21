@@ -2333,28 +2333,6 @@
                 enableBtn.style.display = "block";
                 hideDailyDoublePlayerButtons();
             }
-
-            // DAILY DOUBLE
-            if (clue.clueData.dailyDouble === true) {
-                currentDailyDouble = clue;
-
-                if (dailyDoubleBanner) {
-                    dailyDoubleBanner.classList.remove("hidden");
-                }
-                console.log("DAILY DOUBLE:", clue.clueData.id);
-
-                socket.emit("hostAction", {
-                    type: "dailyDouble",
-                    clueId: clue.clueData.id
-                });
-            } else {
-
-                currentDailyDouble = null;
-
-                if (dailyDoubleBanner) {
-                    dailyDoubleBanner.classList.add("hidden");
-                }
-            }
         }
 
         //FLIP HOST CARD
