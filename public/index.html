@@ -1345,6 +1345,161 @@
         tryReconnect();
     });
 
+    // CONNECT
+    socket.on("connect", () => {
+        console.log("SOCKET CONNECTED:", socket.id);
+        socketConnected = true;
+        reconnectAttempted = false;
+        tryReconnect();
+    });
+
+    // DISCONNECT
+    socket.on("disconnect", reason => {
+        console.log("SOCKET DISCONNECTED:", reason);
+        socketConnected = false;
+    });
+
+    // CONNECT ERROR
+    socket.on("connect_error", error => {
+        console.error("SOCKET CONNECTION ERROR:", error);
+    });
+    
+    // GAME STATE SYNC
+    socket.on("gameStateSync",data=>{
+        console.log("SYNC STATE:",data);
+        const storedIsHost=localStorage.getItem("isHost")==="true";
+        const hostPending=requestingHost||storedIsHost||isHost;
+        console.log("GAME STATE HOST CHECK:",{isHost,storedIsHost,requestingHost,hostPending,hostSession:localStorage.getItem("hostSession"),currentSession});
+
+        if(hostPending){
+            if(storedIsHost)isHost=true;
+            console.log("HOST STATE SYNC RECEIVED:",data.state);
+
+            if(data.state==="lobby"){
+                showHostControls();
+                restoreHostPage(localStorage.getItem("lastHostPage")||"hostLobbyPg");
+                return;
+            }
+
+            if(data.state==="playing"){
+                showHostControls();
+                restoreHostPage(localStorage.getItem("lastHostPage")||"hostBoard");
+                return;
+            }
+            return;
+        }
+
+        isHost=false;
+
+        lockedSet=new Set((data.lockedCharacters||[]).map(c=>c.toLowerCase()));
+        updateLockedUI();
+
+        if(data.state==="lobby"){
+            hideAllPlayerScreens();
+
+            const lobby=document.getElementById("lobbyUI");
+            if(lobby){
+                lobby.style.display="block";
+                lobby.classList.remove("hidden");
+                lobby.style.pointerEvents="auto";
+            }
+
+            const waiting=document.getElementById("waitingScreen");
+            if(waiting){
+                waiting.classList.remove("show");
+                waiting.classList.add("hidden");
+            }
+
+            restoreLobbyUI();
+            return;
+        }
+
+        if(data.state==="playing"){
+            const lobby=document.getElementById("lobbyUI");
+            if(lobby) lobby.style.display="none";
+            showInstructionsHoldingScreen();
+            return;
+        }
+
+        if(data.state==="buzzer"){
+            const lobby=document.getElementById("lobbyUI");
+            if(lobby) lobby.style.display="none";
+            showPlayerScreen("waitingScreen");
+            return;
+        }
+    });
+
+    /*
+    //GAME STATE SYNC
+    socket.on(
+        "gameStateSync",
+        data => {
+            console.log("SYNC STATE:", data);
+
+            if (isHost) {
+                console.log("HOST STATE SYNC RECEIVED");
+                let savedPage = localStorage.getItem("lastHostPage");
+
+                if (!savedPage) {
+                    savedPage = "hostJoinPg";
+                    localStorage.setItem("lastHostPage", savedPage);
+                }
+                console.log("RESTORING HOST PAGE FROM SYNC:", savedPage);
+                showHostControls();
+                return;
+            }
+
+            lockedSet = new Set((data.lockedCharacters || []).map(c => c.toLowerCase()));
+            updateLockedUI();
+
+            if (data.state === "lobby") {
+                const lobby = document.getElementById("lobbyUI");
+
+                if (lobby) {
+                    lobby.style.display = "block";
+                }
+
+                const waiting = document.getElementById("waitingScreen");
+
+                if (waiting) {
+                    waiting.classList.remove("show");
+                }
+            }
+
+            if (data.state === "playing") {
+                const lobby = document.getElementById("lobbyUI");
+
+                if (lobby) {
+                    lobby.style.display =
+                        "none";
+                }
+                showInstructionsHoldingScreen();
+            }
+
+            if (data.state === "buzzer") {
+                const lobby = document.getElementById("lobbyUI");
+
+                if (lobby) {
+                    lobby.style.display =
+                        "none";
+                }
+
+                const waiting = document.getElementById("waitingScreen");
+
+                if (waiting) {
+                    waiting.classList.add(
+                        "show"
+                    );
+                }
+            }
+        }
+    );
+    */
+
+
+
+
+
     //HOST BUTTON VISIBILITY
     function updateHostButton() {
         const btn = document.getElementById("hostBtn");
@@ -1371,23 +1526,6 @@
         btn.style.display = "block";
         btn.classList.remove("hidden");
     }
-
-    //SOCKET CONNECTION EVENTS
-    socket.on("connect", () => {
-        console.log("SOCKET CONNECTED:", socket.id);
-        socketConnected = true;
-        reconnectAttempted = false;
-        tryReconnect();
-    });
-
-    socket.on("disconnect", reason => {
-        console.log("SOCKET DISCONNECTED:", reason);
-        socketConnected = false;
-    });
-
-    socket.on("connect_error", error => {
-        console.error("SOCKET CONNECTION ERROR:", error);
-    });
 
     //HOST RECONNECT TOKEN
     socket.on("hostReconnectToken", token => {
@@ -1925,71 +2063,6 @@
             showWaitingScreen();
         }
     });
-
-    //GAME STATE SYNC
-    socket.on(
-        "gameStateSync",
-        data => {
-            console.log("SYNC STATE:", data);
-
-            if (isHost) {
-                console.log("HOST STATE SYNC RECEIVED");
-                let savedPage = localStorage.getItem("lastHostPage");
-
-                if (!savedPage) {
-                    savedPage = "hostJoinPg";
-                    localStorage.setItem("lastHostPage", savedPage);
-                }
-                console.log("RESTORING HOST PAGE FROM SYNC:", savedPage);
-                showHostControls();
-                return;
-            }
-
-            lockedSet = new Set((data.lockedCharacters || []).map(c => c.toLowerCase()));
-            updateLockedUI();
-
-            if (data.state === "lobby") {
-                const lobby = document.getElementById("lobbyUI");
-
-                if (lobby) {
-                    lobby.style.display = "block";
-                }
-
-                const waiting = document.getElementById("waitingScreen");
-
-                if (waiting) {
-                    waiting.classList.remove("show");
-                }
-            }
-
-            if (data.state === "playing") {
-                const lobby = document.getElementById("lobbyUI");
-
-                if (lobby) {
-                    lobby.style.display =
-                        "none";
-                }
-                showInstructionsHoldingScreen();
-            }
-
-            if (data.state === "buzzer") {
-                const lobby = document.getElementById("lobbyUI");
-
-                if (lobby) {
-                    lobby.style.display =
-                        "none";
-                }
-
-                const waiting = document.getElementById("waitingScreen");
-
-                if (waiting) {
-                    waiting.classList.add(
-                        "show"
-                    );
-                }
-            }
-        }
-    );
 
     //GAME SESSION
     socket.on("gameSession",
