@@ -1827,7 +1827,124 @@
         }
         showPlayerScreen("clueHoldingScreen");
     });
+    
+    // SELECT CLUE
+    socket.on("selectClue", ({ payload }) => {
+        if (!isHost) return;
+        if (!payload) return;
 
+        showHostClue({
+            value: payload.value,
+            clueData: payload.clueData
+        });
+    });
+
+    // INSTRUCTIONS SCREEN
+    socket.on("showInstructionsHolding", () => {
+        console.log("Showing instructions holding screen");
+        const lobby = document.getElementById("lobbyUI");
+
+        if (lobby) {
+            lobby.style.display = "none";
+        }
+        showPlayerScreen("instructionsHoldingScreen");
+    });
+
+    // BUZZER SCREEN
+    const buzzerPage = document.getElementById("buzzerPage");
+    const buzzButton = document.getElementById("buzzButton");
+    const buzzImg = document.getElementById("buzzImg");
+
+    if (buzzButton) {
+        buzzButton.addEventListener("pointerdown", pressBuzzButton);
+    }
+
+    socket.on("resumeBuzzing", () => {
+        canBuzz = true;
+        if (buzzImg) {
+            buzzImg.src = "/backgrounds/WBuzzerUp.png";
+            buzzImg.classList.remove("down");
+        }
+        hideAllPlayerScreens();
+        showPlayerScreen("buzzerPage");
+    });
+
+    socket.on("buzzAccepted", data => {
+        currentBuzzPlayer = data;
+        window.lastBuzzedPlayerName = data.playerName;
+        //const character = characters.find(c => c.name === data.character);
+
+        if (isHost) {
+            const inner = document.getElementById("hostClueInner");
+            const judgement = document.getElementById("hostJudgementArea");
+            const question = document.getElementById("hostJudgementQuestion");
+            const enableBtn =  document.getElementById("enableBuzzerBtn");
+
+            if (inner) {
+                inner.classList.add("flipped");
+            }
+
+            hostAnswerShowing = true;
+
+            if (question) {
+                question.textContent = `Did Team ${data.playerName} answer correctly?`;
+            }
+
+            if (judgement) {
+                judgement.classList.add("show");
+            }
+
+            if (enableBtn) {
+                enableBtn.style.display = "none";
+            }
+
+            return;
+        }
+
+        canBuzz = false;
+        showPlayerScreen("answeringPage");
+
+        const answeringTitle = document.getElementById("answeringTitle");
+        const answeringName = document.getElementById("answeringName");
+
+        const answeringCharacter = document.getElementById("answeringCharacter");
+        const myPlayerId = localStorage.getItem("playerId");
+
+        const isMe = data.playerId === myPlayerId;
+
+        if (answeringTitle) {
+            answeringTitle.textContent = isMe? "ANSWER NOW!" : "IS ANSWERING";
+        }
+
+        if (answeringName) {
+            answeringName.textContent = "Team " + data.playerName;
+        }
+
+        let character = null;
+
+        if (typeof characters !== "undefined") {
+            character = characters.find(c => c.name === data.character);
+        }
+
+        if (!character) {
+            const savedCharacter = localStorage.getItem("character");
+
+            if (savedCharacter) {
+                try {
+                    const saved = JSON.parse(savedCharacter);
+                    if (saved.name === data.character) {
+                        character = saved;
+                    }
+                } catch (error) {
+                    console.error("Could not parse saved character:", error);
+                }
+            }
+        }
+
+        if (character && character.front && answeringCharacter) {
+            answeringCharacter.src = character.front;
+        }
+    });
 
 
 
@@ -2091,19 +2208,6 @@
 
         showPlayerScreen("clueHoldingScreen");
     });
-    //SELECT CLUE
-    socket.on(
-        "selectClue",
-        ({ payload }) => {
-            if (!isHost) return;
-            if (!payload) return;
-
-            showHostClue({
-                value: payload.value,
-                clueData: payload.clueData
-            });
-        }
-    );
 
     //JOIN FUNCTIONS
     function setName() {
@@ -3116,42 +3220,6 @@
         screen.classList.add("hidden");
     }
 
-    //INSTRUCTIONS
-    socket.on(
-        "showInstructionsHolding",
-        () => {
-            console.log("Showing instructions holding screen");
-
-            const lobby = document.getElementById("lobbyUI");
-
-            if (lobby) {
-                lobby.style.display = "none";
-            }
-            showPlayerScreen("instructionsHoldingScreen");
-        }
-    );
-
-    //BUZZER
-    const buzzerPage =
-        document.getElementById(
-            "buzzerPage"
-        );
-    const buzzButton =
-        document.getElementById(
-            "buzzButton"
-        );
-    const buzzImg =
-        document.getElementById(
-            "buzzImg"
-        );
-
-    if (buzzButton) {
-
-        buzzButton.addEventListener(
-            "pointerdown",
-            pressBuzzButton
-        );
-    }
 
     function pressBuzzButton() {
         if (!canBuzz) return;
@@ -3174,122 +3242,6 @@
             100
         );
     }
-
-    socket.on(
-        "resumeBuzzing",
-        () => {
-
-            canBuzz =
-                true;
-
-
-            if (buzzImg) {
-
-                buzzImg.src =
-                    "/backgrounds/WBuzzerUp.png";
-
-                buzzImg.classList.remove(
-                    "down"
-                );
-            }
-
-
-            hideAllPlayerScreens();
-
-            showPlayerScreen(
-                "buzzerPage"
-            );
-        }
-    );
-
-    socket.on(
-        "buzzAccepted",
-        data => {
-            currentBuzzPlayer = data;
-            window.lastBuzzedPlayerName = data.playerName;
-            //const character = characters.find(c => c.name === data.character);
-
-            if (isHost) {
-                const inner = document.getElementById("hostClueInner");
-                const judgement = document.getElementById("hostJudgementArea");
-                const question = document.getElementById("hostJudgementQuestion");
-                const enableBtn =  document.getElementById("enableBuzzerBtn");
-
-                if (inner) {
-                    inner.classList.add("flipped");
-                }
-
-                hostAnswerShowing = true;
-
-                if (question) {
-                    question.textContent = `Did Team ${data.playerName} answer correctly?`;
-                }
-
-                if (judgement) {
-                    judgement.classList.add("show");
-                }
-
-                if (enableBtn) {
-                    enableBtn.style.display = "none";
-                }
-
-                return;
-            }
-
-            canBuzz = false;
-            showPlayerScreen("answeringPage");
-            /*
-            if (character) {
-                const answeringCharacter = document.getElementById("answeringCharacter");
-
-                if (answeringCharacter) {
-                    answeringCharacter.src = character.front;
-                }
-            }
-            */
-            //const isMe = data.playerId === localStorage.getItem("playerId");
-            const answeringTitle = document.getElementById("answeringTitle");
-            const answeringName = document.getElementById("answeringName");
-
-            const answeringCharacter = document.getElementById("answeringCharacter");
-            const myPlayerId = localStorage.getItem("playerId");
-
-            const isMe = data.playerId === myPlayerId;
-
-            if (answeringTitle) {
-                answeringTitle.textContent = isMe? "ANSWER NOW!" : "IS ANSWERING";
-            }
-
-            if (answeringName) {
-                answeringName.textContent = "Team " + data.playerName;
-            }
-
-            let character = null;
-
-            if (typeof characters !== "undefined") {
-                character = characters.find(c => c.name === data.character);
-            }
-
-            if (!character) {
-                const savedCharacter = localStorage.getItem("character");
-
-                if (savedCharacter) {
-                    try {
-                        const saved = JSON.parse(savedCharacter);
-                        if (saved.name === data.character) {
-                            character = saved;
-                        }
-                    } catch (error) {
-                        console.error("Could not parse saved character:", error);
-                    }
-                }
-            }
-
-            if (character && character.front && answeringCharacter) {
-                answeringCharacter.src = character.front;
-            }
-        }
-    );
 
     socket.on("dailyDoubleAnswering", data => {
         canBuzz = false;
