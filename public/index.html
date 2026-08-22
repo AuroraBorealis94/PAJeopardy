@@ -1473,6 +1473,7 @@
             if (lobby) {
                 lobby.style.display = "block";
                 lobby.classList.remove("hidden");
+                restoreLobbyUI();
                 lobby.style.pointerEvents = "auto";
             }
 
@@ -1501,7 +1502,7 @@
                 waiting.classList.remove("show");
                 waiting.classList.add("hidden");
             }
-
+            restoreLobbyUI();
             return;
         }
 
