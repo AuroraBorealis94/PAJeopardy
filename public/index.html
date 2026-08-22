@@ -929,66 +929,11 @@
         }
 
     /* #region Score Screen */
-    #scorePage {
-        position: fixed;
-        inset: 0;
-        width: 100vw;
-        height: 100vh;
-        overflow: hidden;
-    }
-
-    /* Animated player character */
-    #scoreCharacter {
-        position: absolute;
-
-        width: 401px;
-        height: 870px;
-
-        left: 50%;
-        bottom: 0;
-
-        transform: translateX(-50%) scale(0.5);
-        transform-origin: bottom center;
-
-        background-repeat: no-repeat;
-        background-position: 0 0;
-
-        image-rendering: auto;
-
-        z-index: 2;
-    }
-
-    /* The character animation gets this class */
-    #scoreCharacter.animate {
-        animation-name: scoreCharacterIdle;
-        animation-duration: 1.2s;
-        animation-timing-function: steps(6);
-        animation-iteration-count: infinite;
-    }
-
-    @keyframes scoreCharacterIdle {
-
-        from {
-            background-position: 0 0;
+        #scorePage {
+            position: fixed;
+            inset: 0;
+            overflow: hidden;
         }
-
-        to {
-            background-position: -2406px 0;
-        }
-
-    }
-
-
-    /* Score text */
-    #scoreChange {
-        position: absolute;
-        z-index: 5;
-    }
-
-    #scoreValue {
-        position: absolute;
-        z-index: 5;
-    }
 
         #scoreBackground {
             position: absolute;
@@ -1316,8 +1261,13 @@
 <!-- SCORE PAGE -->
 <div id="scorePage" class="hidden">
     <div id="scoreBackground"></div>
-    <div id="scoreCharacter"></div>
+
+    <!--<div id="scoreHeader">
+        Score: $0
+    </div>-->
+
     <div id="scoreChange"></div>
+
     <div id="scoreValue">
         $0
     </div>
@@ -1831,40 +1781,30 @@
 
     // SCORE SCREEN
     socket.on("showScoreScreen", data => {
-        if (!data || !Array.isArray(data.players)) {
-            return;
-        }
+        if (!data) return;
         const myPlayerId = localStorage.getItem("playerId");
-        const me = data.players.find(player => player.playerId === myPlayerId);
 
-        if (!me) {
-            console.warn("Could not find myself in score data:", myPlayerId);
+        // Only the player who earned the points
+        // should receive the score animation.
+        if (data.playerId && data.playerId !== myPlayerId) {
             return;
         }
+        console.log("SHOW SCORE SCREEN:", data);
 
-        console.log("SHOW SCORE SCREEN:", me);
+        const earned = Number(data.earned) || 0;
+        const newScore = Number(data.score) || 0;
 
-        const newScore = Number(me.score) || 0;
-        const oldScore = Number(currentScore) || 0;
+        // The score before the clue was awarded.
+        const oldScore = newScore - earned;
 
-        // My character's idle animation
-        setScoreCharacter(me.animation);
-        // Show the score page
+        setScoreBackground();
         showPlayerScreen("scorePage");
-
-        // Animate only if my score changed
-        if (newScore !== oldScore) {
-            const earned = newScore - oldScore;
-            animateScoreGain(oldScore, newScore, earned);
-        } else {
-            const scoreValue = document.getElementById("scoreValue");
-
-            if (scoreValue) {
-                scoreValue.textContent = `$${newScore}`;
-            }
-        }
-
-        currentScore = me.score;
+        animateScoreGain(
+            oldScore,
+            newScore,
+            earned
+        );
+        currentScore = newScore;
     });
 
     // SHOW BOARD INTRO
@@ -3327,45 +3267,6 @@
 
                 value.textContent = "$" + score;
             }, 30);
-        }
-
-        function setScoreCharacter(animationData) {
-            const character = document.getElementById("scoreCharacter");
-
-            if (!character) {
-                console.error("scoreCharacter element not found");
-                return;
-            }
-
-            if (!animationData || !animationData.src) {
-                console.warn("No score character animation data:", animationData);
-
-                character.style.backgroundImage = "none";
-                character.classList.remove("animate");
-
-                return;
-            }
-
-            console.log("SETTING SCORE CHARACTER:", animationData);
-
-            // Reset animation
-            character.classList.remove("animate");
-
-            // Set sprite sheet
-            character.style.backgroundImage =
-                `url("${animationData.src}")`;
-
-            // Set dimensions from server data
-            character.style.width =
-                `${animationData.frameWidth}px`;
-
-            character.style.height =
-                `${animationData.frameHeight}px`;
-
-            // Restart animation on next frame
-            requestAnimationFrame(() => {
-                character.classList.add("animate");
-            });
         }
 
         // DAILY DOUBLE FUNCTIONS

@@ -47,7 +47,7 @@
         "id": "B_600_2",
         "clue": "This family member would invite Martha Stewart to dinner to learn how she became such an accomplished businesswoman.",
 	"clueImage": "/clueImages/Martha_Jerri.jpg",
-        "answer": "Who is Aunt Jerry?"
+        "answer": "Who is Jerri?"
       },
       {
         "id": "B_600_3",
@@ -85,7 +85,7 @@
       },
       {
         "id": "B_1000_2",
-        "clue": "Uncle Ricky's most burned-in embarrassing memory is being called this famous bodybuilder's name.",
+        "clue": "Ricky's most burned-in embarrassing memory is being called this famous bodybuilder's name.",
 	"clueImage": "/clueImages/Atlas_Ricky.jpg",
         "answer": "Who is Charles Atlas?"
       },
