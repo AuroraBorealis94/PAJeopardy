@@ -99,14 +99,23 @@ const unityHeartbeat = setInterval(() => {
 }, 30000);
 
 // SOCKET.IO
+/*
+const io = require("socket.io")(http, {
+    cors: {
+        origin: "*"
+    }
+});
+*/
 const io = require("socket.io")(http, {
     cors: {
         origin: "*"
     },
+
     transports: [
         "websocket",
         "polling"
     ],
+
     pingInterval: 25000,
     pingTimeout: 60000,
     connectTimeout: 20000
