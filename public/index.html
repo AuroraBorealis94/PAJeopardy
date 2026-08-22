@@ -1292,6 +1292,17 @@
             START NEXT ROUND
         </button>
     </div>
+
+    <div id="hostMidCutscenePg" class="hostPage hidden">
+        <div>Wait for the cutscene to finish</div>
+        <br>
+
+        <button
+            id="showRound2BoardBtn"
+            onclick="hostShowRound2Board()">
+            Show Round 2 Board
+        </button>
+    </div>
 </div>
 
 <!-- BUZZER SCREEN -->
@@ -1469,13 +1480,30 @@
 
             if (data.state === "lobby") {
                 console.log("HOST RETURNING TO HOST JOIN PAGE");
+
                 localStorage.setItem("lastHostPage", "hostJoinPg");
                 showHostControls();
+
                 return;
             }
 
             if (data.state === "playing") {
                 showHostControls();
+                restoreHostPage(
+                    data.hostScreen ||
+                    localStorage.getItem("lastHostPage") ||
+                    "hostBoard"
+                );
+
+                return;
+            }
+
+            if (data.state === "midCutscene") {
+                console.log("HOST RETURNING TO ROUND 2 CUTSCENE");
+
+                showHostControls();
+                restoreHostPage("hostMidCutscenePg");
+
                 return;
             }
 
@@ -1530,6 +1558,14 @@
             }
 
             showPlayerScreen("waitingScreen");
+            return;
+        }
+
+        if(data.state==="midCutscene"){
+            const lobby=document.getElementById("lobbyUI");
+            if(lobby) lobby.style.display="none";
+
+            showPlayerScreen("scorePage");
             return;
         }
     });
@@ -2242,6 +2278,36 @@
         //}
     });
 
+    // ROUND 2 TRANSITION
+    socket.on("round2Transition", data => {
+        console.log("ROUND 2 TRANSITION RECEIVED:", data);
+
+        if (isHost) {
+            showHostControls();
+            restoreHostPage("hostMidCutscenePg");
+        }
+    });
+
+    // ROUND 2 BOARD
+    socket.on("showRound2Board", data => {
+        console.log("ROUND 2 BOARD RECEIVED:", data);
+
+        if (!isHost) {
+            return;
+        }
+
+        currentRound = 2;
+
+        const roundLabel = document.getElementById("hostRoundLabel");
+
+        if (roundLabel) {
+            roundLabel.textContent = "ROUND 2";
+        }
+
+        showHostControls();
+        restoreHostPage("hostBoard");
+    });
+
     document.addEventListener("click", e => {
         const overlay = document.getElementById("hostClueOverlay");
 
@@ -2300,76 +2366,108 @@
         });
     }
     
-    //RESTORE HOST PAGE
-    function restoreHostPage(pageId){
-        const controls=document.getElementById("hostControls");
-        if(!controls){
+    // RESTORE HOST PAGE
+    function restoreHostPage(pageId) {
+        const controls = document.getElementById("hostControls");
+
+        if (!controls) {
             console.error("Host controls container not found.");
             return;
         }
+
         controls.classList.remove("hidden");
         controls.classList.add("show");
-        controls.style.pointerEvents="auto";
-        const hostPages=[
+        controls.style.pointerEvents = "auto";
+
+        const hostPages = [
             "hostJoinPg",
             "hostLobbyPg",
             "hostInstructionsPg",
             "hostInstrucCutscenePg",
             "hostBoard",
+            "hostMidCutscenePg",
             "hostScoreReviewPg"
         ];
-        const instructionsBtn=document.getElementById("instructionsBtn");
-        const showInstrucCutBtn=document.getElementById("showInstrucCutBtn");
-        const showBoardIntroBtn=document.getElementById("showBoardIntroBtn");
-        if(instructionsBtn) instructionsBtn.style.display="none";
-        if(showInstrucCutBtn) showInstrucCutBtn.style.display="none";
-        if(showBoardIntroBtn) showBoardIntroBtn.style.display="none";
-        hostPages.forEach(id=>{
-            const page=document.getElementById(id);
-            if(page){
+
+        const instructionsBtn = document.getElementById("instructionsBtn");
+        const showInstrucCutBtn = document.getElementById("showInstrucCutBtn");
+        const showBoardIntroBtn = document.getElementById("showBoardIntroBtn");
+        const showRound2BoardBtn = document.getElementById("showRound2BoardBtn");
+
+        if (instructionsBtn) instructionsBtn.style.display = "none";
+        if (showInstrucCutBtn) showInstrucCutBtn.style.display = "none";
+        if (showBoardIntroBtn) showBoardIntroBtn.style.display = "none";
+        if (showRound2BoardBtn) showRound2BoardBtn.style.display = "none";
+
+        hostPages.forEach(id => {
+            const page = document.getElementById(id);
+
+            if (page) {
                 page.classList.add("hidden");
-                page.style.pointerEvents="none";
+                page.style.pointerEvents = "none";
             }
         });
-        const target=document.getElementById(pageId);
-        if(!target){
-            console.error("Host page not found:",pageId);
-            pageId="hostJoinPg";
+
+        const target = document.getElementById(pageId);
+
+        if (!target) {
+            console.error("Host page not found:", pageId);
+            pageId = "hostJoinPg";
         }
-        const finalTarget=document.getElementById(pageId);
-        if(finalTarget){
+
+        const finalTarget = document.getElementById(pageId);
+
+        if (finalTarget) {
             finalTarget.classList.remove("hidden");
-            finalTarget.style.display="flex";
-            finalTarget.style.pointerEvents="auto";
+            finalTarget.style.display = "flex";
+            finalTarget.style.pointerEvents = "auto";
         }
 
-        const hostScoreReviewPg=document.getElementById("hostScoreReviewPg");
-        if(hostScoreReviewPg){
-            hostScoreReviewPg.style.display="none";
+        const hostScoreReviewPg = document.getElementById("hostScoreReviewPg");
+
+        if (hostScoreReviewPg) {
+            hostScoreReviewPg.style.display = "none";
             hostScoreReviewPg.classList.add("hidden");
-            hostScoreReviewPg.style.pointerEvents="none";
+            hostScoreReviewPg.style.pointerEvents = "none";
         }
 
-        switch(pageId){
+        switch (pageId) {
             case "hostLobbyPg":
-                if(instructionsBtn) instructionsBtn.style.display="block";
+                if (instructionsBtn) {
+                    instructionsBtn.style.display = "block";
+                }
                 break;
+
             case "hostInstructionsPg":
-                if(showInstrucCutBtn) showInstrucCutBtn.style.display="block";
+                if (showInstrucCutBtn) {
+                    showInstrucCutBtn.style.display = "block";
+                }
                 break;
+
             case "hostInstrucCutscenePg":
-                if(showBoardIntroBtn) showBoardIntroBtn.style.display="block";
+                if (showBoardIntroBtn) {
+                    showBoardIntroBtn.style.display = "block";
+                }
                 break;
+
+            case "hostMidCutscenePg":
+                if (showRound2BoardBtn) {
+                    showRound2BoardBtn.style.display = "block";
+                }
+                break;
+
             case "hostScoreReviewPg":
-                if(hostScoreReviewPg){
+                if (hostScoreReviewPg) {
                     hostScoreReviewPg.classList.remove("hidden");
-                    hostScoreReviewPg.style.display="flex";
-                    hostScoreReviewPg.style.pointerEvents="auto";
+                    hostScoreReviewPg.style.display = "flex";
+                    hostScoreReviewPg.style.pointerEvents = "auto";
                 }
                 break;
         }
-        localStorage.setItem("lastHostPage",pageId);
-        console.log("HOST PAGE SAVED:",pageId);
+
+        localStorage.setItem("lastHostPage", pageId);
+
+        console.log("HOST PAGE SAVED:", pageId);
     }
 
     //HOST ENABLE LOBBY
@@ -2664,19 +2762,15 @@
         });
     }
         
-    // HOST START ROUND 2
+    // START ROUND 2
     function hostStartRound2() {
-        console.log("HOST START ROUND 2");
+        console.log("HOST STARTING ROUND 2 TRANSITION");
 
+        localStorage.setItem("lastHostPage", "hostMidCutscenePg");
+        restoreHostPage("hostMidCutscenePg");
         socket.emit("hostAction", {
             type: "startRound2"
         });
-
-        const round2Btn = document.getElementById("round2Btn");
-
-        if (round2Btn) {
-            round2Btn.style.display = "none";
-        }
     }
 
     function updateFinishRoundButton() {
@@ -3433,6 +3527,17 @@
             const wager=Math.max(0,parseInt(input?.value)||0);
             socket.emit("dailyDoubleWager",{payload:{wager}});
             showDailyDoubleSubmittedScreen();
+        }
+
+        // SHOW ROUND 2 BOARD
+        function hostShowRound2Board() {
+            console.log("HOST SHOWING ROUND 2 BOARD");
+
+            localStorage.setItem("lastHostPage", "hostBoard");
+            restoreHostPage("hostRound2Board");
+            socket.emit("hostAction", {
+                type: "showRound2Board"
+            });
         }
     /* #endregion */
 </script>

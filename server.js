@@ -840,29 +840,37 @@ io.on("connection", (socket) => {
         }
 
         if (data.type === "startRound2") {
-            console.log("STARTING ROUND 2");
-            game.state = "playing";
+            console.log("STARTING ROUND 2 TRANSITION");
+
             game.round = 2;
-            game.hostScreen = "hostRound2";
+            game.state = "midCutscene";
+            game.hostScreen = "hostMidCutscenePg";
+
             game.currentClueId = null;
             game.currentClueValue = 0;
             game.currentClueIsDailyDouble = false;
+
             buzzAccepted = false;
             currentBuzzPlayer = null;
+
+            currentDailyDoubleWager = 0;
+            currentDailyDoublePlayer = null;
+            currentDailyDoubleWagerSubmitted = false;
+
             generateBoard(2);
 
-            broadcastToUnity({ type: "startRound", round: 2 });
-            io.emit("roundStarted", { round: 2 });
-            io.emit("showRoundHolding", { round: 2 });
+            // HOST
+            io.emit("round2Transition", {
+                round: 2
+            });
 
-            setTimeout(() => {
-                const boardData = {
-                    round: 2,
-                    board: convertBoardForUnity(game.board)
-                };
-                broadcastToUnity({ type: "boardData", ...boardData });
-                io.emit("boardData", boardData);
-            }, 500);
+            // UNITY
+            broadcastToUnity({
+                type: "midCutscene",
+                round: 2
+            });
+
+            console.log("ROUND 2 MID-CUTSCENE STARTED");
 
             return;
         }
@@ -1324,6 +1332,43 @@ io.on("connection", (socket) => {
 
                 break;
             }
+
+            case "showRound2Board":
+                console.log("HOST ACTION: showRound2Board");
+
+                game.state = "playing";
+                game.round = 2;
+                game.hostScreen = "hostBoard";
+
+                game.currentClueId = null;
+                game.currentClueValue = 0;
+                game.currentClueIsDailyDouble = false;
+
+                buzzAccepted = false;
+                currentBuzzPlayer = null;
+
+                currentDailyDoubleWager = 0;
+                currentDailyDoublePlayer = null;
+                currentDailyDoubleWagerSubmitted = false;
+
+                // UNITY
+                broadcastToUnity({
+                    type: "showRound2BoardIntro",
+                    round: 2,
+                    board: convertBoardForUnity(game.board)
+                });
+
+                // HOST
+                io.emit("showRound2Board", {
+                    round: 2
+                });
+
+                // PLAYERS
+                // Do not change player screens here.
+
+                console.log("ROUND 2 BOARD INTRO SENT");
+
+                break;
 
             // UNKNOWN HOST ACTION
             default:
