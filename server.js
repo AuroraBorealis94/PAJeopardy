@@ -277,7 +277,7 @@ const characters = [
     }
 ];
 
-function getScorePlayers(earnedPlayerId = null, earnedAmount = 0) {
+function getScorePlayers() {
     return game.players.map(player => {
         const character = characters.find(c => c.name === player.character);
 
@@ -285,7 +285,6 @@ function getScorePlayers(earnedPlayerId = null, earnedAmount = 0) {
             playerId: player.playerId,
             character: player.character,
             score: player.score || 0,
-            earned: player.playerId === earnedPlayerId ? earnedAmount : 0,
             animation: character?.animations?.idle || null
         };
     });
@@ -1000,38 +999,75 @@ io.on("connection", (socket) => {
                     return;
                 }
 
-                if (game.currentClueIsDailyDouble) {
-                    const wager = currentBuzzPlayer.dailyDoubleWager || 0;
+                if(game.currentClueIsDailyDouble){
+                    const wager=currentBuzzPlayer.dailyDoubleWager||0;
 
-                    currentBuzzPlayer.score = (currentBuzzPlayer.score || 0) + wager;
-                    currentBuzzPlayer.correctAnswers = (currentBuzzPlayer.correctAnswers || 0) + 1;
+                    currentBuzzPlayer.score=
+                        (currentBuzzPlayer.score||0)+wager;
 
-                    console.log("DAILY DOUBLE CORRECT:", currentBuzzPlayer.name, "wager:", wager, "new score:", currentBuzzPlayer.score);
+                    currentBuzzPlayer.correctAnswers=
+                        (currentBuzzPlayer.correctAnswers||0)+1;
+
+                    console.log(
+                        "DAILY DOUBLE CORRECT:",
+                        currentBuzzPlayer.name,
+                        "wager:",
+                        wager,
+                        "new score:",
+                        currentBuzzPlayer.score
+                    );
 
                     io.emit("showScoreScreen", {
-                        players: getScorePlayers(currentBuzzPlayer.playerId, wager)
+                        players: getScorePlayers()
+                        /*
+                        players: game.players.map(player => {
+                            const character = characters.find(
+                                c => c.name === player.character
+                            );
+
+                            return {
+                                playerId: player.playerId,
+                                character: player.character,
+                                score: player.score || 0,
+                                animation: character?.animations?.idle || null
+                            };
+                        })
+                        */
                     });
 
                     broadcastToUnity({
-                        type: "showScoreScreen",
-                        playerId: currentBuzzPlayer.playerId,
-                        character: currentBuzzPlayer.character,
-                        score: currentBuzzPlayer.score,
-                        earned: wager
+                        type:"showScoreScreen",
+                        playerId:currentBuzzPlayer.playerId,
+                        character:currentBuzzPlayer.character,
+                        score:currentBuzzPlayer.score,
+                        earned:wager
                     });
 
-                    currentBuzzPlayer.dailyDoubleWager = 0;
+                    currentBuzzPlayer.dailyDoubleWager=0;
+
                     return;
                 }
 
                 const earned = game.currentClueValue || 0;
 
-                currentBuzzPlayer.score = (currentBuzzPlayer.score || 0) + earned;
+                currentBuzzPlayer.score =
+                    (currentBuzzPlayer.score || 0) + earned;
 
-                console.log("ANSWER CORRECT:", currentBuzzPlayer.name, "earned:", earned, "new score:", currentBuzzPlayer.score);
+                console.log(
+                    "ANSWER CORRECT:",
+                    currentBuzzPlayer.name,
+                    "earned:",
+                    earned,
+                    "new score:",
+                    currentBuzzPlayer.score
+                );
 
                 io.emit("showScoreScreen", {
-                    players: getScorePlayers(currentBuzzPlayer.playerId, earned)
+                    playerId: currentBuzzPlayer.playerId,
+                    character: currentBuzzPlayer.character,
+                    score: currentBuzzPlayer.score,
+                    earned: earned
+                    players: getScorePlayers()
                 });
 
                 broadcastToUnity({
