@@ -1782,6 +1782,22 @@
         currentScore = newScore;
     });
 
+    // SHOW BOARD INTRO / SCORE PAGE
+    socket.on("showBoardIntro", data => {
+        if (isHost) return;
+
+        console.log("SHOW BOARD INTRO - PLAYER SCORE PAGE");
+
+        const lobby = document.getElementById("lobbyUI");
+
+        if (lobby) {
+            lobby.style.display = "none";
+        }
+
+        setScoreBackground();
+        showPlayerScreen("scorePage");
+    });
+
     // ANIMATION HOLDING SCREEN
     socket.on("showAnimHolding", () => {
         console.log("Showing animation holding screen");
@@ -2260,7 +2276,7 @@
         console.log("HOST SHOW BOARD INTRO");
         localStorage.setItem("lastHostPage","hostBoard");
         restoreHostPage("hostBoard");
-        //socket.emit("hostAction",{type:"showBoardIntro"});
+        socket.emit("hostAction",{type:"showBoardIntro"});
     }
 
     //BUILD HOST BOARD

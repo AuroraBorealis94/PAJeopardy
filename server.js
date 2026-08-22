@@ -935,13 +935,21 @@ io.on("connection", (socket) => {
 
             case "showBoardIntro":
                 console.log("HOST ACTION: showBoardIntro");
+
                 game.hostScreen = "hostBoard";
-                io.emit("showClueHolding");
+
+                // Tell all player screens to go to the score/board-intro page
+                io.emit("showBoardIntro", {
+                    round: game.round
+                });
+
+                // Tell Unity to show the board
                 broadcastToUnity({
                     type: "showBoardIntro",
                     round: game.round,
                     board: convertBoardForUnity(game.board)
                 });
+
                 break;
 
             // SELECT CLUE
