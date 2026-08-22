@@ -790,6 +790,15 @@
             padding:0; 
             cursor:pointer; 
             z-index:2;
+            -webkit-tap-highlight-color: transparent;
+            outline: none;
+        }
+
+        #buzzButton:focus,
+        #buzzButton:active{
+            outline:none;
+            background:none;
+            box-shadow:none;
         }
 
         #buzzImg{
@@ -1447,7 +1456,7 @@
         if(data.state==="playing"){
             const lobby=document.getElementById("lobbyUI");
             if(lobby) lobby.style.display="none";
-            showInstructionsHoldingScreen();
+            //showInstructionsHoldingScreen();
             return;
         }
 
@@ -3240,14 +3249,9 @@
         }
 
         function submitDailyDoubleWager(){
-            const wager=Math.max(0,parseInt(document.getElementById("dailyDoubleWagerInput").value)||0);
-
-            socket.emit("dailyDoubleWager",{
-                payload:{
-                    wager
-                }
-            });
-
+            const input=document.getElementById("dailyDoubleWagerInput");
+            const wager=Math.max(0,parseInt(input?.value)||0);
+            socket.emit("dailyDoubleWager",{payload:{wager}});
             showDailyDoubleSubmittedScreen();
         }
     /* #endregion */
