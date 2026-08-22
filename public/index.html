@@ -1606,20 +1606,43 @@
         currentSession = String(session);
         sessionReceived = true;
 
+        console.log("================================");
+        console.log("GAME SESSION RECEIVED");
         console.log("SERVER SESSION:", session);
         console.log("SAVED PLAYER SESSION:", savedSession);
         console.log("SAVED HOST SESSION:", savedHostSession);
         console.log("STORED IS HOST:", storedIsHost);
+        console.log("REQUESTING HOST:", requestingHost);
+        console.log("CURRENT isHost:", isHost);
+        console.log("================================");
 
-        // HOST SESSION CHECK
-        if (storedIsHost) {
-            if (savedHostSession && String(savedHostSession) === String(session)) {
+        /*
+         * IMPORTANT:
+         *
+         * Do NOT clear host state simply because isHost has
+         * not been confirmed yet.
+         *
+         * The server's hostConfirmed event is responsible for
+         * establishing host identity.
+         */
+
+        if (storedIsHost && savedHostSession) {
+
+            if (String(savedHostSession) === String(session)) {
+
+                console.log("VALID SAVED HOST SESSION.");
+
                 isHost = true;
                 requestingHost = false;
-                console.log("VALID HOST SESSION. RECONNECTING...");
-                updateHostButton();
+
+                console.log("HOST STATE PRESERVED.");
+
             } else {
-                console.log("SERVER SESSION CHANGED. CLEARING HOST STATE.");
+
+                console.log(
+                    "SERVER SESSION CHANGED. CLEARING OLD HOST STATE."
+                );
+
                 localStorage.removeItem("isHost");
                 localStorage.removeItem("hostSession");
                 localStorage.removeItem("lastHostPage");
@@ -1627,19 +1650,42 @@
 
                 isHost = false;
                 requestingHost = false;
-
-                updateHostButton();
             }
         }
 
-        // PLAYER SESSION CHECK
-        if (savedSession && String(savedSession) !== String(session) && !storedIsHost) {
-            console.log("SERVER SESSION CHANGED. CLEARING PLAYER STATE.");
+        /*
+         * If we are currently requesting the host slot,
+         * DO NOT treat this temporary gameSession message
+         * as proof that we are a player.
+         */
+        if (requestingHost) {
+            console.log(
+                "HOST REQUEST IN PROGRESS - WAITING FOR HOST CONFIRMATION."
+            );
+
+            tryReconnect();
+            return;
+        }
+
+        /*
+         * PLAYER SESSION CHECK
+         */
+        if (
+            savedSession &&
+            String(savedSession) !== String(session) &&
+            !isHost &&
+            !storedIsHost
+        ) {
+            console.log(
+                "SERVER SESSION CHANGED. CLEARING PLAYER STATE."
+            );
+
             localStorage.removeItem("playerId");
             localStorage.removeItem("name");
             localStorage.removeItem("character");
             localStorage.removeItem("hasJoined");
             localStorage.removeItem("gameSession");
+
             location.reload();
             return;
         }
@@ -1742,7 +1788,9 @@
 
     // HOST CONFIRMED
     socket.on("hostConfirmed", () => {
+        console.log("================================");
         console.log("HOST CONFIRMED BY SERVER.");
+        console.log("================================");
 
         isHost = true;
         requestingHost = false;
@@ -1750,11 +1798,15 @@
         localStorage.setItem("isHost", "true");
 
         if (currentSession) {
-            localStorage.setItem("hostSession", currentSession);
-            console.log("HOST SESSION SAVED:", currentSession);
-        } else {
-            console.warn("HOST CONFIRMED BEFORE GAME SESSION WAS RECEIVED.");
+            localStorage.setItem("hostSession", String(currentSession));
         }
+
+        console.log("HOST STATE SAVED:", {
+            isHost,
+            storedIsHost: localStorage.getItem("isHost"),
+            hostSession: localStorage.getItem("hostSession"),
+            currentSession
+        });
 
         updateHostButton();
     });
@@ -1962,13 +2014,23 @@
 
     // SHOW BOARD INTRO
     socket.on("showBoardIntro", data => {
-        if (isHost) return;
+        const storedHost = localStorage.getItem("isHost") === "true";
+        const hostNow = isHost || storedHost;
 
         console.log("================================");
         console.log("SHOW BOARD INTRO RECEIVED");
         console.log("DATA:", data);
-        console.log("PLAYER CHANGING TO SCORE PAGE");
+        console.log("isHost:", isHost);
+        console.log("storedHost:", storedHost);
+        console.log("hostNow:", hostNow);
         console.log("================================");
+
+        if (hostNow) {
+            console.log("HOST RECEIVED showBoardIntro - IGNORING PLAYER SCREEN CHANGE");
+            return;
+        }
+
+        console.log("PLAYER CHANGING TO SCORE PAGE");
 
         const lobby = document.getElementById("lobbyUI");
 
@@ -1976,17 +2038,7 @@
             lobby.style.display = "none";
         }
 
-        // CHANGE SCREEN FIRST
         showPlayerScreen("scorePage");
-
-        /*
-        // Set the background AFTER the screen is visible
-        try {
-            setScoreBackground();
-        } catch (error) {
-            console.error("setScoreBackground() failed:", error);
-        }
-        */
     });
 
     // ANIMATION HOLDING SCREEN
@@ -2099,11 +2151,27 @@
     }
 
     socket.on("resumeBuzzing", () => {
+        const storedHost = localStorage.getItem("isHost") === "true";
+        const hostNow = isHost || storedHost;
+
+        console.log("RESUME BUZZING RECEIVED:", {
+            isHost,
+            storedHost,
+            hostNow
+        });
+
+        if (hostNow) {
+            console.log("HOST RECEIVED resumeBuzzing - IGNORING PLAYER BUZZER SCREEN");
+            return;
+        }
+
         canBuzz = true;
+
         if (buzzImg) {
             buzzImg.src = "/backgrounds/WBuzzerUp.png";
             buzzImg.classList.remove("down");
         }
+
         hideAllPlayerScreens();
         showPlayerScreen("buzzerPage");
     });
@@ -2112,32 +2180,32 @@
         console.log("================================");
         console.log("BUZZ ACCEPTED RECEIVED");
         console.log("DATA:", data);
-        console.log("isHost VARIABLE:", isHost);
-        console.log("LOCAL STORAGE isHost:", localStorage.getItem("isHost"));
+        console.log("isHost:", isHost);
+        console.log("stored isHost:", localStorage.getItem("isHost"));
         console.log("SOCKET ID:", socket.id);
         console.log("================================");
 
         const storedHost = localStorage.getItem("isHost") === "true";
 
         if (storedHost && !isHost) {
-            console.warn("HOST STATE WAS FALSE BUT LOCAL STORAGE SAYS HOST. RESTORING HOST STATE.");
+            console.warn("RESTORING HOST STATE FROM LOCAL STORAGE.");
             isHost = true;
         }
 
+        const hostNow = isHost || storedHost;
+
         console.log("FINAL BUZZ HOST CHECK:", {
             isHost,
-            storedHost
+            storedHost,
+            hostNow
         });
 
         currentBuzzPlayer = data;
         window.lastBuzzedPlayerName = data.playerName;
 
-        // =====================================================
         // HOST
-        // =====================================================
-
-        if (isHost) {
-            console.log("HOST HANDLING BUZZ");
+        if (hostNow) {
+            console.log("HOST HANDLING BUZZ - PLAYER SCREEN WILL NOT CHANGE");
 
             const inner = document.getElementById("hostClueInner");
             const judgement = document.getElementById("hostJudgementArea");
@@ -2160,8 +2228,6 @@
             }
 
             if (judgement) {
-                console.log("SHOWING HOST JUDGEMENT AREA");
-
                 judgement.classList.add("show");
                 judgement.hidden = false;
                 judgement.style.display = "flex";
@@ -2170,13 +2236,7 @@
                 judgement.style.pointerEvents = "auto";
                 judgement.style.zIndex = "10000";
 
-                console.log("HOST JUDGEMENT FINAL STATE:", {
-                    hidden: judgement.hidden,
-                    display: judgement.style.display,
-                    visibility: judgement.style.visibility,
-                    opacity: judgement.style.opacity,
-                    className: judgement.className
-                });
+                console.log("HOST JUDGEMENT SHOWN");
             } else {
                 console.error("HOST BUZZ: hostJudgementArea NOT FOUND");
             }
@@ -2188,14 +2248,10 @@
             return;
         }
 
-        // =====================================================
-        // PLAYERS
-        // =====================================================
-
+        // PLAYER
         console.log("PLAYER HANDLING BUZZ");
 
         canBuzz = false;
-
         showPlayerScreen("answeringPage");
 
         const answeringTitle = document.getElementById("answeringTitle");

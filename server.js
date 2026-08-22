@@ -607,6 +607,7 @@ io.on("connection", (socket) => {
                 console.log("Socket:", socket.id);
                 console.log("================================");
 
+                // Tell this browser specifically that it is the host
                 socket.emit("hostReconnectToken", HOST_RECONNECT_TOKEN);
                 socket.emit("hostConfirmed");
 
