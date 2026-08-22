@@ -351,6 +351,14 @@ function broadcastToUnity(data) {
     });
 }
 
+function broadcastPlayerScores(){
+    game.players.forEach(player=>{
+        io.to(player.socketId).emit("scoreUpdate",{
+            score:player.score||0
+        });
+    });
+}
+
 // GENERATE BOARD
 function generateBoard(roundNumber) {
     console.log("================================");
@@ -1033,6 +1041,44 @@ io.on("connection", (socket) => {
                     return;
                 }
 
+                if(game.currentClueIsDailyDouble){
+                    const wager=currentBuzzPlayer.dailyDoubleWager||0;
+
+                    currentBuzzPlayer.score=
+                        (currentBuzzPlayer.score||0)+wager;
+
+                    currentBuzzPlayer.correctAnswers=
+                        (currentBuzzPlayer.correctAnswers||0)+1;
+
+                    console.log(
+                        "DAILY DOUBLE CORRECT:",
+                        currentBuzzPlayer.name,
+                        "wager:",
+                        wager,
+                        "new score:",
+                        currentBuzzPlayer.score
+                    );
+
+                    io.emit("showScoreScreen",{
+                        playerId:currentBuzzPlayer.playerId,
+                        character:currentBuzzPlayer.character,
+                        score:currentBuzzPlayer.score,
+                        earned:wager
+                    });
+
+                    broadcastToUnity({
+                        type:"showScoreScreen",
+                        playerId:currentBuzzPlayer.playerId,
+                        character:currentBuzzPlayer.character,
+                        score:currentBuzzPlayer.score,
+                        earned:wager
+                    });
+
+                    currentBuzzPlayer.dailyDoubleWager=0;
+
+                    return;
+                }
+
                 const earned = game.currentClueValue || 0;
 
                 currentBuzzPlayer.score =
@@ -1174,35 +1220,40 @@ io.on("connection", (socket) => {
                 break;
             }
 
-            case "dailyDoubleWager": {
-                if (!game.currentClueIsDailyDouble) {
-                    console.warn(
-                        "Wager received but current clue is not a Daily Double."
-                    );
+            case "dailyDoubleWager":{
+                if(!game.currentClueIsDailyDouble){
+                    console.warn("Wager received but current clue is not a Daily Double.");
                     return;
                 }
 
-                const wager =
-                    Math.max(
-                        0,
-                        parseInt(data.payload?.wager) || 0
-                    );
+                const wager=Math.max(0,parseInt(data.payload?.wager)||0);
+
+                if(!currentBuzzPlayer){
+                    console.warn("No Daily Double player selected.");
+                    return;
+                }
+
+                const maxWager=Math.max(0,currentBuzzPlayer.score);
+
+                currentBuzzPlayer.dailyDoubleWager=Math.min(wager,maxWager);
 
                 console.log(
                     "DAILY DOUBLE WAGER:",
-                    wager
+                    currentBuzzPlayer.name,
+                    currentBuzzPlayer.dailyDoubleWager
                 );
 
-                io.emit(
-                    "dailyDoubleWager",
-                    {
-                        wager
-                    }
-                );
+                io.emit("dailyDoubleWager",{
+                    playerId:currentBuzzPlayer.playerId,
+                    playerName:currentBuzzPlayer.name,
+                    wager:currentBuzzPlayer.dailyDoubleWager
+                });
 
                 broadcastToUnity({
-                    type: "dailyDoubleWager",
-                    wager
+                    type:"dailyDoubleWager",
+                    playerId:currentBuzzPlayer.playerId,
+                    playerName:currentBuzzPlayer.name,
+                    wager:currentBuzzPlayer.dailyDoubleWager
                 });
 
                 break;

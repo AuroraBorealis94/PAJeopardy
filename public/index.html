@@ -340,15 +340,7 @@
             flex-direction: column;
             justify-content: center;
             align-items: center;
-
-            opacity: 0;
             pointer-events: none;
-            transition: opacity 0.5s ease;
-        }
-
-        #waitingScreen.show {
-            opacity: 1;
-            pointer-events: auto;
         }
 
         #waitingCharacter img {
@@ -356,9 +348,6 @@
             margin-top: 20px;
         }
 
-        .hidden{
-            display:none !important;
-        }
 
         #waitingCharacter img {
             transform: scale(0.9);
@@ -406,12 +395,21 @@
         #clueHoldingScreen {
             position: fixed;
             background-size: cover;
-            background-position: bottom center;
+            background-position: center bottom;
             background-repeat: no-repeat;
             width: 100vw;
             height: 100vh;
             inset: 0;
             z-index: 5000;
+        }
+
+        #playerScoreDisplay{
+            position:absolute;
+            top:25px;
+            right:30px;
+            z-index:100;
+            font-size:32px;
+            font-weight:bold;
         }
     /* #endregion */
 
@@ -1095,6 +1093,7 @@
 
 <!-- CLUE HOLDING SCREEN -->
 <div id="clueHoldingScreen" class="playerScreen hidden">
+    <div id="playerScoreDisplay">$0</div>
     <img
         id="clueHoldingImage"
     >
@@ -1570,6 +1569,10 @@
         document.querySelectorAll("#characters button").forEach(b => { b.disabled = true; b.style.pointerEvents = "none";});
         const alreadyJoined = document.getElementById("waitingScreen")?.classList.contains("show");
 
+        socket.emit("scoreUpdate",{
+            score:player.score||0
+        });
+
         if (!alreadyJoined) {
             confettiBurst();
 
@@ -1740,6 +1743,14 @@
         }
     });
 
+    socket.on("scoreUpdate",data=>{
+        const scoreDisplay=document.getElementById("playerScoreDisplay");
+
+        if(scoreDisplay){
+            scoreDisplay.textContent="$"+(data.score||0).toLocaleString();
+        }
+    });
+
     // SCORE SCREEN
     socket.on("showScoreScreen", data => {
         if (!data) return;
@@ -1860,13 +1871,11 @@
     });
 
     // INSTRUCTIONS SCREEN
-    socket.on("showInstructionsHolding", () => {
+    socket.on("showInstructionsHolding",()=>{
+        if(isHost)return;
         console.log("Showing instructions holding screen");
-        const lobby = document.getElementById("lobbyUI");
-
-        if (lobby) {
-            lobby.style.display = "none";
-        }
+        const lobby=document.getElementById("lobbyUI");
+        if(lobby)lobby.style.display="none";
         showPlayerScreen("instructionsHoldingScreen");
     });
 
@@ -1983,7 +1992,7 @@
 
     socket.on("dailyDoubleAnswering",data=>{
         console.log("DAILY DOUBLE ANSWERING:",data);
-
+        showDailyDoubleWagerScreen(data);
         showPlayerScreen("dailyDoubleWagerScreen");
 
         const playerName=document.getElementById("dailyDoublePlayerName");
@@ -2004,34 +2013,38 @@
         }
     });
 
-    socket.on("dailyDoubleWaiting", data => {
-        canBuzz = false;
-        const answeringTitle = document.getElementById("answeringTitle");
-        const answeringName = document.getElementById("answeringName");
-        if (answeringTitle) {
-            answeringTitle.textContent = "IS ANSWERING";
-        }
-
-        if (answeringName) {
-            answeringName.textContent = "Team " + data.playerName;
-        }
+    socket.on("dailyDoubleWaiting",data=>{
+        if(isHost)return;
+        canBuzz=false;
+        const answeringTitle=document.getElementById("answeringTitle");
+        const answeringName=document.getElementById("answeringName");
+        if(answeringTitle)answeringTitle.textContent="IS ANSWERING";
+        if(answeringName)answeringName.textContent="Team "+data.playerName;
         showPlayerScreen("answeringPage");
     });
 
     socket.on("dailyDoubleWagerSubmitted",data=>{
         if(!socket.isHost) return;
 
+        currentDailyDoubleWager={
+            playerId:data.playerId,
+            playerName:data.playerName||"Player",
+            wager:Number(data.wager)||0
+        };
+
         const judgement=document.getElementById("hostJudgementArea");
         const playerName=document.getElementById("hostBuzzPlayerName");
 
         if(playerName){
             playerName.textContent=
-                `${data.playerName||"Player"} wagered $${data.wager}`;
+                `${currentDailyDoubleWager.playerName} wagered $${currentDailyDoubleWager.wager}`;
         }
 
         if(judgement){
             judgement.classList.add("show");
         }
+
+        console.log("DAILY DOUBLE WAGER SUBMITTED:",currentDailyDoubleWager);
     });
 
     // ROUNDS
@@ -2065,8 +2078,9 @@
         }
     });
 
-    socket.on("showRoundHolding", data => {
-        console.log("ROUND HOLDING:", data);
+    socket.on("showRoundHolding",data=>{
+        console.log("ROUND HOLDING:",data);
+        if(isHost)return;
         showPlayerScreen("instructionsHoldingScreen");
     });
 
@@ -2277,56 +2291,6 @@
             }
         );
 
-        /*
-        // CLUE VALUES
-        const values =
-            currentRound === 2
-                ? ["400", "800", "1200", "1600", "2000"]
-                : ["200", "400", "600", "800", "1000"];
-
-        values.forEach(value => {
-            board.categories.forEach(
-                category => {
-                    const clue = category.clues.find(c => c.value === value);
-                    const tile = document.createElement("div");
-
-                    tile.className = "hostTile";
-
-                    if (!clue) {
-                        tile.classList.add("empty");
-                        hostBoard.appendChild(tile);
-                        return;
-                    }
-
-                    tile.innerText = "$" + value;
-                    tile.dataset.clueId = clue.clueData.id;
-                    tile.onclick = () => {
-                        if (tile.classList.contains("used")) {
-                            return;
-                        }
-                        currentHostClue = clue;
-                        currentHostTile = tile;
-                        currentDailyDouble = clue.clueData.dailyDouble ? clue : null;
-
-                        showHostClue(clue);
-
-                        socket.emit(
-                            "hostAction",
-                            {
-                                type: "selectClue",
-                                payload: {
-                                    value,
-                                    clueData:clue.clueData
-                                }
-                            }
-                        );
-                    };
-
-                    hostBoard.appendChild(tile);
-                }
-            );
-        });
-        */
         // CLUE VALUES
         const values = currentRound === 2
             ? ["400", "800", "1200", "1600", "2000"]
@@ -3256,6 +3220,18 @@
             if (area) {
                 area.classList.add("hidden");
             }
+        }
+
+        function submitDailyDoubleWager(){
+            const wager=Math.max(0,parseInt(document.getElementById("dailyDoubleWagerInput").value)||0);
+
+            socket.emit("dailyDoubleWager",{
+                payload:{
+                    wager
+                }
+            });
+
+            showDailyDoubleSubmittedScreen();
         }
     /* #endregion */
 </script>
