@@ -547,27 +547,26 @@ io.on("connection", (socket) => {
     if (reconnectToken && reconnectToken === HOST_RECONNECT_TOKEN) {
         console.log("HOST RECONNECT TOKEN ACCEPTED");
 
-        if (hostDisconnectTimer) {
-            clearTimeout(hostDisconnectTimer);
-            hostDisconnectTimer = null;
-        }
-
         hostConnected = true;
         hostSocketId = socket.id;
         socket.isHost = true;
         socket.data.joined = true;
 
         console.log("================================");
-        console.log("HOST RECONNECTED");
+        console.log("HOST CONNECTED");
         console.log("Socket:", socket.id);
         console.log("================================");
 
+        socket.emit("hostReconnectToken", HOST_RECONNECT_TOKEN);
         socket.emit("hostConfirmed");
 
         sendHostState(socket);
         io.emit("hostStatus", true);
 
-        console.log("Host state restored.");
+        if (hostDisconnectTimer) {
+            clearTimeout(hostDisconnectTimer);
+            hostDisconnectTimer = null;
+        }
 
         return;
     }

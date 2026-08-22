@@ -1514,7 +1514,10 @@
         }
 
         // PLAYER
-        isHost = false;
+        if (isHost || localStorage.getItem("isHost") === "true") {
+            console.log("GAME STATE SYNC: HOST STATE PRESERVED.");
+            return;
+        }
 
         lockedSet = new Set(
             (data.lockedCharacters || []).map(c => c.toLowerCase())
@@ -1587,28 +1590,28 @@
         console.log("SAVED HOST SESSION:", savedHostSession);
         console.log("STORED IS HOST:", storedIsHost);
 
-        //HOST SESSION CHECK
-        if(storedIsHost){
-            if(savedHostSession&&String(savedHostSession)===String(session)){
-                isHost=true;
-                requestingHost=false;
+        // HOST SESSION CHECK
+        if (storedIsHost) {
+            if (savedHostSession && String(savedHostSession) === String(session)) {
+                isHost = true;
+                requestingHost = false;
                 console.log("VALID HOST SESSION. RECONNECTING...");
                 updateHostButton();
-            }else{
+            } else {
                 console.log("SERVER SESSION CHANGED. CLEARING HOST STATE.");
                 localStorage.removeItem("isHost");
                 localStorage.removeItem("hostSession");
                 localStorage.removeItem("lastHostPage");
                 localStorage.removeItem("paHostReconnectToken");
 
-                isHost=false;
-                requestingHost=false;
+                isHost = false;
+                requestingHost = false;
 
                 updateHostButton();
             }
         }
 
-        //PLAYER SESSION CHECK
+        // PLAYER SESSION CHECK
         if (savedSession && String(savedSession) !== String(session) && !storedIsHost) {
             console.log("SERVER SESSION CHANGED. CLEARING PLAYER STATE.");
             localStorage.removeItem("playerId");
@@ -1619,6 +1622,7 @@
             location.reload();
             return;
         }
+
         tryReconnect();
     });
     
@@ -1726,16 +1730,18 @@
 
         if (currentSession) {
             localStorage.setItem("hostSession", currentSession);
+            console.log("HOST SESSION SAVED:", currentSession);
+        } else {
+            console.warn("HOST CONFIRMED BEFORE GAME SESSION WAS RECEIVED.");
         }
 
         updateHostButton();
     });
 
     // HOST STATUS
-    socket.on("hostStatus", taken => {
-        console.log("HOST STATUS FROM SERVER:", taken);
-
-        serverHostTaken = !!taken;
+    socket.on("hostStatus", data => {
+        console.log("HOST STATUS FROM SERVER:", data);
+        serverHostTaken = data;
         updateHostButton();
     });
 
@@ -3107,7 +3113,6 @@
             localStorage.removeItem("isHost");
             localStorage.removeItem("hostSession");
             localStorage.removeItem("lastHostPage");
-            localStorage.removeItem("paHostReconnectToken");
 
             isHost = false;
             requestingHost = false;
