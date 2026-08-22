@@ -1782,11 +1782,15 @@
         currentScore = newScore;
     });
 
-    // SHOW BOARD INTRO / SCORE PAGE
+    // SHOW BOARD INTRO
     socket.on("showBoardIntro", data => {
         if (isHost) return;
 
-        console.log("SHOW BOARD INTRO - PLAYER SCORE PAGE");
+        console.log("================================");
+        console.log("SHOW BOARD INTRO RECEIVED");
+        console.log("DATA:", data);
+        console.log("PLAYER CHANGING TO SCORE PAGE");
+        console.log("================================");
 
         const lobby = document.getElementById("lobbyUI");
 
@@ -1794,8 +1798,15 @@
             lobby.style.display = "none";
         }
 
-        setScoreBackground();
+        // CHANGE SCREEN FIRST
         showPlayerScreen("scorePage");
+
+        // Set the background AFTER the screen is visible
+        try {
+            setScoreBackground();
+        } catch (error) {
+            console.error("setScoreBackground() failed:", error);
+        }
     });
 
     // ANIMATION HOLDING SCREEN
@@ -2274,9 +2285,14 @@
     //HOST SHOW BOARD INTRO
     function hostShowBoardIntro() {
         console.log("HOST SHOW BOARD INTRO");
-        localStorage.setItem("lastHostPage","hostBoard");
+
+        localStorage.setItem("lastHostPage", "hostBoard");
+
         restoreHostPage("hostBoard");
-        socket.emit("hostAction",{type:"showBoardIntro"});
+
+        socket.emit("hostAction", {
+            type: "showBoardIntro"
+        });
     }
 
     //BUILD HOST BOARD
@@ -2934,7 +2950,7 @@
         }
     /* #endregion */
 
-        /* #region PLAYER SCREENS */
+    /* #region PLAYER SCREENS */
         function hideAllPlayerScreens() {
             const screens = [
                 "waitingScreen",
@@ -2958,16 +2974,41 @@
         }
 
         function showPlayerScreen(id) {
+            console.log("SHOW PLAYER SCREEN:", id);
+
             hideAllPlayerScreens();
 
             const screen = document.getElementById(id);
 
             if (!screen) {
-                console.error("Player screen not found:", id);
+                console.error("PLAYER SCREEN NOT FOUND:", id);
                 return;
             }
 
             screen.classList.remove("hidden");
+            screen.style.display = "";
+
+            console.log(
+                "SCREEN AFTER UNHIDE:",
+                id,
+                "hidden:",
+                screen.classList.contains("hidden"),
+                "display:",
+                getComputedStyle(screen).display
+            );
+
+            requestAnimationFrame(() => {
+                screen.classList.add("show");
+
+                console.log(
+                    "SCREEN NOW SHOWING:",
+                    id,
+                    "hidden:",
+                    screen.classList.contains("hidden"),
+                    "display:",
+                    getComputedStyle(screen).display
+                );
+            });
         }
 
         function hidePlayerScreen(id) {

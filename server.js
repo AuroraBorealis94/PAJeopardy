@@ -938,12 +938,12 @@ io.on("connection", (socket) => {
 
                 game.hostScreen = "hostBoard";
 
-                // Tell all player screens to go to the score/board-intro page
+                console.log("SENDING showBoardIntro TO PLAYERS");
+
                 io.emit("showBoardIntro", {
                     round: game.round
                 });
 
-                // Tell Unity to show the board
                 broadcastToUnity({
                     type: "showBoardIntro",
                     round: game.round,
