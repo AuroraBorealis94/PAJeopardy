@@ -929,66 +929,64 @@
         }
 
     /* #region Score Screen */
-    #scorePage {
-        position: fixed;
-        inset: 0;
-        width: 100vw;
-        height: 100vh;
-        overflow: hidden;
-    }
+        #scorePage {
+            position: fixed;
+            inset: 0;
 
-    /* Animated player character */
-    #scoreCharacter {
-        position: absolute;
+            display: flex;
+            flex-direction: column;
 
-        width: 401px;
-        height: 870px;
+            justify-content: center;
+            align-items: center;
 
-        left: 50%;
-        bottom: 0;
+            text-align: center;
+        }
 
-        transform: translateX(-50%) scale(0.5);
-        transform-origin: bottom center;
+        #scoreValue,
+        #scoreChange {
+            left: 50%;
+            transform: translateX(-50%);
+            text-align: center;
+        }
 
-        background-repeat: no-repeat;
-        background-position: 0 0;
+        #scoreCharacter {
+            position: absolute;
 
-        image-rendering: auto;
+            width: 401px;
+            height: 870px;
 
-        z-index: 2;
-    }
+            left: 50%;
+            bottom: 0;
 
-    /* The character animation gets this class */
-    #scoreCharacter.animate {
-        animation-name: scoreCharacterIdle;
-        animation-duration: 1.2s;
-        animation-timing-function: steps(6);
-        animation-iteration-count: infinite;
-    }
+            transform: translateX(-50%) scale(0.5);
+            transform-origin: bottom center;
 
-    @keyframes scoreCharacterIdle {
-
-        from {
+            background-repeat: no-repeat;
             background-position: 0 0;
+
+            image-rendering: auto;
+
+            z-index: 2;
         }
 
-        to {
-            background-position: -2406px 0;
+        #scoreCharacter.animate {
+            animation-name: scoreCharacterIdle;
+            animation-duration: 1.2s;
+            animation-timing-function: steps(6);
+            animation-iteration-count: infinite;
         }
 
-    }
+        @keyframes scoreCharacterIdle {
 
+            from {
+                background-position: 0 0;
+            }
 
-    /* Score text */
-    #scoreChange {
-        position: absolute;
-        z-index: 5;
-    }
+            to {
+                background-position: -2406px 0;
+            }
 
-    #scoreValue {
-        position: absolute;
-        z-index: 5;
-    }
+        }
 
         #scoreBackground {
             position: absolute;
@@ -1000,28 +998,6 @@
 
             z-index: 0;
         }
-
-        /*#scoreHeader {
-            position: absolute;
-
-            top: 4%;
-            left: 50%;
-
-            transform: translateX(-50%);
-
-            z-index: 5;
-
-            font-size: clamp(28px, 6vw, 58px);
-            font-weight: bold;
-
-            white-space: nowrap;
-
-            text-shadow:
-                2px 2px 0 #000,
-                -2px -2px 0 #000,
-                2px -2px 0 #000,
-                -2px 2px 0 #000;
-        }*/
 
         #scoreChange {
             position: absolute;
@@ -1038,6 +1014,8 @@
 
             opacity: 1;
 
+            transform: translateX(-50%) translateY(0);
+
             transition:
                 opacity 0.4s ease,
                 transform 0.4s ease;
@@ -1051,7 +1029,10 @@
 
         #scoreChange.hidden {
             opacity: 0;
-            transform: translateY(-15px);
+
+            transform:
+                translateX(-50%)
+                translateY(-15px);
         }
 
         #scoreValue {
@@ -1175,12 +1156,34 @@
 </div>
 
 <div id="dailyDoubleWagerScreen" class="playerScreen hidden">
-    <div>DAILY DOUBLE!</div>
+    <div class="dailyDoubleWagerTitle">
+        DAILY DOUBLE!
+    </div>
+
     <div id="dailyDoublePlayerName"></div>
-    <div>Your score: <span id="dailyDoublePlayerScore">$0</span></div>
-    <div>How much do you want to wager?</div>
-    <input id="dailyDoubleWagerInput" type="number" min="0">
-    <button id="dailyDoubleWagerSubmit">SUBMIT WAGER</button>
+
+    <div class="dailyDoubleCurrentScore">
+        Your score:
+        <span id="dailyDoublePlayerScore">$0</span>
+    </div>
+
+    <div class="dailyDoubleWagerPrompt">
+        How much do you want to wager?
+    </div>
+
+    <input
+        id="dailyDoubleWagerInput"
+        type="number"
+        min="0"
+    >
+
+    <div id="dailyDoubleMaxWager"></div>
+
+    <button
+        id="dailyDoubleWagerSubmit"
+        onclick="submitDailyDoubleWager()">
+        SUBMIT WAGER
+    </button>
 </div>
 
 <!-- HOST CONTROLS -->
@@ -1269,7 +1272,7 @@
             </button>
         </div>
 
-        <div id="hostJudgementArea">
+        <div id="hostJudgementArea" style="display:none;">
             <div id="hostJudgementQuestion">
                 Did nobody answer correctly?
             </div>
@@ -2077,30 +2080,60 @@
     });
 
     socket.on("buzzAccepted", data => {
+        console.log("================================");
+        console.log("BUZZ ACCEPTED:", data);
+        console.log("IS HOST:", isHost);
+        console.log("================================");
+
         currentBuzzPlayer = data;
         window.lastBuzzedPlayerName = data.playerName;
-        //const character = characters.find(c => c.name === data.character);
 
+        // ==========================================
+        // HOST
+        // ==========================================
         if (isHost) {
+            console.log("HOST HANDLING BUZZ");
+
             const inner = document.getElementById("hostClueInner");
             const judgement = document.getElementById("hostJudgementArea");
             const question = document.getElementById("hostJudgementQuestion");
-            const enableBtn =  document.getElementById("enableBuzzerBtn");
+            const enableBtn = document.getElementById("enableBuzzerBtn");
 
+            // Flip clue to answer
             if (inner) {
                 inner.classList.add("flipped");
+            } else {
+                console.error("hostClueInner NOT FOUND");
             }
 
             hostAnswerShowing = true;
 
+            // Update judgement question
             if (question) {
-                question.textContent = `Did Team ${data.playerName} answer correctly?`;
+                question.textContent =
+                    `Did Team ${data.playerName} answer correctly?`;
+            } else {
+                console.error("hostJudgementQuestion NOT FOUND");
             }
 
+            // SHOW JUDGEMENT AREA
             if (judgement) {
                 judgement.classList.add("show");
+
+                // Explicitly force visibility
+                judgement.hidden = false;
+                judgement.style.display = "flex";
+                judgement.style.visibility = "visible";
+                judgement.style.opacity = "1";
+                judgement.style.pointerEvents = "auto";
+                judgement.style.zIndex = "10000";
+
+                console.log("HOST JUDGEMENT AREA SHOWN");
+            } else {
+                console.error("hostJudgementArea NOT FOUND");
             }
 
+            // Hide enable buzzer button
             if (enableBtn) {
                 enableBtn.style.display = "none";
             }
@@ -2108,47 +2141,71 @@
             return;
         }
 
+        // ==========================================
+        // PLAYERS
+        // ==========================================
+
         canBuzz = false;
+
         showPlayerScreen("answeringPage");
 
-        const answeringTitle = document.getElementById("answeringTitle");
-        const answeringName = document.getElementById("answeringName");
+        const answeringTitle =
+            document.getElementById("answeringTitle");
 
-        const answeringCharacter = document.getElementById("answeringCharacter");
-        const myPlayerId = localStorage.getItem("playerId");
+        const answeringName =
+            document.getElementById("answeringName");
+
+        const answeringCharacter =
+            document.getElementById("answeringCharacter");
+
+        const myPlayerId =
+            localStorage.getItem("playerId");
 
         const isMe = data.playerId === myPlayerId;
 
         if (answeringTitle) {
-            answeringTitle.textContent = isMe? "ANSWER NOW!" : "IS ANSWERING";
+            answeringTitle.textContent =
+                isMe ? "ANSWER NOW!" : "IS ANSWERING";
         }
 
         if (answeringName) {
-            answeringName.textContent = "Team " + data.playerName;
+            answeringName.textContent =
+                "Team " + data.playerName;
         }
 
         let character = null;
 
         if (typeof characters !== "undefined") {
-            character = characters.find(c => c.name === data.character);
+            character = characters.find(
+                c => c.name === data.character
+            );
         }
 
         if (!character) {
-            const savedCharacter = localStorage.getItem("character");
+            const savedCharacter =
+                localStorage.getItem("character");
 
             if (savedCharacter) {
                 try {
                     const saved = JSON.parse(savedCharacter);
+
                     if (saved.name === data.character) {
                         character = saved;
                     }
                 } catch (error) {
-                    console.error("Could not parse saved character:", error);
+                    console.error(
+                        "Could not parse saved character:",
+                        error
+                    );
                 }
             }
         }
 
-        if (character && character.front && answeringCharacter) {
+        if (
+            character &&
+            character.front &&
+            answeringCharacter
+        ) {
             answeringCharacter.src = character.front;
         }
     });
@@ -2168,68 +2225,175 @@
         }
     });
 
-    socket.on("dailyDoubleAnswering",data=>{
-        console.log("DAILY DOUBLE ANSWERING:",data);
+    socket.on("dailyDoubleAnswering", data => {
+
+        console.log(
+            "DAILY DOUBLE ANSWERING:",
+            data
+        );
+
+        const myPlayerId =
+            localStorage.getItem("playerId");
+
+        // Only the selected player gets the wager screen
+        if (data.playerId !== myPlayerId) {
+            return;
+        }
+
+        canBuzz = false;
+
         showDailyDoubleWagerScreen(data);
-        showPlayerScreen("dailyDoubleWagerScreen");
 
-        const playerName=document.getElementById("dailyDoublePlayerName");
-        const score=document.getElementById("dailyDoublePlayerScore");
-        const wagerInput=document.getElementById("dailyDoubleWagerInput");
-        const submitBtn=document.getElementById("dailyDoubleWagerSubmit");
+        showPlayerScreen(
+            "dailyDoubleWagerScreen"
+        );
 
-        if(playerName) playerName.textContent=data.playerName;
-        if(score) score.textContent="$"+(data.score||0);
+        const playerName =
+            document.getElementById(
+                "dailyDoublePlayerName"
+            );
 
-        if(wagerInput){
-            wagerInput.value="";
-            const score=Number(data.score)||0;
-            const maxWager=score>0?score:(currentRound===1?500:1000);
-            if(wagerInput){
-                wagerInput.value="";
-                wagerInput.max=maxWager;
+        const score =
+            document.getElementById(
+                "dailyDoublePlayerScore"
+            );
+
+        const wagerInput =
+            document.getElementById(
+                "dailyDoubleWagerInput"
+            );
+
+        const submitBtn =
+            document.getElementById(
+                "dailyDoubleWagerSubmit"
+            );
+
+        if (playerName) {
+            playerName.textContent =
+                data.playerName;
+        }
+
+        const playerScore =
+            Number(data.score) || 0;
+
+        if (score) {
+            score.textContent =
+                "$" + playerScore;
+        }
+
+        if (wagerInput) {
+
+            wagerInput.value = "";
+
+            const maxWager =
+                playerScore > 0
+                    ? playerScore
+                    : (currentRound === 1 ? 500 : 1000);
+
+            wagerInput.max = maxWager;
+
+            const maxLabel =
+                document.getElementById(
+                    "dailyDoubleMaxWager"
+                );
+
+            if (maxLabel) {
+                maxLabel.textContent =
+                    "Maximum wager: $" +
+                    maxWager.toLocaleString();
             }
-            const maxLabel=document.getElementById("dailyDoubleMaxWager");
-            if(maxLabel)maxLabel.textContent="Maximum wager: $"+maxWager.toLocaleString();
         }
 
-        if(submitBtn){
-            submitBtn.disabled=false;
+        if (submitBtn) {
+            submitBtn.disabled = false;
         }
     });
 
-    socket.on("dailyDoubleWaiting",data=>{
-        if(isHost)return;
-        canBuzz=false;
-        const answeringTitle=document.getElementById("answeringTitle");
-        const answeringName=document.getElementById("answeringName");
-        if(answeringTitle)answeringTitle.textContent="IS ANSWERING";
-        if(answeringName)answeringName.textContent="Team "+data.playerName;
-        showPlayerScreen("answeringPage");
+    socket.on("dailyDoubleWaiting", data => {
+        if (isHost) {
+            return;
+        }
+
+        const myPlayerId =
+            localStorage.getItem("playerId");
+
+        // Selected player should NOT get waiting screen
+        if (data.playerId === myPlayerId) {
+            return;
+        }
+
+        canBuzz = false;
+
+        const answeringTitle =
+            document.getElementById(
+                "answeringTitle"
+            );
+
+        const answeringName =
+            document.getElementById(
+                "answeringName"
+            );
+
+        if (answeringTitle) {
+            answeringTitle.textContent =
+                "IS ANSWERING";
+        }
+
+        if (answeringName) {
+            answeringName.textContent =
+                "Team " + data.playerName;
+        }
+
+        showPlayerScreen(
+            "answeringPage"
+        );
     });
 
-    socket.on("dailyDoubleWagerSubmitted",data=>{
-        if(!socket.isHost) return;
+    socket.on("dailyDoubleWagerSubmitted", data => {
+        if (!isHost) {
+            return;
+        }
 
-        currentDailyDoubleWager={
-            playerId:data.playerId,
-            playerName:data.playerName||"Player",
-            wager:Number(data.wager)||0
+        currentDailyDoubleWager = {
+            playerId: data.playerId,
+            playerName: data.playerName || "Player",
+            wager: Number(data.wager) || 0
         };
 
-        const judgement=document.getElementById("hostJudgementArea");
-        const playerName=document.getElementById("hostBuzzPlayerName");
+        console.log(
+            "DAILY DOUBLE WAGER SUBMITTED:",
+            currentDailyDoubleWager
+        );
 
-        if(playerName){
-            playerName.textContent=
+        // Hide player selection buttons
+        hideDailyDoublePlayerButtons();
+
+        const judgement =
+            document.getElementById(
+                "hostJudgementArea"
+            );
+
+        const playerName =
+            document.getElementById(
+                "hostBuzzPlayerName"
+            );
+
+        if (playerName) {
+            playerName.textContent =
                 `${currentDailyDoubleWager.playerName} wagered $${currentDailyDoubleWager.wager}`;
         }
 
-        if(judgement){
-            judgement.classList.add("show");
-        }
+        if (judgement) {
 
-        console.log("DAILY DOUBLE WAGER SUBMITTED:",currentDailyDoubleWager);
+            judgement.classList.add("show");
+
+            judgement.hidden = false;
+            judgement.style.display = "flex";
+            judgement.style.visibility = "visible";
+            judgement.style.opacity = "1";
+            judgement.style.pointerEvents = "auto";
+            judgement.style.zIndex = "10000";
+        }
     });
 
     // ROUNDS
@@ -2634,8 +2798,19 @@
             if (dailyDoubleBanner) {
                 dailyDoubleBanner.classList.add("hidden");
             }
-            // Normal clue gets the buzzer button.
-            enableBtn.style.display = "block";
+
+            // Hide any previous judgement state
+            if (judgement) {
+                judgement.classList.remove("show");
+                judgement.style.display = "none";
+                judgement.style.pointerEvents = "none";
+            }
+
+            // Normal clue uses buzzer
+            if (enableBtn) {
+                enableBtn.style.display = "block";
+            }
+
             hideDailyDoublePlayerButtons();
         }
     }
@@ -2672,17 +2847,19 @@
         flipHostCard();
     }
 
-    //HOST ANSWER CORRECT
     function hostAnswerCorrect() {
-        if(currentDailyDouble){
-            socket.emit("hostAction",{type:"dailyDoubleCorrect"});
+        // DAILY DOUBLE
+        if (currentDailyDouble) {
+            socket.emit("hostAction", {
+                type: "dailyDoubleCorrect"
+            });
             return;
         }
 
         socket.emit("hostAction", {
             type: "answerCorrect"
         });
-       
+
         closeHostClue();
     }
 
@@ -2695,42 +2872,102 @@
         closeHostClue();
     }
 
-    //HOST ANSWER WRONG
     function hostAnswerWrong() {
         console.log("ANSWER WRONG");
 
-        if(currentDailyDouble){
-            socket.emit("hostAction",{type:"dailyDoubleIncorrect"});
+        // DAILY DOUBLE
+        if (currentDailyDouble) {
+            socket.emit("hostAction", {
+                type: "dailyDoubleIncorrect"
+            });
             return;
         }
 
-        document.getElementById("hostJudgementArea").classList.remove("show");
-        document.getElementById("hostClueInner").classList.remove("flipped");
+        const judgement =
+            document.getElementById("hostJudgementArea");
+
+        const inner =
+            document.getElementById("hostClueInner");
+
+        const enableBtn =
+            document.getElementById("enableBuzzerBtn");
+
+        // Hide judgement
+        if (judgement) {
+            judgement.classList.remove("show");
+            judgement.style.display = "none";
+            judgement.style.pointerEvents = "none";
+        }
+
+        // Turn card back to clue
+        if (inner) {
+            inner.classList.remove("flipped");
+        }
 
         hostAnswerShowing = false;
         currentBuzzPlayer = null;
 
+        // Resume buzzing
         socket.emit("hostAction", {
             type: "resumeBuzzing"
         });
+
+        // Keep enable button hidden because buzzers are now active
+        if (enableBtn) {
+            enableBtn.style.display = "none";
+        }
     }
 
-    //CLOSE HOST CLUE
     function closeHostClue() {
-        document.getElementById("enableBuzzerBtn").style.display = "none";
-        document.getElementById("hostClueOverlay").classList.remove("show");
-        document.getElementById("hostJudgementArea").classList.remove("show");
-        document.getElementById("hostClueInner").classList.remove("flipped");
 
-        const dailyDoubleBanner = document.getElementById("dailyDoubleBanner");
+        const enableBtn =
+            document.getElementById("enableBuzzerBtn");
+
+        const overlay =
+            document.getElementById("hostClueOverlay");
+
+        const judgement =
+            document.getElementById("hostJudgementArea");
+
+        const inner =
+            document.getElementById("hostClueInner");
+
+        const dailyDoubleBanner =
+            document.getElementById("dailyDoubleBanner");
+
+        const dailyDoublePlayerArea =
+            document.getElementById("dailyDoublePlayerArea");
+
+        if (enableBtn) {
+            enableBtn.style.display = "none";
+        }
+
+        if (overlay) {
+            overlay.classList.remove("show");
+        }
+
+        if (judgement) {
+            judgement.classList.remove("show");
+            judgement.style.display = "none";
+            judgement.style.pointerEvents = "none";
+        }
+
+        if (inner) {
+            inner.classList.remove("flipped");
+        }
 
         if (dailyDoubleBanner) {
             dailyDoubleBanner.classList.add("hidden");
         }
 
+        if (dailyDoublePlayerArea) {
+            dailyDoublePlayerArea.classList.add("hidden");
+        }
+
         currentBuzzPlayer = null;
         hostAnswerShowing = false;
         currentDailyDouble = null;
+        buzzersEnabled = false;
 
         if (currentHostTile) {
             currentHostTile.classList.add("used");
@@ -3371,51 +3608,61 @@
         }
 
         // SCORE GAIN SCREEN
-        function setScoreBackground() {
-            const background = document.getElementById("scoreBackground");
-            if (!background) return;
-            let character = state.character;
+        function animateScoreGain(oldScore, newScore, earned) {
+            const value = document.getElementById("scoreValue");
+            const change = document.getElementById("scoreChange");
+            const current = document.getElementById("scoreCurrent");
 
-            if (!character) {
-                const savedCharacter = localStorage.getItem("character");
+            if (!value || !change) return;
 
-                if (savedCharacter) {
-                    try {
-                        character = JSON.parse(savedCharacter);
-                        state.character = character;
+            if (current) {
+                current.textContent = "Score: $" + oldScore;
+            }
 
-                    } catch (error) {
-                        console.error("Could not parse saved character:", error);
+            value.textContent = "$" + oldScore;
+
+            // Set the amount first
+            change.textContent =
+                earned >= 0
+                    ? "+$" + earned
+                    : "-$" + Math.abs(earned);
+
+            // Make sure the animation starts from the hidden state
+            change.classList.add("hidden");
+
+            // Force the browser to recognize the starting state
+            void change.offsetWidth;
+
+            // Start the animation
+            change.classList.remove("hidden");
+
+            let score = oldScore;
+
+            const difference = newScore - oldScore;
+            const direction = difference >= 0 ? 1 : -1;
+            const amount = Math.abs(difference);
+
+            const timer = setInterval(() => {
+                score += direction * Math.max(1, Math.ceil(amount / 20));
+
+                if (
+                    (direction > 0 && score >= newScore) ||
+                    (direction < 0 && score <= newScore)
+                ) {
+                    score = newScore;
+                    clearInterval(timer);
+
+                    if (current) {
+                        current.textContent = "Score: $" + newScore;
                     }
+
+                    setTimeout(() => {
+                        change.classList.add("hidden");
+                    }, 1200);
                 }
-            }
 
-            if (!character || !character.name) {
-                console.warn("No character available for score background.");
-                return;
-            }
-
-            const characterFiles = {
-                "The Boss": "thebossclueholding.png",
-                "Janice Mowes": "janicemowesclueholding.png",
-                "Tricerex": "tricerexclueholding.png",
-                "Fancy Dancer": "fancydancerclueholding.png",
-                "Deerhead": "deerheadclueholding.png",
-                "Caity Satyr": "caitysatyrclueholding.png",
-                "The Holy Spirit": "theholyspiritclueholding.png",
-                "The Newlyweds": "thenewlywedsclueholding.png",
-                "Lorenzo": "lorenzoclueholding.png",
-                "The Guitarist": "theguitaristclueholding.png"
-            };
-
-            const filename = characterFiles[character.name];
-
-            if (!filename) {
-                console.warn("No score background for:", character.name);
-                return;
-            }
-
-            background.style.backgroundImage = `url('/backgrounds/clueholding/${filename}')`;
+                value.textContent = "$" + score;
+            }, 30);
         }
 
         function animateScoreGain(oldScore, newScore, earned){
@@ -3489,28 +3736,63 @@
             });
         }
 
-        // DAILY DOUBLE FUNCTIONS
         function showDailyDoublePlayerButtons() {
-            const area = document.getElementById("dailyDoublePlayerArea");
-            const container = document.getElementById("dailyDoublePlayerButtons");
-            if (!area || !container) return;
+
+            const area =
+                document.getElementById("dailyDoublePlayerArea");
+
+            const container =
+                document.getElementById("dailyDoublePlayerButtons");
+
+            if (!area || !container) {
+                console.error("Daily Double player area not found");
+                return;
+            }
+
             container.innerHTML = "";
-            if (!window.currentPlayers || !window.currentPlayers.length) {
+
+            if (
+                !window.currentPlayers ||
+                !window.currentPlayers.length
+            ) {
+                console.warn("No current players available for Daily Double");
                 return;
             }
 
             window.currentPlayers.forEach(player => {
-                const button = document.createElement("button");
-                button.className = "dailyDoublePlayerBtn";
-                button.textContent = player.name;
+
+                const button =
+                    document.createElement("button");
+
+                button.className =
+                    "dailyDoublePlayerBtn";
+
+                button.textContent =
+                    player.name;
+
                 button.onclick = () => {
+
+                    console.log(
+                        "DAILY DOUBLE PLAYER SELECTED:",
+                        player
+                    );
+
+                    // Immediately hide the player buttons
+                    area.classList.add("hidden");
+
+                    // Prevent another selection while wager is happening
+                    container.innerHTML = "";
+
+                    // Tell server which player was selected
                     socket.emit("hostAction", {
                         type: "dailyDoubleSelectPlayer",
                         playerId: player.playerId
                     });
                 };
+
                 container.appendChild(button);
             });
+
             area.classList.remove("hidden");
         }
 

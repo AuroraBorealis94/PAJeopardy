@@ -1241,94 +1241,124 @@ io.on("connection", (socket) => {
                 break;
             }
 
-            case "dailyDoubleCorrect":{
-                if(!currentDailyDoublePlayer||!currentDailyDoubleWagerSubmitted){
+            case "dailyDoubleCorrect": {
+                if (
+                    !currentDailyDoublePlayer ||
+                    !currentDailyDoubleWagerSubmitted
+                ) {
                     console.warn("No submitted Daily Double wager to judge.");
                     return;
                 }
 
-                const wager=currentDailyDoubleWager;
+                const wager = currentDailyDoubleWager;
 
-                currentDailyDoublePlayer.score=
-                    (currentDailyDoublePlayer.score||0)+wager;
+                const oldScore =
+                    currentDailyDoublePlayer.score || 0;
+
+                currentDailyDoublePlayer.score =
+                    oldScore + wager;
 
                 console.log(
                     "DAILY DOUBLE CORRECT:",
                     currentDailyDoublePlayer.name,
-                    "+",wager,
-                    "NEW SCORE:",currentDailyDoublePlayer.score
+                    "+", wager,
+                    "OLD SCORE:", oldScore,
+                    "NEW SCORE:", currentDailyDoublePlayer.score
                 );
 
-                io.emit("scoreUpdate",{
-                    playerId:currentDailyDoublePlayer.playerId,
-                    playerName:currentDailyDoublePlayer.name,
-                    score:currentDailyDoublePlayer.score
+                // SCORE SCREEN
+                io.emit("showScoreScreen", {
+                    playerId: currentDailyDoublePlayer.playerId,
+                    character: currentDailyDoublePlayer.character,
+                    oldScore: oldScore,
+                    score: currentDailyDoublePlayer.score,
+                    earned: wager,
+                    players: getScorePlayers()
                 });
 
                 broadcastToUnity({
-                    type:"scoreUpdate",
-                    playerId:currentDailyDoublePlayer.playerId,
-                    playerName:currentDailyDoublePlayer.name,
-                    score:currentDailyDoublePlayer.score
+                    type: "showScoreScreen",
+                    playerId: currentDailyDoublePlayer.playerId,
+                    character: currentDailyDoublePlayer.character,
+                    oldScore: oldScore,
+                    score: currentDailyDoublePlayer.score,
+                    earned: wager
                 });
 
-                io.emit("dailyDoubleJudged",{
-                    correct:true,
-                    playerId:currentDailyDoublePlayer.playerId,
-                    playerName:currentDailyDoublePlayer.name,
-                    wager,
-                    score:currentDailyDoublePlayer.score
+                // Also update score state
+                io.emit("scoreUpdate", {
+                    playerId: currentDailyDoublePlayer.playerId,
+                    playerName: currentDailyDoublePlayer.name,
+                    score: currentDailyDoublePlayer.score
                 });
 
-                currentDailyDoubleWager=0;
-                currentDailyDoublePlayer=null;
-                currentDailyDoubleWagerSubmitted=false;
+                // Clear Daily Double state
+                currentDailyDoublePlayer.dailyDoubleWager = 0;
+
+                currentDailyDoubleWager = 0;
+                currentDailyDoublePlayer = null;
+                currentDailyDoubleWagerSubmitted = false;
 
                 break;
             }
 
-            case "dailyDoubleIncorrect":{
-                if(!currentDailyDoublePlayer||!currentDailyDoubleWagerSubmitted){
+            case "dailyDoubleIncorrect": {
+                if (
+                    !currentDailyDoublePlayer ||
+                    !currentDailyDoubleWagerSubmitted
+                ) {
                     console.warn("No submitted Daily Double wager to judge.");
                     return;
                 }
 
-                const wager=currentDailyDoubleWager;
+                const wager = currentDailyDoubleWager;
 
-                currentDailyDoublePlayer.score=
-                    (currentDailyDoublePlayer.score||0)-wager;
+                const oldScore =
+                    currentDailyDoublePlayer.score || 0;
+
+                currentDailyDoublePlayer.score =
+                    oldScore - wager;
 
                 console.log(
                     "DAILY DOUBLE INCORRECT:",
                     currentDailyDoublePlayer.name,
-                    "-",wager,
-                    "NEW SCORE:",currentDailyDoublePlayer.score
+                    "-", wager,
+                    "OLD SCORE:", oldScore,
+                    "NEW SCORE:", currentDailyDoublePlayer.score
                 );
 
-                io.emit("scoreUpdate",{
-                    playerId:currentDailyDoublePlayer.playerId,
-                    playerName:currentDailyDoublePlayer.name,
-                    score:currentDailyDoublePlayer.score
+                // SCORE SCREEN
+                io.emit("showScoreScreen", {
+                    playerId: currentDailyDoublePlayer.playerId,
+                    character: currentDailyDoublePlayer.character,
+                    oldScore: oldScore,
+                    score: currentDailyDoublePlayer.score,
+                    earned: -wager,
+                    players: getScorePlayers()
                 });
 
                 broadcastToUnity({
-                    type:"scoreUpdate",
-                    playerId:currentDailyDoublePlayer.playerId,
-                    playerName:currentDailyDoublePlayer.name,
-                    score:currentDailyDoublePlayer.score
+                    type: "showScoreScreen",
+                    playerId: currentDailyDoublePlayer.playerId,
+                    character: currentDailyDoublePlayer.character,
+                    oldScore: oldScore,
+                    score: currentDailyDoublePlayer.score,
+                    earned: -wager
                 });
 
-                io.emit("dailyDoubleJudged",{
-                    correct:false,
-                    playerId:currentDailyDoublePlayer.playerId,
-                    playerName:currentDailyDoublePlayer.name,
-                    wager,
-                    score:currentDailyDoublePlayer.score
+                // Also update score state
+                io.emit("scoreUpdate", {
+                    playerId: currentDailyDoublePlayer.playerId,
+                    playerName: currentDailyDoublePlayer.name,
+                    score: currentDailyDoublePlayer.score
                 });
 
-                currentDailyDoubleWager=0;
-                currentDailyDoublePlayer=null;
-                currentDailyDoubleWagerSubmitted=false;
+                // Clear Daily Double state
+                currentDailyDoublePlayer.dailyDoubleWager = 0;
+
+                currentDailyDoubleWager = 0;
+                currentDailyDoublePlayer = null;
+                currentDailyDoubleWagerSubmitted = false;
 
                 break;
             }
