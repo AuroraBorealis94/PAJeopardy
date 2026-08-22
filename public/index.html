@@ -2081,7 +2081,7 @@
 
     socket.on("buzzAccepted", data => {
         console.log("================================");
-        console.log("HOST/CLIENT RECEIVED buzzAccepted");
+        console.log("BUZZ ACCEPTED RECEIVED");
         console.log("DATA:", data);
         console.log("isHost:", isHost);
         console.log("================================");
@@ -2089,52 +2089,70 @@
         currentBuzzPlayer = data;
         window.lastBuzzedPlayerName = data.playerName;
 
-        // ==========================================
+        // =====================================================
         // HOST
-        // ==========================================
+        // =====================================================
+
         if (isHost) {
+
             console.log("HOST HANDLING BUZZ");
 
-            const inner = document.getElementById("hostClueInner");
-            const judgement = document.getElementById("hostJudgementArea");
-            const question = document.getElementById("hostJudgementQuestion");
-            const enableBtn = document.getElementById("enableBuzzerBtn");
+            const inner =
+                document.getElementById("hostClueInner");
 
-            // Flip clue to answer
+            const judgement =
+                document.getElementById("hostJudgementArea");
+
+            const question =
+                document.getElementById("hostJudgementQuestion");
+
+            const enableBtn =
+                document.getElementById("enableBuzzerBtn");
+
+            // The host should stay on the host clue screen.
+            // DO NOT call showPlayerScreen() here.
+
             if (inner) {
                 inner.classList.add("flipped");
             } else {
-                console.error("hostClueInner NOT FOUND");
+                console.error(
+                    "HOST BUZZ: hostClueInner NOT FOUND"
+                );
             }
 
             hostAnswerShowing = true;
 
-            // Update judgement question
             if (question) {
                 question.textContent =
                     `Did Team ${data.playerName} answer correctly?`;
             } else {
-                console.error("hostJudgementQuestion NOT FOUND");
+                console.error(
+                    "HOST BUZZ: hostJudgementQuestion NOT FOUND"
+                );
             }
 
-            // SHOW JUDGEMENT AREA
             if (judgement) {
+
+                console.log(
+                    "SHOWING HOST JUDGEMENT AREA"
+                );
+
                 judgement.classList.add("show");
 
-                // Explicitly force visibility
-                judgement.hidden = false;
+                // Force these in case another rule is overriding CSS
                 judgement.style.display = "flex";
                 judgement.style.visibility = "visible";
                 judgement.style.opacity = "1";
                 judgement.style.pointerEvents = "auto";
                 judgement.style.zIndex = "10000";
 
-                console.log("HOST JUDGEMENT AREA SHOWN");
             } else {
-                console.error("hostJudgementArea NOT FOUND");
+
+                console.error(
+                    "HOST BUZZ: hostJudgementArea NOT FOUND"
+                );
             }
 
-            // Hide enable buzzer button
             if (enableBtn) {
                 enableBtn.style.display = "none";
             }
@@ -2142,9 +2160,10 @@
             return;
         }
 
-        // ==========================================
+
+        // =====================================================
         // PLAYERS
-        // ==========================================
+        // =====================================================
 
         canBuzz = false;
 
@@ -2162,38 +2181,58 @@
         const myPlayerId =
             localStorage.getItem("playerId");
 
-        const isMe = data.playerId === myPlayerId;
+        const isMe =
+            data.playerId === myPlayerId;
+
 
         if (answeringTitle) {
+
             answeringTitle.textContent =
-                isMe ? "ANSWER NOW!" : "IS ANSWERING";
+                isMe
+                    ? "ANSWER NOW!"
+                    : "IS ANSWERING";
         }
 
+
         if (answeringName) {
+
             answeringName.textContent =
                 "Team " + data.playerName;
         }
 
+
         let character = null;
 
+
         if (typeof characters !== "undefined") {
-            character = characters.find(
-                c => c.name === data.character
-            );
+
+            character =
+                characters.find(
+                    c => c.name === data.character
+                );
         }
 
+
         if (!character) {
+
             const savedCharacter =
                 localStorage.getItem("character");
 
             if (savedCharacter) {
-                try {
-                    const saved = JSON.parse(savedCharacter);
 
-                    if (saved.name === data.character) {
+                try {
+
+                    const saved =
+                        JSON.parse(savedCharacter);
+
+                    if (
+                        saved.name === data.character
+                    ) {
                         character = saved;
                     }
+
                 } catch (error) {
+
                     console.error(
                         "Could not parse saved character:",
                         error
@@ -2202,13 +2241,17 @@
             }
         }
 
+
         if (
             character &&
             character.front &&
             answeringCharacter
         ) {
-            answeringCharacter.src = character.front;
+
+            answeringCharacter.src =
+                character.front;
         }
+
     });
 
     // DAILY DOUBLE
