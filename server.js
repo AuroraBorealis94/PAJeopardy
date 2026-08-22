@@ -99,6 +99,13 @@ const unityHeartbeat = setInterval(() => {
 }, 30000);
 
 // SOCKET.IO
+/*
+const io = require("socket.io")(http, {
+    cors: {
+        origin: "*"
+    }
+});
+*/
 const io = require("socket.io")(http, {
     cors: {
         origin: "*"
@@ -1059,7 +1066,7 @@ io.on("connection", (socket) => {
                     playerId: currentBuzzPlayer.playerId,
                     character: currentBuzzPlayer.character,
                     score: currentBuzzPlayer.score,
-                    earned: earned,
+                    earned: earned
                     players: getScorePlayers()
                 });
 
