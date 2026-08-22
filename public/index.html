@@ -1398,12 +1398,37 @@
             if(storedIsHost)isHost=true;
             console.log("HOST STATE SYNC RECEIVED:",data.state);
 
-            if(data.state==="lobby"){
-                showHostControls();
-                restoreHostPage(localStorage.getItem("lastHostPage")||"hostLobbyPg");
+        if (data.state === "lobby") {
+            const hasJoined = localStorage.getItem("hasJoined") === "true";
+
+            // PLAYER HAS ALREADY JOINED
+            if (hasJoined) {
+                console.log(
+                    "GAME STATE IS LOBBY, BUT PLAYER HAS JOINED.",
+                    "Showing waiting screen."
+                );
+                const lobby = document.getElementById("lobbyUI");
+
+                if (lobby) {
+                    lobby.style.display = "none";
+                }
+                showWaitingScreen();
                 return;
             }
 
+            // PLAYER HAS NOT JOINED YET
+            console.log("PLAYER HAS NOT JOINED - SHOWING LOBBY");
+            hideAllPlayerScreens();
+            const lobby = document.getElementById("lobbyUI");
+
+            if (lobby) {
+                lobby.style.display = "block";
+                lobby.classList.remove("hidden");
+                lobby.style.pointerEvents = "auto";
+            }
+            restoreLobbyUI();
+            return;
+        }
             if(data.state==="playing"){
                 showHostControls();
                 restoreHostPage(localStorage.getItem("lastHostPage")||"hostBoard");
