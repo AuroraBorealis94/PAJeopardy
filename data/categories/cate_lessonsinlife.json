@@ -85,21 +85,21 @@
       {
         "id": "E_800_3",
         "clue": "The best advice this person ever received was \"you have to live with the living,\" a reminder they lean on daily while missing loved ones who've passed.",
-        "answer": "Who is Aunt Shari?"
+        "answer": "Who is Shari?"
       }
     ],
 
     "1000": [
       {
         "id": "E_1000_1",
-        "clue": "Uncle Ricky is currently eager to learn more about this Chinese martial art.",
+        "clue": "Ricky is currently eager to learn more about this Chinese martial art.",
         "answer": "What is t'ai chi ch'uan?",
 	"answerImage": "/answerImages/Taichi_Ricky.jpg"
       },
       {
         "id": "E_1000_2",
         "clue": "The book that changed how this person sees things was \"How to Change Your Sleep Habits.\"",
-        "answer": "Who is Uncle Ricky?"
+        "answer": "Who is Ricky?"
       },
       {
         "id": "E_1000_3",
