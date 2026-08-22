@@ -33,12 +33,12 @@
     "600": [
       {
         "id": "M_600_1",
-        "clue": "Shari offered this as her dream job.",
+        "clue": "Aunt Shari offered this as her dream job.",
         "answer": "What is zookeeper?"
       },
       {
         "id": "M_600_2",
-        "clue": "Shari says that if they could have any wild animal as a pet, it would be this big cat.",
+        "clue": "Aunt Shari says that if they could have any wild animal as a pet, it would be this big cat.",
         "answer": "What is a lion?",
 	"answerImage": "/answerImages/Lion_Shari.jpg"
       }

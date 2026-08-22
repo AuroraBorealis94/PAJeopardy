@@ -1831,67 +1831,57 @@
 
     // SCORE SCREEN
     socket.on("showScoreScreen", data => {
-        if (!data || !Array.isArray(data.players)) {
-            return;
-        }
+        if (!data?.players) return;
+
+        console.log("SHOW SCORE SCREEN:", data);
+
         const myPlayerId = localStorage.getItem("playerId");
-        const me = data.players.find(player => player.playerId === myPlayerId);
+        const me = data.players.find(p => p.playerId === myPlayerId);
 
         if (!me) {
-            console.warn("Could not find myself in score data:", myPlayerId);
+            console.warn("Could not find myself in score players:", myPlayerId);
             return;
         }
 
-        console.log("SHOW SCORE SCREEN:", me);
-
+        const earned = Number(me.earned) || 0;
         const newScore = Number(me.score) || 0;
-        const oldScore = Number(currentScore) || 0;
+        const oldScore = newScore - earned;
 
-        // My character's idle animation
         setScoreCharacter(me.animation);
-        // Show the score page
+
+        document.getElementById("scoreValue").textContent = `$${newScore}`;
+
         showPlayerScreen("scorePage");
 
-        // Animate only if my score changed
-        if (newScore !== oldScore) {
-            const earned = newScore - oldScore;
-            animateScoreGain(oldScore, newScore, earned);
-        } else {
-            const scoreValue = document.getElementById("scoreValue");
+        animateScoreGain(oldScore, newScore, earned);
 
-            if (scoreValue) {
-                scoreValue.textContent = `$${newScore}`;
-            }
-        }
-
-        currentScore = me.score;
+        currentScore = newScore;
     });
 
     // SHOW BOARD INTRO
-    socket.on("showBoardIntro", data => {
-        if (isHost) return;
+    socket.on("showScoreScreen", data => {
+        if (!data?.players) return;
 
-        console.log("================================");
-        console.log("SHOW BOARD INTRO RECEIVED");
-        console.log("DATA:", data);
-        console.log("PLAYER CHANGING TO SCORE PAGE");
-        console.log("================================");
+        console.log("SHOW SCORE SCREEN:", data);
 
-        const lobby = document.getElementById("lobbyUI");
+        const myPlayerId = localStorage.getItem("playerId");
+        const me = data.players.find(p => p.playerId === myPlayerId);
 
-        if (lobby) {
-            lobby.style.display = "none";
-        }
+        if (!me) return;
 
-        // CHANGE SCREEN FIRST
+        const earned = Number(me.earned) || 0;
+        const newScore = Number(me.score) || 0;
+        const oldScore = newScore - earned;
+
+        setScoreCharacter(me.animation);
+
+        document.getElementById("scoreValue").textContent = `$${newScore}`;
+
         showPlayerScreen("scorePage");
 
-        // Set the background AFTER the screen is visible
-        try {
-            setScoreBackground();
-        } catch (error) {
-            console.error("setScoreBackground() failed:", error);
-        }
+        animateScoreGain(oldScore, newScore, earned);
+
+        currentScore = newScore;
     });
 
     // ANIMATION HOLDING SCREEN
