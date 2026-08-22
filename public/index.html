@@ -348,18 +348,6 @@
             margin-top: 20px;
         }
 
-
-        #waitingCharacter img {
-            transform: scale(0.9);
-            opacity: 0;
-            transition: all 0.4s ease;
-        }
-
-        #waitingScreen.show #waitingCharacter img {
-            transform: scale(1);
-            opacity: 1;
-        }
-
         #waitingName {
             color: orange;
         }
@@ -2005,7 +1993,14 @@
 
         if(wagerInput){
             wagerInput.value="";
-            wagerInput.max=data.score||0;
+            const score=Number(data.score)||0;
+            const maxWager=score>0?score:(currentRound===1?500:1000);
+            if(wagerInput){
+                wagerInput.value="";
+                wagerInput.max=maxWager;
+            }
+            const maxLabel=document.getElementById("dailyDoubleMaxWager");
+            if(maxLabel)maxLabel.textContent="Maximum wager: $"+maxWager.toLocaleString();
         }
 
         if(submitBtn){
