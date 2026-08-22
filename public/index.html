@@ -1451,6 +1451,7 @@
         if (data.state === "lobby") {
             const hasJoined = localStorage.getItem("hasJoined") === "true";
 
+            // PLAYER HAS ALREADY JOINED
             if (hasJoined) {
                 console.log(
                     "GAME STATE IS LOBBY, BUT PLAYER HAS JOINED.",
@@ -1465,9 +1466,9 @@
                 return;
             }
 
+            // PLAYER HAS NOT JOINED YET
             console.log("PLAYER HAS NOT JOINED - SHOWING LOBBY");
             hideAllPlayerScreens();
-
             const lobby = document.getElementById("lobbyUI");
 
             if (lobby) {
@@ -1475,7 +1476,14 @@
                 lobby.classList.remove("hidden");
                 lobby.style.pointerEvents = "auto";
             }
-
+            restoreLobbyUI();
+            return;
+        }
+            if(data.state==="playing"){
+                showHostControls();
+                restoreHostPage(localStorage.getItem("lastHostPage")||"hostBoard");
+                return;
+            }
             return;
         }
 
@@ -1488,7 +1496,6 @@
             hideAllPlayerScreens();
 
             const lobby=document.getElementById("lobbyUI");
-
             if(lobby){
                 lobby.style.display="block";
                 lobby.classList.remove("hidden");
@@ -1496,12 +1503,12 @@
             }
 
             const waiting=document.getElementById("waitingScreen");
-
             if(waiting){
                 waiting.classList.remove("show");
                 waiting.classList.add("hidden");
             }
 
+            restoreLobbyUI();
             return;
         }
 
