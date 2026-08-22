@@ -19,7 +19,7 @@ let hostSocketId = null;
 const HOST_RECONNECT_TOKEN = "HOST_" + Math.random().toString(36).substring(2) + "_" + Date.now();
 
 let hostDisconnectTimer = null;
-const HOST_RECONNECT_WINDOW = 30000;
+const HOST_RECONNECT_WINDOW = 15000;
 
 // CURRENT GAME SESSION
 let GAME_SESSION = Date.now();
@@ -562,6 +562,8 @@ io.on("connection", (socket) => {
         console.log("Socket:", socket.id);
         console.log("================================");
 
+        socket.emit("hostConfirmed");
+
         sendHostState(socket);
         io.emit("hostStatus", true);
 
@@ -601,7 +603,14 @@ io.on("connection", (socket) => {
                 socket.isHost = true;
                 socket.data.joined = true;
 
+                console.log("================================");
+                console.log("HOST CONNECTED");
+                console.log("Socket:", socket.id);
+                console.log("================================");
+
                 socket.emit("hostReconnectToken", HOST_RECONNECT_TOKEN);
+                socket.emit("hostConfirmed");
+
                 sendHostState(socket);
                 io.emit("hostStatus", true);
 

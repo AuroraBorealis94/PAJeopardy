@@ -1467,47 +1467,14 @@
             console.log("HOST STATE SYNC RECEIVED:", data.state);
 
             if (data.state === "lobby") {
-                const hasJoined = localStorage.getItem("hasJoined") === "true";
-
-                if (hasJoined) {
-                    console.log(
-                        "GAME STATE IS LOBBY, BUT PLAYER HAS JOINED.",
-                        "Showing waiting screen."
-                    );
-
-                    const lobby = document.getElementById("lobbyUI");
-
-                    if (lobby) {
-                        lobby.style.display = "none";
-                    }
-
-                    showWaitingScreen();
-                    return;
-                }
-
-                console.log("PLAYER HAS NOT JOINED - SHOWING LOBBY");
-
-                hideAllPlayerScreens();
-
-                const lobby = document.getElementById("lobbyUI");
-
-                if (lobby) {
-                    lobby.style.display = "block";
-                    lobby.classList.remove("hidden");
-                    lobby.style.pointerEvents = "auto";
-                }
-
-                restoreLobbyUI();
+                console.log("HOST RETURNING TO HOST JOIN PAGE");
+                localStorage.setItem("lastHostPage", "hostJoinPg");
+                showHostControls();
                 return;
             }
 
             if (data.state === "playing") {
                 showHostControls();
-                restoreHostPage(
-                    data.hostScreen ||
-                    localStorage.getItem("lastHostPage") ||
-                    "hostBoard"
-                );
                 return;
             }
 
@@ -1541,7 +1508,6 @@
                 waiting.classList.add("hidden");
             }
 
-            restoreLobbyUI();
             return;
         }
 
@@ -1709,25 +1675,27 @@
         console.log("Host reconnect token saved.");
     });
 
+    // HOST CONFIRMED
+    socket.on("hostConfirmed", () => {
+        console.log("HOST CONFIRMED BY SERVER.");
+
+        isHost = true;
+        requestingHost = false;
+
+        localStorage.setItem("isHost", "true");
+
+        if (currentSession) {
+            localStorage.setItem("hostSession", currentSession);
+        }
+
+        updateHostButton();
+    });
+
     // HOST STATUS
     socket.on("hostStatus", taken => {
         console.log("HOST STATUS FROM SERVER:", taken);
 
         serverHostTaken = !!taken;
-
-        if (taken && requestingHost) {
-            console.log("SERVER CONFIRMED HOST CONNECTION.");
-
-            isHost = true;
-            requestingHost = false;
-
-            localStorage.setItem("isHost", "true");
-
-            if (currentSession) {
-                localStorage.setItem("hostSession", currentSession);
-            }
-        }
-
         updateHostButton();
     });
 
