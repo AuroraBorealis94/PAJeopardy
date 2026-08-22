@@ -2081,8 +2081,9 @@
 
     socket.on("buzzAccepted", data => {
         console.log("================================");
-        console.log("BUZZ ACCEPTED:", data);
-        console.log("IS HOST:", isHost);
+        console.log("HOST/CLIENT RECEIVED buzzAccepted");
+        console.log("DATA:", data);
+        console.log("isHost:", isHost);
         console.log("================================");
 
         currentBuzzPlayer = data;

@@ -1409,8 +1409,11 @@ io.on("connection", (socket) => {
 
     // BUZZER SCREEN
     socket.on("buzz", () => {
-        if (!buzzAccepted)
+
+        if (!buzzAccepted) {
+            console.log("BUZZ REJECTED - buzzAccepted is false");
             return;
+        }
 
         buzzAccepted = false;
 
@@ -1418,31 +1421,80 @@ io.on("connection", (socket) => {
             p => p.socketId === socket.id
         );
 
-        if (!player)
+        if (!player) {
+            console.warn(
+                "BUZZ RECEIVED BUT PLAYER NOT FOUND:",
+                socket.id
+            );
             return;
+        }
 
         currentBuzzPlayer = player;
-        /*
-        io.emit("buzzAccepted", {
+
+        const buzzData = {
+            playerId: player.playerId,
+            playerName: player.name,
+            character: player.character
+        };
+
+        console.log("================================");
+        console.log("BUZZ ACCEPTED");
+        console.log("Player:", player.name);
+        console.log("Player ID:", player.playerId);
+        console.log("Host Socket:", hostSocketId);
+        console.log("================================");
+
+        // ==========================================
+        // SEND TO HOST
+        // ==========================================
+
+        if (hostSocketId) {
+
+            io.to(hostSocketId).emit(
+                "buzzAccepted",
+                buzzData
+            );
+
+            console.log(
+                "buzzAccepted SENT TO HOST:",
+                hostSocketId
+            );
+
+        } else {
+
+            console.warn(
+                "NO HOST SOCKET ID - CANNOT SEND BUZZ TO HOST"
+            );
+        }
+
+        // ==========================================
+        // SEND TO ALL PLAYERS
+        // ==========================================
+
+        game.players.forEach(player => {
+
+            io.to(player.socketId).emit(
+                "buzzAccepted",
+                buzzData
+            );
+
+        });
+
+        // ==========================================
+        // SEND TO UNITY
+        // ==========================================
+
+        broadcastToUnity({
+            type: "buzzAccepted",
             playerId: player.playerId,
             playerName: player.name,
             character: player.character
         });
-        */
-        game.players.forEach(player=>{
-            io.to(player.socketId).emit("buzzAccepted",{
-                playerId: player.playerId,
-                playerName: player.name,
-                character: player.character
-            });
-        });
 
-        broadcastToUnity({
-            type: "buzzAccepted",
-            playerName: player.name
-        });
-
-        console.log("Buzz won by", player.name);
+        console.log(
+            "Buzz won by",
+            player.name
+        );
     });
 
     // DISCONNECT
