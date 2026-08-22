@@ -1473,10 +1473,9 @@
             if (lobby) {
                 lobby.style.display = "block";
                 lobby.classList.remove("hidden");
-                restoreLobbyUI();
                 lobby.style.pointerEvents = "auto";
             }
-
+            restoreLobbyUI();
             return;
         }
 
@@ -2329,19 +2328,7 @@
         console.log("HOST PAGE SAVED:",pageId);
     }
 
-    function restoreLobbyUI(){
-        const lobby = document.getElementById("lobbyUI");
-        if (!lobby) {
-            console.error("Lobby UI not found.");
-            return;
-        }
 
-        hideAllPlayerScreens();
-
-        lobby.classList.remove("hidden");
-        lobby.style.display = "block";
-        lobby.style.pointerEvents = "auto";
-    }
 
     //HOST ENABLE LOBBY
     function hostEnableLobby() {
