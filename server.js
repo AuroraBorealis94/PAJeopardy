@@ -1105,7 +1105,8 @@ io.on("connection", (socket) => {
                     playerId: currentBuzzPlayer.playerId,
                     character: currentBuzzPlayer.character,
                     score: currentBuzzPlayer.score,
-                    earned: earned
+                    earned: earned,
+                    players: getScorePlayers()
                 });
 
                 broadcastToUnity({
