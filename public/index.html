@@ -326,12 +326,14 @@
     /* #endregion */
 
     /* #region Waiting Screen */
+
         #waitingScreen {
             position: fixed;
             inset: 0;
-            background-image: 
-                url('/backgrounds/WHostBG.jpg');
+
+            background-image: url('/backgrounds/WHostBG.jpg');
             background-size: cover;
+            background-position: center;
             background-repeat: no-repeat;
 
             color: white;
@@ -340,9 +342,13 @@
             flex-direction: column;
             justify-content: center;
             align-items: center;
+
             opacity: 0;
             pointer-events: none;
+
             transition: opacity 0.5s ease;
+
+            z-index: 5000;
         }
 
         #waitingScreen.show {
@@ -350,19 +356,24 @@
             pointer-events: auto;
         }
 
+        #waitingCharacter {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
         #waitingCharacter img {
             width: 140px;
+            height: auto;
+
             margin-top: 20px;
-        }
 
-        .hidden{
-            display:none !important;
-        }
-
-        #waitingCharacter img {
             transform: scale(0.9);
             opacity: 0;
-            transition: all 0.4s ease;
+
+            transition:
+                transform 0.4s ease,
+                opacity 0.4s ease;
         }
 
         #waitingScreen.show #waitingCharacter img {
@@ -377,11 +388,13 @@
         #changeCharacterBtn {
             font-family: 'Korinna', serif;
             text-transform: uppercase;
+
             background: linear-gradient(135deg, #ffcc00, #ff6600);
             color: black;
 
             border: 1px solid #fff;
             border-radius: 4px;
+
             box-shadow: 0 0 15px rgba(255, 140, 0, 0.6);
         }
     /* #endregion */
@@ -2851,22 +2864,13 @@
                 localStorage.setItem("playerId", playerId);
             }
 
-            socket.emit(
-                "join",
-                {
-                    playerId,
-
-                    name:
-                        state.name,
-
-                    character:
-                        state.character.name,
-
-                    isHost:
-                        false
-                }
-            );
-            showWaitingScreen();
+            socket.emit("join", {
+                playerId,
+                name: state.name,
+                character: state.character.name,
+                isHost: false
+            });
+            //showWaitingScreen();
             console.log("joinGame ran");
         }
 
@@ -2993,27 +2997,44 @@
 
         // WAITING SCREEN
         function showWaitingScreen() {
+            console.log("SHOW WAITING SCREEN");
+            console.log("STATE CHARACTER:", state.character);
+
             const lobby = document.getElementById("lobbyUI");
 
             if (lobby) {
                 lobby.style.display = "none";
             }
 
-            if (state.character?.front) {
-                const waitingImage = document.getElementById("waitingImage");
+            const waitingScreen = document.getElementById("waitingScreen");
+            const waitingImage = document.getElementById("waitingImage");
+            const waitingName = document.getElementById("waitingName");
 
-                if (waitingImage) {
+            // Make sure the screen itself is actually visible
+            if (waitingScreen) {
+                waitingScreen.classList.remove("hidden");
+                waitingScreen.classList.add("show");
+            }
+
+            // Set character image
+            if (waitingImage && state.character) {
+                console.log("WAITING CHARACTER FRONT:", state.character.front);
+
+                if (state.character.front) {
                     waitingImage.src = state.character.front;
+                    waitingImage.style.display = "block";
+                } else {
+                    console.error(
+                        "Character exists, but it has no 'front' image:",
+                        state.character
+                    );
                 }
             }
 
-            const waitingName = document.getElementById("waitingName");
-
+            // Set player/team name
             if (waitingName) {
-                waitingName.textContent = state.name;
+                waitingName.textContent = state.name || "";
             }
-
-            showPlayerScreen("waitingScreen");
         }
     
         function changeCharacter() {
