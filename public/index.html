@@ -929,11 +929,66 @@
         }
 
     /* #region Score Screen */
-        #scorePage {
-            position: fixed;
-            inset: 0;
-            overflow: hidden;
+    #scorePage {
+        position: fixed;
+        inset: 0;
+        width: 100vw;
+        height: 100vh;
+        overflow: hidden;
+    }
+
+    /* Animated player character */
+    #scoreCharacter {
+        position: absolute;
+
+        width: 401px;
+        height: 870px;
+
+        left: 50%;
+        bottom: 0;
+
+        transform: translateX(-50%) scale(0.5);
+        transform-origin: bottom center;
+
+        background-repeat: no-repeat;
+        background-position: 0 0;
+
+        image-rendering: auto;
+
+        z-index: 2;
+    }
+
+    /* The character animation gets this class */
+    #scoreCharacter.animate {
+        animation-name: scoreCharacterIdle;
+        animation-duration: 1.2s;
+        animation-timing-function: steps(6);
+        animation-iteration-count: infinite;
+    }
+
+    @keyframes scoreCharacterIdle {
+
+        from {
+            background-position: 0 0;
         }
+
+        to {
+            background-position: -2406px 0;
+        }
+
+    }
+
+
+    /* Score text */
+    #scoreChange {
+        position: absolute;
+        z-index: 5;
+    }
+
+    #scoreValue {
+        position: absolute;
+        z-index: 5;
+    }
 
         #scoreBackground {
             position: absolute;
@@ -1261,13 +1316,8 @@
 <!-- SCORE PAGE -->
 <div id="scorePage" class="hidden">
     <div id="scoreBackground"></div>
-
-    <!--<div id="scoreHeader">
-        Score: $0
-    </div>-->
-
+    <div id="scoreCharacter"></div>
     <div id="scoreChange"></div>
-
     <div id="scoreValue">
         $0
     </div>
@@ -1276,8 +1326,13 @@
 <script src="/socket.io/socket.io.js"></script>
 
 <script>
-    //SOCKET CONNECTION
+    // SOCKET CONNECTION
+    const savedHostReconnectToken = localStorage.getItem("paHostReconnectToken");
+    console.log("Saved host reconnect token:", savedHostReconnectToken);
     const socket = io({
+        auth: {
+            hostReconnectToken: savedHostReconnectToken || null
+        },
         reconnection: true,
         reconnectionAttempts: Infinity,
         reconnectionDelay: 1000,
@@ -1388,37 +1443,89 @@
     });
     
     // GAME STATE SYNC
-    socket.on("gameStateSync",data=>{
-        console.log("SYNC STATE:",data);
-        const storedIsHost=localStorage.getItem("isHost")==="true";
-        const hostPending=requestingHost||storedIsHost||isHost;
-        console.log("GAME STATE HOST CHECK:",{isHost,storedIsHost,requestingHost,hostPending,hostSession:localStorage.getItem("hostSession"),currentSession});
+    socket.on("gameStateSync", data => {
+        console.log("SYNC STATE:", data);
 
-        if(hostPending){
-            if(storedIsHost)isHost=true;
-            console.log("HOST STATE SYNC RECEIVED:",data.state);
+        const storedIsHost = localStorage.getItem("isHost") === "true";
+        const hostPending = requestingHost || storedIsHost || isHost;
 
-        if (data.state === "lobby") {
-            const hasJoined = localStorage.getItem("hasJoined") === "true";
+        console.log("GAME STATE HOST CHECK:", {
+            isHost,
+            storedIsHost,
+            requestingHost,
+            hostPending,
+            hostSession: localStorage.getItem("hostSession"),
+            currentSession
+        });
 
-            // PLAYER HAS ALREADY JOINED
-            if (hasJoined) {
-                console.log(
-                    "GAME STATE IS LOBBY, BUT PLAYER HAS JOINED.",
-                    "Showing waiting screen."
-                );
+        // HOST
+        if (hostPending) {
+            if (storedIsHost) {
+                isHost = true;
+            }
+
+            console.log("HOST STATE SYNC RECEIVED:", data.state);
+
+            if (data.state === "lobby") {
+                const hasJoined = localStorage.getItem("hasJoined") === "true";
+
+                if (hasJoined) {
+                    console.log(
+                        "GAME STATE IS LOBBY, BUT PLAYER HAS JOINED.",
+                        "Showing waiting screen."
+                    );
+
+                    const lobby = document.getElementById("lobbyUI");
+
+                    if (lobby) {
+                        lobby.style.display = "none";
+                    }
+
+                    showWaitingScreen();
+                    return;
+                }
+
+                console.log("PLAYER HAS NOT JOINED - SHOWING LOBBY");
+
+                hideAllPlayerScreens();
+
                 const lobby = document.getElementById("lobbyUI");
 
                 if (lobby) {
-                    lobby.style.display = "none";
+                    lobby.style.display = "block";
+                    lobby.classList.remove("hidden");
+                    lobby.style.pointerEvents = "auto";
                 }
-                showWaitingScreen();
+
+                restoreLobbyUI();
                 return;
             }
 
-            // PLAYER HAS NOT JOINED YET
-            console.log("PLAYER HAS NOT JOINED - SHOWING LOBBY");
+            if (data.state === "playing") {
+                showHostControls();
+                restoreHostPage(
+                    data.hostScreen ||
+                    localStorage.getItem("lastHostPage") ||
+                    "hostBoard"
+                );
+                return;
+            }
+
+            return;
+        }
+
+        // PLAYER
+        isHost = false;
+
+        lockedSet = new Set(
+            (data.lockedCharacters || []).map(c => c.toLowerCase())
+        );
+
+        updateLockedUI();
+
+        if (data.state === "lobby") {
             hideAllPlayerScreens();
+
             const lobby = document.getElementById("lobbyUI");
 
             if (lobby) {
@@ -1426,34 +1533,10 @@
                 lobby.classList.remove("hidden");
                 lobby.style.pointerEvents = "auto";
             }
-            restoreLobbyUI();
-            return;
-        }
-            if(data.state==="playing"){
-                showHostControls();
-                restoreHostPage(localStorage.getItem("lastHostPage")||"hostBoard");
-                return;
-            }
-            return;
-        }
 
-        isHost=false;
+            const waiting = document.getElementById("waitingScreen");
 
-        lockedSet=new Set((data.lockedCharacters||[]).map(c=>c.toLowerCase()));
-        updateLockedUI();
-
-        if(data.state==="lobby"){
-            hideAllPlayerScreens();
-
-            const lobby=document.getElementById("lobbyUI");
-            if(lobby){
-                lobby.style.display="block";
-                lobby.classList.remove("hidden");
-                lobby.style.pointerEvents="auto";
-            }
-
-            const waiting=document.getElementById("waitingScreen");
-            if(waiting){
+            if (waiting) {
                 waiting.classList.remove("show");
                 waiting.classList.add("hidden");
             }
@@ -1462,16 +1545,23 @@
             return;
         }
 
-        if(data.state==="playing"){
-            const lobby=document.getElementById("lobbyUI");
-            if(lobby) lobby.style.display="none";
-            //showInstructionsHoldingScreen();
+        if (data.state === "playing") {
+            const lobby = document.getElementById("lobbyUI");
+
+            if (lobby) {
+                lobby.style.display = "none";
+            }
+
             return;
         }
 
-        if(data.state==="buzzer"){
-            const lobby=document.getElementById("lobbyUI");
-            if(lobby) lobby.style.display="none";
+        if (data.state === "buzzer") {
+            const lobby = document.getElementById("lobbyUI");
+
+            if (lobby) {
+                lobby.style.display = "none";
+            }
+
             showPlayerScreen("waitingScreen");
             return;
         }
@@ -1616,18 +1706,35 @@
     socket.on("hostReconnectToken", token => {
         console.log("Received host reconnect token");
         localStorage.setItem("paHostReconnectToken", token);
+        console.log("Host reconnect token saved.");
     });
 
     // HOST STATUS
     socket.on("hostStatus", taken => {
         console.log("HOST STATUS FROM SERVER:", taken);
+
         serverHostTaken = !!taken;
+
+        if (taken && requestingHost) {
+            console.log("SERVER CONFIRMED HOST CONNECTION.");
+
+            isHost = true;
+            requestingHost = false;
+
+            localStorage.setItem("isHost", "true");
+
+            if (currentSession) {
+                localStorage.setItem("hostSession", currentSession);
+            }
+        }
+
         updateHostButton();
     });
 
     // HOST TAKEN
     socket.on("hostTaken", () => {
         console.warn("HOST SLOT WAS REJECTED.");
+
         requestingHost = false;
         isHost = false;
 
@@ -1636,6 +1743,7 @@
         localStorage.removeItem("lastHostPage");
 
         alert("The host slot is already taken.");
+
         updateHostButton();
     });
     
@@ -1781,30 +1889,40 @@
 
     // SCORE SCREEN
     socket.on("showScoreScreen", data => {
-        if (!data) return;
-        const myPlayerId = localStorage.getItem("playerId");
-
-        // Only the player who earned the points
-        // should receive the score animation.
-        if (data.playerId && data.playerId !== myPlayerId) {
+        if (!data || !Array.isArray(data.players)) {
             return;
         }
-        console.log("SHOW SCORE SCREEN:", data);
+        const myPlayerId = localStorage.getItem("playerId");
+        const me = data.players.find(player => player.playerId === myPlayerId);
 
-        const earned = Number(data.earned) || 0;
-        const newScore = Number(data.score) || 0;
+        if (!me) {
+            console.warn("Could not find myself in score data:", myPlayerId);
+            return;
+        }
 
-        // The score before the clue was awarded.
-        const oldScore = newScore - earned;
+        console.log("SHOW SCORE SCREEN:", me);
 
-        setScoreBackground();
+        const newScore = Number(me.score) || 0;
+        const oldScore = Number(currentScore) || 0;
+
+        // My character's idle animation
+        setScoreCharacter(me.animation);
+        // Show the score page
         showPlayerScreen("scorePage");
-        animateScoreGain(
-            oldScore,
-            newScore,
-            earned
-        );
-        currentScore = newScore;
+
+        // Animate only if my score changed
+        if (newScore !== oldScore) {
+            const earned = newScore - oldScore;
+            animateScoreGain(oldScore, newScore, earned);
+        } else {
+            const scoreValue = document.getElementById("scoreValue");
+
+            if (scoreValue) {
+                scoreValue.textContent = `$${newScore}`;
+            }
+        }
+
+        currentScore = me.score;
     });
 
     // SHOW BOARD INTRO
@@ -3267,6 +3385,45 @@
 
                 value.textContent = "$" + score;
             }, 30);
+        }
+
+        function setScoreCharacter(animationData) {
+            const character = document.getElementById("scoreCharacter");
+
+            if (!character) {
+                console.error("scoreCharacter element not found");
+                return;
+            }
+
+            if (!animationData || !animationData.src) {
+                console.warn("No score character animation data:", animationData);
+
+                character.style.backgroundImage = "none";
+                character.classList.remove("animate");
+
+                return;
+            }
+
+            console.log("SETTING SCORE CHARACTER:", animationData);
+
+            // Reset animation
+            character.classList.remove("animate");
+
+            // Set sprite sheet
+            character.style.backgroundImage =
+                `url("${animationData.src}")`;
+
+            // Set dimensions from server data
+            character.style.width =
+                `${animationData.frameWidth}px`;
+
+            character.style.height =
+                `${animationData.frameHeight}px`;
+
+            // Restart animation on next frame
+            requestAnimationFrame(() => {
+                character.classList.add("animate");
+            });
         }
 
         // DAILY DOUBLE FUNCTIONS

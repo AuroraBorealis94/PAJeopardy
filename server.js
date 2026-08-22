@@ -19,7 +19,7 @@ let hostSocketId = null;
 const HOST_RECONNECT_TOKEN = "HOST_" + Math.random().toString(36).substring(2) + "_" + Date.now();
 
 let hostDisconnectTimer = null;
-const HOST_RECONNECT_WINDOW = 15000;
+const HOST_RECONNECT_WINDOW = 30000;
 
 // CURRENT GAME SESSION
 let GAME_SESSION = Date.now();
@@ -146,17 +146,17 @@ const characters = [
             idle: { 
                 src: "/characters/animations/thebossidle.png", 
                 frames: 6, 
-                speed: "1.2s",
+                speed: "1.0s",
                 frameWidth: 401,
                 frameHeight: 870
-            },
+            }/*,
             victory: { 
                 src: "/characters/animations/thebossvictory.png", 
                 frames: 6, 
                 speed: "1.2s",
                 frameWidth: 401,
                 frameHeight: 870 
-            }
+            }*/
         }
     },
 
@@ -166,14 +166,7 @@ const characters = [
             idle: { 
                 src: "/characters/animations/janicemowesidle.png", 
                 frames: 6, 
-                speed: "1.2s",
-                frameWidth: 401,
-                frameHeight: 870 
-            },
-            victory: { 
-                src: "/characters/animations/janicemowesvictory.png", 
-                frames: 6, 
-                speed: "1.2s",
+                speed: "1.0s",
                 frameWidth: 401,
                 frameHeight: 870 
             }
@@ -186,14 +179,7 @@ const characters = [
             idle: { 
                 src: "/characters/animations/tricerexidle.png", 
                 frames: 6, 
-                speed: "1.2s",
-                frameWidth: 401,
-                frameHeight: 870 
-            },
-            victory: { 
-                src: "/characters/animations/tricerexvictory.png", 
-                frames: 6, 
-                speed: "1.2s",
+                speed: "1.0s",
                 frameWidth: 401,
                 frameHeight: 870 
             }
@@ -206,14 +192,7 @@ const characters = [
             idle: { 
                 src: "/characters/animations/fancydanceridle.png", 
                 frames: 6, 
-                speed: "1.2s",
-                frameWidth: 401,
-                frameHeight: 870 
-            },
-            victory: { 
-                src: "/characters/animations/fancydancervictory.png", 
-                frames: 6, 
-                speed: "1.2s",
+                speed: "1.0s",
                 frameWidth: 401,
                 frameHeight: 870 
             }
@@ -226,14 +205,7 @@ const characters = [
             idle: { 
                 src: "/characters/animations/deerheadidle.png", 
                 frames: 6, 
-                speed: "1.2s",
-                frameWidth: 401,
-                frameHeight: 870 
-            },
-            victory: { 
-                src: "/characters/animations/deerheadvictory.png", 
-                frames: 6, 
-                speed: "1.2s",
+                speed: "1.0s",
                 frameWidth: 401,
                 frameHeight: 870 
             }
@@ -246,14 +218,7 @@ const characters = [
             idle: { 
                 src: "/characters/animations/caitysatyridle.png", 
                 frames: 6, 
-                speed: "1.2s",
-                frameWidth: 401,
-                frameHeight: 870 
-            },
-            victory: { 
-                src: "/characters/animations/caitysatyrvictory.png", 
-                frames: 6, 
-                speed: "1.2s",
+                speed: "1.0s",
                 frameWidth: 401,
                 frameHeight: 870 
             }
@@ -266,14 +231,7 @@ const characters = [
             idle: { 
                 src: "/characters/animations/jesusidle.png", 
                 frames: 6, 
-                speed: "1.2s",
-                frameWidth: 401,
-                frameHeight: 870 
-            },
-            victory: { 
-                src: "/characters/animations/jesusvictory.png", 
-                frames: 6, 
-                speed: "1.2s",
+                speed: "1.0s",
                 frameWidth: 401,
                 frameHeight: 870 
             }
@@ -286,14 +244,7 @@ const characters = [
             idle: { 
                 src: "/characters/animations/thenewlywedsidle.png", 
                 frames: 6, 
-                speed: "1.2s",
-                frameWidth: 401,
-                frameHeight: 870 
-            },
-            victory: { 
-                src: "/characters/animations/thenewlywedsvictory.png", 
-                frames: 6, 
-                speed: "1.2s",
+                speed: "1.0s",
                 frameWidth: 401,
                 frameHeight: 870 
             }
@@ -306,14 +257,7 @@ const characters = [
             idle: { 
                 src: "/characters/animations/lorenzoidle.png", 
                 frames: 6, 
-                speed: "1.2s",
-                frameWidth: 401,
-                frameHeight: 870 
-            },
-            victory: { 
-                src: "/characters/animations/lorenzovictory.png", 
-                frames: 6, 
-                speed: "1.2s",
+                speed: "1.0s",
                 frameWidth: 401,
                 frameHeight: 870 
             }
@@ -325,20 +269,26 @@ const characters = [
             idle: { 
                 src: "/characters/animations/guitaristidle.png", 
                 frames: 6, 
-                speed: "1.2s",
-                frameWidth: 401,
-                frameHeight: 870 
-            },
-            victory: { 
-                src: "/characters/animations/theguitaristvictory.png", 
-                frames: 6, 
-                speed: "1.2s",
+                speed: "1.0s",
                 frameWidth: 401,
                 frameHeight: 870 
             }
         }
     }
 ];
+
+function getScorePlayers() {
+    return game.players.map(player => {
+        const character = characters.find(c => c.name === player.character);
+
+        return {
+            playerId: player.playerId,
+            character: player.character,
+            score: player.score || 0,
+            animation: character?.animations?.idle || null
+        };
+    });
+}
 
 // WEBSOCKET TO UNITY
 function broadcastToUnity(data) {
@@ -597,7 +547,6 @@ io.on("connection", (socket) => {
     if (reconnectToken && reconnectToken === HOST_RECONNECT_TOKEN) {
         console.log("HOST RECONNECT TOKEN ACCEPTED");
 
-        // Cancel pending host disconnect
         if (hostDisconnectTimer) {
             clearTimeout(hostDisconnectTimer);
             hostDisconnectTimer = null;
@@ -605,21 +554,21 @@ io.on("connection", (socket) => {
 
         hostConnected = true;
         hostSocketId = socket.id;
-
         socket.isHost = true;
         socket.data.joined = true;
 
-        console.log("HOST RECONNECTED:", socket.id);
+        console.log("================================");
+        console.log("HOST RECONNECTED");
+        console.log("Socket:", socket.id);
+        console.log("================================");
 
         sendHostState(socket);
-
         io.emit("hostStatus", true);
 
         console.log("Host state restored.");
 
         return;
     }
-
     console.log("A player connected:", socket.id);
 
     // JOIN LOBBY
@@ -637,7 +586,10 @@ io.on("connection", (socket) => {
             const reconnectToken = socket.handshake.auth?.hostReconnectToken;
 
             if (reconnectToken && reconnectToken === HOST_RECONNECT_TOKEN) {
-                console.log("Host manually reconnected with token.");
+                console.log("================================");
+                console.log("HOST MANUAL RECONNECT ACCEPTED");
+                console.log("Socket:", socket.id);
+                console.log("================================");
 
                 if (hostDisconnectTimer) {
                     clearTimeout(hostDisconnectTimer);
@@ -646,32 +598,24 @@ io.on("connection", (socket) => {
 
                 hostConnected = true;
                 hostSocketId = socket.id;
-
                 socket.isHost = true;
                 socket.data.joined = true;
 
+                socket.emit("hostReconnectToken", HOST_RECONNECT_TOKEN);
                 sendHostState(socket);
-
                 io.emit("hostStatus", true);
 
                 return;
             }
 
-            // Another host is already connected
             if (hostConnected) {
-                console.log(
-                    "HOST CONNECTION REJECTED - HOST ALREADY CONNECTED"
-                );
-
+                console.log("HOST CONNECTION REJECTED - HOST ALREADY CONNECTED");
                 socket.emit("hostTaken");
-
                 return;
             }
 
-            // New host connection
             hostConnected = true;
             hostSocketId = socket.id;
-
             socket.isHost = true;
             socket.data.joined = true;
 
@@ -680,11 +624,9 @@ io.on("connection", (socket) => {
             console.log("Socket:", socket.id);
             console.log("================================");
 
-            // Give the browser its reconnect token.
             socket.emit("hostReconnectToken", HOST_RECONNECT_TOKEN);
 
             sendHostState(socket);
-
             io.emit("hostStatus", true);
 
             return;
@@ -739,9 +681,14 @@ io.on("connection", (socket) => {
             socket.emit("joinSuccess");
             socket.emit("gameStateSync", {
                 state: game.state,
+                round: game.round,
                 players: game.players,
-                board: game.board,
-                lockedCharacters: Array.from(lockedCharacters)
+                board: convertBoardForUnity(game.board),
+                lockedCharacters: Array.from(lockedCharacters),
+                currentClueId: game.currentClueId,
+                currentClueValue: game.currentClueValue,
+                currentClueIsDailyDouble: game.currentClueIsDailyDouble,
+                hostScreen: game.hostScreen || "hostJoinPg"
             });
 
             broadcastToUnity({
@@ -1067,11 +1014,22 @@ io.on("connection", (socket) => {
                         currentBuzzPlayer.score
                     );
 
-                    io.emit("showScoreScreen",{
-                        playerId:currentBuzzPlayer.playerId,
-                        character:currentBuzzPlayer.character,
-                        score:currentBuzzPlayer.score,
-                        earned:wager
+                    io.emit("showScoreScreen", {
+                        players: getScorePlayers()
+                        /*
+                        players: game.players.map(player => {
+                            const character = characters.find(
+                                c => c.name === player.character
+                            );
+
+                            return {
+                                playerId: player.playerId,
+                                character: player.character,
+                                score: player.score || 0,
+                                animation: character?.animations?.idle || null
+                            };
+                        })
+                        */
                     });
 
                     broadcastToUnity({
@@ -1160,14 +1118,6 @@ io.on("connection", (socket) => {
 
                 break;
 
-            case "startRound2":
-                console.log("HOST ACTION: startRound2");
-
-                // The actual round transition is handled
-                // above in the hostAction if/else chain.
-
-                break;
-
             case "roundComplete":
                 console.log("ROUND", game.round, "COMPLETE");
                 game.state = "roundComplete";
@@ -1237,32 +1187,38 @@ io.on("connection", (socket) => {
 
                 const wager=Math.max(0,parseInt(data.payload?.wager)||0);
 
-                if(!currentBuzzPlayer){
+                if(!currentDailyDoublePlayer){
                     console.warn("No Daily Double player selected.");
                     return;
                 }
 
-                const maxWager=Math.max(0,currentBuzzPlayer.score);
+                const maxWager=Math.max(
+                    game.currentClueValue || 0,
+                    currentDailyDoublePlayer.score || 0
+                );
 
-                currentBuzzPlayer.dailyDoubleWager=Math.min(wager,maxWager);
+                currentDailyDoubleWager=Math.min(wager,maxWager);
+                currentDailyDoublePlayer.dailyDoubleWager=currentDailyDoubleWager;
+                currentDailyDoubleWagerSubmitted=true;
+                currentBuzzPlayer=currentDailyDoublePlayer;
 
                 console.log(
                     "DAILY DOUBLE WAGER:",
-                    currentBuzzPlayer.name,
-                    currentBuzzPlayer.dailyDoubleWager
+                    currentDailyDoublePlayer.name,
+                    currentDailyDoubleWager
                 );
 
                 io.emit("dailyDoubleWager",{
-                    playerId:currentBuzzPlayer.playerId,
-                    playerName:currentBuzzPlayer.name,
-                    wager:currentBuzzPlayer.dailyDoubleWager
+                    playerId:currentDailyDoublePlayer.playerId,
+                    playerName:currentDailyDoublePlayer.name,
+                    wager:currentDailyDoubleWager
                 });
 
                 broadcastToUnity({
                     type:"dailyDoubleWager",
-                    playerId:currentBuzzPlayer.playerId,
-                    playerName:currentBuzzPlayer.name,
-                    wager:currentBuzzPlayer.dailyDoubleWager
+                    playerId:currentDailyDoublePlayer.playerId,
+                    playerName:currentDailyDoublePlayer.name,
+                    wager:currentDailyDoubleWager
                 });
 
                 break;
@@ -1307,6 +1263,10 @@ io.on("connection", (socket) => {
                     score:currentDailyDoublePlayer.score
                 });
 
+                currentDailyDoubleWager=0;
+                currentDailyDoublePlayer=null;
+                currentDailyDoubleWagerSubmitted=false;
+
                 break;
             }
 
@@ -1348,6 +1308,10 @@ io.on("connection", (socket) => {
                     wager,
                     score:currentDailyDoublePlayer.score
                 });
+
+                currentDailyDoubleWager=0;
+                currentDailyDoublePlayer=null;
+                currentDailyDoubleWagerSubmitted=false;
 
                 break;
             }
@@ -1408,19 +1372,25 @@ io.on("connection", (socket) => {
         // HOST DISCONNECTED
         if (socket.isHost) {
             console.log("Host temporarily disconnected.");
-
             socket.isHost = false;
+
+            if (hostDisconnectTimer) {
+                clearTimeout(hostDisconnectTimer);
+                hostDisconnectTimer = null;
+            }
+
             hostDisconnectTimer = setTimeout(() => {
                 if (hostSocketId === socket.id) {
                     hostConnected = false;
                     hostSocketId = null;
-
                     io.emit("hostStatus", false);
 
-                    console.log(
-                        "Host reconnect window expired."
-                    );
+                    console.log("================================");
+                    console.log("HOST RECONNECT WINDOW EXPIRED");
+                    console.log("Host is now disconnected.");
+                    console.log("================================");
                 }
+
                 hostDisconnectTimer = null;
             }, HOST_RECONNECT_WINDOW);
         }
@@ -1452,6 +1422,11 @@ io.on("connection", (socket) => {
     socket.on("leavePlayer", ({ playerId }) => {
         const player = game.players.find(p => p.playerId === playerId);
         if (!player) return;
+
+        if (player.socketId !== socket.id) {
+            console.warn("Unauthorized leavePlayer attempt:", socket.id, playerId);
+            return;
+        }
         console.log(player.name + " left character selection");
         lockedCharacters.delete(player.characterKey);
 
