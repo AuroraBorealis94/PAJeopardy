@@ -1098,15 +1098,25 @@ io.on("connection", (socket) => {
             // CONTINUE
             case "continueClue":
                 console.log("HOST ACTION: continueClue");
-                game.currentClueId=null;
-                game.currentClueValue=0;
-                game.currentClueIsDailyDouble=false;
-                buzzAccepted=false;
-                currentBuzzPlayer=null;
-                game.players.forEach(player=>{
-                    io.to(player.socketId).emit("showClueHolding");
+
+                game.currentClueId = null;
+                game.currentClueValue = 0;
+                game.currentClueIsDailyDouble = false;
+
+                buzzAccepted = false;
+                currentBuzzPlayer = null;
+
+                game.players.forEach(player => {
+                    io.to(player.socketId).emit("showScoreScreen", {
+                        players: getScorePlayers()
+                    });
                 });
-                broadcastToUnity({type:"showClueHolding"});
+
+                broadcastToUnity({
+                    type: "showScoreScreen",
+                    players: getScorePlayers()
+                });
+
                 break;
 
             // REVEAL ANSWER
@@ -1154,42 +1164,45 @@ io.on("connection", (socket) => {
                 break;
 
             // DAILY DOUBLE SELECT PLAYER
-            case "dailyDoubleSelectPlayer":{
+            case "dailyDoubleSelectPlayer": {
                 console.log("HOST ACTION: dailyDoubleSelectPlayer");
 
-                if(!game.currentClueIsDailyDouble){
+                if (!game.currentClueIsDailyDouble) {
                     console.warn("Player selection attempted on non-Daily Double.");
                     return;
                 }
 
-                const playerId=data.playerId;
-                const player=game.players.find(p=>p.playerId===playerId);
+                const playerId = data.playerId;
+                const player = game.players.find(p => p.playerId === playerId);
 
-                if(!player){
-                    console.warn("Daily Double player not found:",playerId);
+                if (!player) {
+                    console.warn("Daily Double player not found:", playerId);
                     return;
                 }
 
-                currentDailyDoublePlayer=player;
-                currentBuzzPlayer=player;
-                currentDailyDoubleWager=0;
-                currentDailyDoubleWagerSubmitted=false;
+                buzzAccepted = false;
+                currentBuzzPlayer = player;
 
-                console.log("DAILY DOUBLE PLAYER:",player.name);
+                currentDailyDoublePlayer = player;
+                currentDailyDoubleWager = 0;
+                currentDailyDoubleWagerSubmitted = false;
 
-                io.to(player.socketId).emit("dailyDoubleAnswering",{
-                    playerId:player.playerId,
-                    playerName:player.name,
-                    character:player.character,
-                    score:player.score
+                console.log("DAILY DOUBLE PLAYER:", player.name);
+
+                io.to(player.socketId).emit("dailyDoubleAnswering", {
+                    playerId: player.playerId,
+                    playerName: player.name,
+                    character: player.character,
+                    score: player.score || 0,
+                    clueValue: game.currentClueValue
                 });
 
-                game.players.forEach(otherPlayer=>{
-                    if(otherPlayer.playerId===player.playerId) return;
+                game.players.forEach(otherPlayer => {
+                    if (otherPlayer.playerId === player.playerId) return;
 
-                    io.to(otherPlayer.socketId).emit("dailyDoubleWaiting",{
-                        playerId:player.playerId,
-                        playerName:player.name
+                    io.to(otherPlayer.socketId).emit("dailyDoubleWaiting", {
+                        playerId: player.playerId,
+                        playerName: player.name
                     });
                 });
 
@@ -1363,42 +1376,42 @@ io.on("connection", (socket) => {
                 break;
             }
 
-            case "showRound2Board":
-                console.log("HOST ACTION: showRound2Board");
+        case "showRound2Board":
+            console.log("HOST ACTION: showRound2Board");
 
-                game.state = "playing";
-                game.round = 2;
-                game.hostScreen = "hostBoard";
+            game.state = "playing";
+            game.round = 2;
+            game.hostScreen = "hostBoard";
 
-                game.currentClueId = null;
-                game.currentClueValue = 0;
-                game.currentClueIsDailyDouble = false;
+            game.currentClueId = null;
+            game.currentClueValue = 0;
+            game.currentClueIsDailyDouble = false;
 
-                buzzAccepted = false;
-                currentBuzzPlayer = null;
+            buzzAccepted = false;
+            currentBuzzPlayer = null;
 
-                currentDailyDoubleWager = 0;
-                currentDailyDoublePlayer = null;
-                currentDailyDoubleWagerSubmitted = false;
+            currentDailyDoubleWager = 0;
+            currentDailyDoublePlayer = null;
+            currentDailyDoubleWagerSubmitted = false;
 
-                // UNITY
-                broadcastToUnity({
-                    type: "showRound2BoardIntro",
-                    round: 2,
-                    board: convertBoardForUnity(game.board)
-                });
+            const round2BoardData = {
+                round: 2,
+                board: convertBoardForUnity(game.board)
+            };
 
-                // HOST
-                io.emit("showRound2Board", {
-                    round: 2
-                });
+            console.log("ROUND 2 NEW BOARD:", round2BoardData);
 
-                // PLAYERS
-                // Do not change player screens here.
+            broadcastToUnity({
+                type: "showRound2BoardIntro",
+                ...round2BoardData
+            });
 
-                console.log("ROUND 2 BOARD INTRO SENT");
+            io.emit("showRound2Board", round2BoardData);
+            io.emit("boardData", round2BoardData);
 
-                break;
+            console.log("ROUND 2 BOARD SENT TO HOST AND PLAYERS");
+
+            break;
 
             // UNKNOWN HOST ACTION
             default:

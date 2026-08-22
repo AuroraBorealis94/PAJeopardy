@@ -583,6 +583,14 @@
         #round2Btn {
             flex-shrink: 0;
         }
+
+        #hostScoreReview {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            width: 100%;
+        }
     /* #endregion */
 
     /* #region Clue Overlay */
@@ -2310,7 +2318,7 @@
             banner.classList.remove("hidden");
         }
     });
-
+    /*
     socket.on("dailyDoubleAnswering", data => {
 
         console.log(
@@ -2394,51 +2402,93 @@
             submitBtn.disabled = false;
         }
     });
+    */
 
-    socket.on("dailyDoubleWaiting", data => {
-        if (isHost) {
+    socket.on("dailyDoubleAnswering", data => {
+        console.log("================================");
+        console.log("DAILY DOUBLE ANSWERING");
+        console.log("DATA:", data);
+        console.log("================================");
+
+        if (isHost) return;
+
+        const myPlayerId = localStorage.getItem("playerId");
+
+        if (data.playerId !== myPlayerId) {
+            console.warn("DAILY DOUBLE PLAYER ID DOES NOT MATCH THIS PLAYER.");
             return;
         }
 
-        const myPlayerId =
-            localStorage.getItem("playerId");
+        canBuzz = false;
 
-        // Selected player should NOT get waiting screen
+        const lobby = document.getElementById("lobbyUI");
+        if (lobby) {
+            lobby.style.display = "none";
+        }
+
+        hideAllPlayerScreens();
+        showPlayerScreen("dailyDoubleWagerScreen");
+
+        const nameElement = document.getElementById("dailyDoublePlayerName");
+        if (nameElement) {
+            nameElement.textContent = "Team " + data.playerName;
+        }
+
+        const scoreElement = document.getElementById("dailyDoublePlayerScore");
+        if (scoreElement) {
+            scoreElement.textContent = "$" + (data.score || 0);
+        }
+
+        const maximum = Math.max(data.score || 0, data.clueValue || 0);
+
+        const wagerInput = document.getElementById("dailyDoubleWagerInput");
+        if (wagerInput) {
+            wagerInput.value = "";
+            wagerInput.max = maximum;
+        }
+
+        const maxWager = document.getElementById("dailyDoubleMaxWager");
+        if (maxWager) {
+            maxWager.textContent = "Maximum wager: $" + maximum;
+        }
+
+        console.log("DAILY DOUBLE WAGER SCREEN SHOWN");
+    });
+
+    socket.on("dailyDoubleWaiting", data => {
+        if (isHost) return;
+
+        const myPlayerId = localStorage.getItem("playerId");
+
         if (data.playerId === myPlayerId) {
             return;
         }
 
         canBuzz = false;
 
-        const answeringTitle =
-            document.getElementById(
-                "answeringTitle"
-            );
+        const lobby = document.getElementById("lobbyUI");
+        if (lobby) {
+            lobby.style.display = "none";
+        }
 
-        const answeringName =
-            document.getElementById(
-                "answeringName"
-            );
+        hideAllPlayerScreens();
+
+        const answeringTitle = document.getElementById("answeringTitle");
+        const answeringName = document.getElementById("answeringName");
 
         if (answeringTitle) {
-            answeringTitle.textContent =
-                "IS ANSWERING";
+            answeringTitle.textContent = "IS ANSWERING";
         }
 
         if (answeringName) {
-            answeringName.textContent =
-                "Team " + data.playerName;
+            answeringName.textContent = "Team " + data.playerName;
         }
 
-        showPlayerScreen(
-            "answeringPage"
-        );
+        showPlayerScreen("answeringPage");
     });
 
     socket.on("dailyDoubleWagerSubmitted", data => {
-        if (!isHost) {
-            return;
-        }
+        if (!isHost) return;
 
         currentDailyDoubleWager = {
             playerId: data.playerId,
@@ -2446,23 +2496,12 @@
             wager: Number(data.wager) || 0
         };
 
-        console.log(
-            "DAILY DOUBLE WAGER SUBMITTED:",
-            currentDailyDoubleWager
-        );
+        console.log("DAILY DOUBLE WAGER SUBMITTED:", currentDailyDoubleWager);
 
-        // Hide player selection buttons
         hideDailyDoublePlayerButtons();
 
-        const judgement =
-            document.getElementById(
-                "hostJudgementArea"
-            );
-
-        const playerName =
-            document.getElementById(
-                "hostBuzzPlayerName"
-            );
+        const judgement = document.getElementById("hostJudgementArea");
+        const playerName = document.getElementById("hostBuzzPlayerName");
 
         if (playerName) {
             playerName.textContent =
@@ -2470,9 +2509,7 @@
         }
 
         if (judgement) {
-
             judgement.classList.add("show");
-
             judgement.hidden = false;
             judgement.style.display = "flex";
             judgement.style.visibility = "visible";
@@ -2481,7 +2518,6 @@
             judgement.style.zIndex = "10000";
         }
     });
-
     // ROUNDS
     socket.on("roundComplete", data => {
         console.log("ROUND COMPLETE:", data);
