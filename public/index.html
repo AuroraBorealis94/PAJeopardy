@@ -326,10 +326,11 @@
     /* #endregion */
 
     /* #region Waiting Screen */
-
         #waitingScreen {
             position: fixed;
             inset: 0;
+            width: 100vw;
+            height: 100vh;
 
             background-image: url('/backgrounds/WHostBG.jpg');
             background-size: cover;
@@ -343,42 +344,12 @@
             justify-content: center;
             align-items: center;
 
-            opacity: 0;
-            pointer-events: none;
-
-            transition: opacity 0.5s ease;
-
             z-index: 5000;
-        }
-
-        #waitingScreen.show {
-            opacity: 1;
-            pointer-events: auto;
-        }
-
-        #waitingCharacter {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
         }
 
         #waitingCharacter img {
             width: 140px;
-            height: auto;
-
             margin-top: 20px;
-
-            transform: scale(0.9);
-            opacity: 0;
-
-            transition:
-                transform 0.4s ease,
-                opacity 0.4s ease;
-        }
-
-        #waitingScreen.show #waitingCharacter img {
-            transform: scale(1);
-            opacity: 1;
         }
 
         #waitingName {
@@ -2972,6 +2943,7 @@
 
         function showPlayerScreen(id) {
             hideAllPlayerScreens();
+
             const screen = document.getElementById(id);
 
             if (!screen) {
@@ -2980,9 +2952,6 @@
             }
 
             screen.classList.remove("hidden");
-            requestAnimationFrame(() => {
-                screen.classList.add("show");
-            });
         }
 
         function hidePlayerScreen(id) {
@@ -2997,44 +2966,25 @@
 
         // WAITING SCREEN
         function showWaitingScreen() {
-            console.log("SHOW WAITING SCREEN");
-            console.log("STATE CHARACTER:", state.character);
-
             const lobby = document.getElementById("lobbyUI");
 
             if (lobby) {
                 lobby.style.display = "none";
             }
 
-            const waitingScreen = document.getElementById("waitingScreen");
             const waitingImage = document.getElementById("waitingImage");
+
+            if (waitingImage && state.character?.front) {
+                waitingImage.src = state.character.front;
+            }
+
             const waitingName = document.getElementById("waitingName");
 
-            // Make sure the screen itself is actually visible
-            if (waitingScreen) {
-                waitingScreen.classList.remove("hidden");
-                waitingScreen.classList.add("show");
-            }
-
-            // Set character image
-            if (waitingImage && state.character) {
-                console.log("WAITING CHARACTER FRONT:", state.character.front);
-
-                if (state.character.front) {
-                    waitingImage.src = state.character.front;
-                    waitingImage.style.display = "block";
-                } else {
-                    console.error(
-                        "Character exists, but it has no 'front' image:",
-                        state.character
-                    );
-                }
-            }
-
-            // Set player/team name
             if (waitingName) {
                 waitingName.textContent = state.name || "";
             }
+
+            showPlayerScreen("waitingScreen");
         }
     
         function changeCharacter() {
