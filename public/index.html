@@ -1462,24 +1462,31 @@
         console.log("SYNC STATE:", data);
 
         const storedIsHost = localStorage.getItem("isHost") === "true";
-        const hostPending = requestingHost || storedIsHost || isHost;
+        const hostPending = requestingHost || storedIsHost || isHost || socket.isHost;
 
         console.log("GAME STATE HOST CHECK:", {
             isHost,
             storedIsHost,
             requestingHost,
             hostPending,
+            socketIsHost: socket.isHost,
             hostSession: localStorage.getItem("hostSession"),
             currentSession
         });
 
         // HOST
         if (hostPending) {
-            if (storedIsHost) {
-                isHost = true;
-            }
+            isHost = true;
 
             console.log("HOST STATE SYNC RECEIVED:", data.state);
+
+            if (!localStorage.getItem("isHost")) {
+                localStorage.setItem("isHost", "true");
+            }
+
+            if (currentSession && !localStorage.getItem("hostSession")) {
+                localStorage.setItem("hostSession", currentSession);
+            }
 
             if (data.state === "lobby") {
                 console.log("HOST RETURNING TO HOST JOIN PAGE");
@@ -1513,11 +1520,22 @@
             return;
         }
 
-        // PLAYER
-        if (isHost || localStorage.getItem("isHost") === "true") {
-            console.log("GAME STATE SYNC: HOST STATE PRESERVED.");
+        // SAFETY CHECK: NEVER LET A SERVER-AUTHENTICATED HOST BECOME A PLAYER
+        if (socket.isHost) {
+            console.warn("GAME STATE SYNC: SOCKET IS HOST. PRESERVING HOST STATE.");
+
+            isHost = true;
+            localStorage.setItem("isHost", "true");
+
+            if (currentSession) {
+                localStorage.setItem("hostSession", currentSession);
+            }
+
             return;
         }
+
+        // PLAYER
+        isHost = false;
 
         lockedSet = new Set(
             (data.lockedCharacters || []).map(c => c.toLowerCase())
@@ -1567,9 +1585,12 @@
             return;
         }
 
-        if(data.state==="midCutscene"){
-            const lobby=document.getElementById("lobbyUI");
-            if(lobby) lobby.style.display="none";
+        if (data.state === "midCutscene") {
+            const lobby = document.getElementById("lobbyUI");
+
+            if (lobby) {
+                lobby.style.display = "none";
+            }
 
             showPlayerScreen("scorePage");
             return;
