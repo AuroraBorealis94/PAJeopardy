@@ -959,19 +959,14 @@
 
         #scoreCharacter {
             position: absolute;
-
-            width: 401px;
-            height: 870px;
-
             left: 50%;
             top: 50%;
-
-            transform: translate(-50%, -50%) scale(calc(100vh / 870));
-            transform-origin: center center;
-
+            width: 100vw;
+            height: calc(100vw * 870 / 401);
+            transform: translate(-50%, -50%);
             background-repeat: no-repeat;
             background-position: 0 0;
-
+            background-size: 600% 100%;
             image-rendering: auto;
             z-index: 2;
         }
@@ -984,15 +979,21 @@
         }
 
         @keyframes scoreCharacterIdle {
-
             from {
-                background-position: 0 0;
+                background-position: 0% 0;
             }
 
             to {
-                background-position: -2406px 0;
+                background-position: 120% 0;
             }
+        }
 
+        /* If the phone is narrower/taller than the sprite frame, size from height instead */
+        @media (max-aspect-ratio: 401/870) {
+            #scoreCharacter {
+                width: calc(100vh * 401 / 870);
+                height: 100vh;
+            }
         }
 
         #scoreBackground {
@@ -3852,28 +3853,17 @@
                 return;
             }
 
-            if (!animationData || !animationData.src) {
+            if (!animationData?.src) {
                 console.warn("No score character animation data:", animationData);
                 return;
             }
 
-            console.log("SETTING SCORE CHARACTER:", animationData);
-
-            // Stop current animation before changing spritesheet
             character.classList.remove("animate");
-
-            // Set this player's spritesheet
             character.style.backgroundImage = `url("${animationData.src}")`;
-
-            // Reset to first frame
             character.style.backgroundPosition = "0 0";
-
-            // Use character-specific animation speed from server
             character.style.animationDuration = animationData.speed || "1.2s";
 
-            // Force browser to restart the animation
             void character.offsetWidth;
-
             character.classList.add("animate");
         }
 
