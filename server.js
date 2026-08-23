@@ -1475,9 +1475,9 @@ io.on("connection", (socket) => {
                 io.emit("boardData", round2BoardData);
 
                 console.log("ROUND 2 BOARD SENT");
-
                 break;
             }
+        }
     });
 
     // BUZZER SCREEN
