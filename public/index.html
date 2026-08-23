@@ -940,11 +940,19 @@
         #scorePage {
             position: fixed;
             inset: 0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            text-align: center;
+            width: 100vw;
+            height: 100vh;
             overflow: hidden;
+            text-align: center;
+        }
+
+        #scoreBackground {
+            position: absolute;
+            inset: 0;
+            background-position: center;
+            background-size: cover;
+            background-repeat: no-repeat;
+            z-index: 0;
         }
 
         #scoreCharacter {
@@ -986,23 +994,25 @@
             }
         }
 
-        #scoreBackground {
+        #scoreHud {
             position: absolute;
-            inset: 0;
-            background-position: center;
-            background-size: cover;
-            background-repeat: no-repeat;
-            z-index: 0;
+            left: 50%;
+            top: 52%;
+            transform: translate(-50%, -50%);
+            z-index: 10;
+            width: min(75vw, 300px);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            pointer-events: none;
         }
 
         #scoreValue {
-            position: absolute;
-            left: 50%;
-            top: 50%;
-            transform: translate(-50%, -50%);
-            z-index: 5;
-            font-size: clamp(28px, 7vw, 52px);
+            position: relative;
+            font-size: clamp(26px, 6vw, 42px);
             font-weight: bold;
+            line-height: 1;
             white-space: nowrap;
             text-align: center;
             text-shadow:
@@ -1014,12 +1024,12 @@
 
         #scoreChange {
             position: absolute;
-            left: calc(50% + 60px);
-            top: calc(50% - 52px);
-            transform: translate(-50%, -50%);
-            z-index: 6;
-            font-size: clamp(18px, 4.5vw, 34px);
+            left: calc(50% + 58px);
+            bottom: calc(100% + 5px);
+            transform: translateX(-50%);
+            font-size: clamp(16px, 4vw, 26px);
             font-weight: bold;
+            line-height: 1;
             white-space: nowrap;
             opacity: 1;
             transition: opacity 0.4s ease, transform 0.4s ease;
@@ -1032,19 +1042,15 @@
 
         #scoreChange.hidden {
             opacity: 0;
-            transform: translate(-50%, calc(-50% - 15px));
+            transform: translateX(-50%) translateY(-15px);
         }
 
         #scorePlayerName {
-            position: absolute;
-            left: 50%;
-            top: calc(50% + 58px);
-            transform: translateX(-50%);
-            z-index: 5;
-            width: min(68vw, 260px);
-            padding: 4px 8px;
+            width: min(65vw, 220px);
+            margin-top: 12px;
+            padding: 2px 6px;
             box-sizing: border-box;
-            font-size: clamp(16px, 4vw, 28px);
+            font-size: clamp(16px, 4vw, 26px);
             font-weight: bold;
             line-height: 1.05;
             text-align: center;
@@ -1334,9 +1340,12 @@
 <div id="scorePage" class="hidden">
     <div id="scoreBackground"></div>
     <div id="scoreCharacter"></div>
-    <div id="scoreChange"></div>
-    <div id="scoreValue">$0</div>
-    <div id="scorePlayerName"></div>
+
+    <div id="scoreHud">
+        <div id="scoreChange"></div>
+        <div id="scoreValue">$0</div>
+        <div id="scorePlayerName"></div>
+    </div>
 </div>
 
 <script src="/socket.io/socket.io.js"></script>
