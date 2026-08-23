@@ -355,42 +355,35 @@ function generateBoard(roundNumber) {
         selectedCategories.map(c => c.category)
     );
 
-    // Mark these categories as permanently used
-    selectedCategories.forEach(categoryData => {
-        usedCategoryNames.add(categoryData.category);
-    });
-
-    game.board = {};
-    game.dailyDoubleIds = new Set();
+    const sourceValues = ["200", "400", "600", "800", "1000"];
+    const displayValues = roundNumber === 1 ? ["200", "400", "600", "800", "1000"] : ["400", "800", "1200", "1600", "2000"];
 
     selectedCategories.forEach(categoryData => {
         const categoryName = categoryData.category;
         game.board[categoryName] = {};
 
-        for (const value in categoryData.clues) {
-            const options = categoryData.clues[value];
+        sourceValues.forEach((sourceValue, index) => {
+            const displayValue = displayValues[index];
+            const options = categoryData.clues[sourceValue];
 
-            const available = options.filter(
-                clue => !game.usedClueIds.has(clue.id)
-            );
-
-            if (available.length === 0) {
-                console.warn(
-                    "NO UNUSED CLUES LEFT:",
-                    categoryName,
-                    value
-                );
-                continue;
+            if (!options || options.length === 0) {
+                console.warn("NO CLUES FOUND:", categoryName, "SOURCE VALUE:", sourceValue);
+                return;
             }
 
-            const chosen =
-                available[
-                    Math.floor(Math.random() * available.length)
-                ];
+            const available = options.filter(clue => !game.usedClueIds.has(clue.id));
 
-            game.board[categoryName][value] = {
+            if (available.length === 0) {
+                console.warn("NO UNUSED CLUES:", categoryName, "SOURCE VALUE:", sourceValue);
+                return;
+            }
+
+            const chosen = available[Math.floor(Math.random() * available.length)];
+
+            game.board[categoryName][displayValue] = {
                 id: chosen.id,
-                value: value,
+                value: displayValue,
+                sourceValue: sourceValue,
                 category: categoryName,
                 clue: chosen.clue,
                 clueImage: chosen.clueImage || "",
@@ -399,7 +392,9 @@ function generateBoard(roundNumber) {
                 used: false,
                 dailyDouble: false
             };
-        }
+
+            console.log("BOARD SLOT:", categoryName, "JSON:", sourceValue, "DISPLAY:", displayValue, "CLUE:", chosen.id);
+        });
     });
 
     // DAILY DOUBLES
