@@ -34,6 +34,7 @@ console.log("================================");
 const disconnectTimers = new Map();
 //const round1Categories = new Set();
 const lockedCharacters = new Set();
+const usedCategoryNames = new Set();
 
 let buzzAccepted = false;
 let currentBuzzPlayer = null;
@@ -317,13 +318,47 @@ function generateBoard(roundNumber) {
 
     const allCategories = loadCategories();
 
-    // Randomize category order
-    const shuffled = [...allCategories].sort(
+    // Only categories that have NOT been used in a previous round
+    const availableCategories = allCategories.filter(categoryData => {
+        return !usedCategoryNames.has(categoryData.category);
+    });
+
+    console.log(
+        "AVAILABLE CATEGORIES FOR ROUND",
+        roundNumber,
+        ":",
+        availableCategories.map(c => c.category)
+    );
+
+    if (availableCategories.length < 6) {
+        console.error(
+            "NOT ENOUGH UNUSED CATEGORIES FOR ROUND",
+            roundNumber,
+            "Available:",
+            availableCategories.length
+        );
+        return;
+    }
+
+    // Randomize remaining categories
+    const shuffled = [...availableCategories].sort(
         () => Math.random() - 0.5
     );
 
-    // Pick 6 categories
+    // Pick 6 completely unused categories
     const selectedCategories = shuffled.slice(0, 6);
+
+    console.log(
+        "SELECTED CATEGORIES FOR ROUND",
+        roundNumber,
+        ":",
+        selectedCategories.map(c => c.category)
+    );
+
+    // Mark these categories as permanently used
+    selectedCategories.forEach(categoryData => {
+        usedCategoryNames.add(categoryData.category);
+    });
 
     game.board = {};
     game.dailyDoubleIds = new Set();
@@ -335,12 +370,16 @@ function generateBoard(roundNumber) {
         for (const value in categoryData.clues) {
             const options = categoryData.clues[value];
 
-            // Only exclude clues that were actually selected
-            // in a previous round.
-            const available = options.filter(clue => !game.usedClueIds.has(clue.id));
+            const available = options.filter(
+                clue => !game.usedClueIds.has(clue.id)
+            );
 
             if (available.length === 0) {
-                console.log("No unused clues left for:", categoryName, value);
+                console.warn(
+                    "NO UNUSED CLUES LEFT:",
+                    categoryName,
+                    value
+                );
                 continue;
             }
 
@@ -376,11 +415,15 @@ function generateBoard(roundNumber) {
     // Round 2 = 2 Daily Doubles
     const dailyDoubleCount = roundNumber === 1 ? 1 : 2;
 
-    // Shuffle possible Daily Double locations
     allTiles.sort(() => Math.random() - 0.5);
 
-    for (let i = 0; i < Math.min(dailyDoubleCount, allTiles.length); i++) {
+    for (
+        let i = 0;
+        i < Math.min(dailyDoubleCount, allTiles.length);
+        i++
+    ) {
         const clue = allTiles[i];
+
         clue.dailyDouble = true;
         game.dailyDoubleIds.add(clue.id);
 
@@ -394,13 +437,22 @@ function generateBoard(roundNumber) {
 
     console.log("================================");
     console.log("ROUND", roundNumber, "BOARD GENERATED");
+    console.log("Categories:", Object.keys(game.board));
     console.log(
         "Daily Doubles:",
         game.dailyDoubleIds.size
     );
-    console.log("================================");
 
-    console.log(game.board);
+    for (const categoryName in game.board) {
+        console.log(
+            "CATEGORY:",
+            categoryName,
+            "VALUES:",
+            Object.keys(game.board[categoryName])
+        );
+    }
+
+    console.log("================================");
 }
 
 function resetGameState() {
@@ -410,6 +462,7 @@ function resetGameState() {
     game.board = {};
     game.usedClueIds.clear();
     game.dailyDoubleIds.clear();
+    usedCategoryNames.clear();
     game.currentClueId = null;
     game.currentClueValue = 0;
     game.currentClueIsDailyDouble = false;
@@ -1376,48 +1429,55 @@ io.on("connection", (socket) => {
                 break;
             }
 
-        case "showRound2Board":
-            console.log("HOST ACTION: showRound2Board");
+            case "showRound2Board": {
+                console.log("HOST ACTION: showRound2Board");
 
-            game.state = "playing";
-            game.round = 2;
-            game.hostScreen = "hostBoard";
+                game.state = "playing";
+                game.round = 2;
+                game.hostScreen = "hostBoard";
 
-            game.currentClueId = null;
-            game.currentClueValue = 0;
-            game.currentClueIsDailyDouble = false;
+                game.currentClueId = null;
+                game.currentClueValue = 0;
+                game.currentClueIsDailyDouble = false;
 
-            buzzAccepted = false;
-            currentBuzzPlayer = null;
+                buzzAccepted = false;
+                currentBuzzPlayer = null;
 
-            currentDailyDoubleWager = 0;
-            currentDailyDoublePlayer = null;
-            currentDailyDoubleWagerSubmitted = false;
+                currentDailyDoubleWager = 0;
+                currentDailyDoublePlayer = null;
+                currentDailyDoubleWagerSubmitted = false;
 
-            const round2BoardData = {
-                round: 2,
-                board: convertBoardForUnity(game.board)
-            };
+                const round2BoardData = {
+                    round: 2,
+                    board: convertBoardForUnity(game.board)
+                };
 
-            console.log("ROUND 2 NEW BOARD:", round2BoardData);
+                console.log("================================");
+                console.log("ROUND 2 BOARD DATA");
+                console.log("CATEGORIES:", Object.keys(game.board));
 
-            broadcastToUnity({
-                type: "showRound2BoardIntro",
-                ...round2BoardData
-            });
+                for (const categoryName in game.board) {
+                    console.log(
+                        categoryName,
+                        "VALUES:",
+                        Object.keys(game.board[categoryName])
+                    );
+                }
 
-            io.emit("showRound2Board", round2BoardData);
-            io.emit("boardData", round2BoardData);
+                console.log("================================");
 
-            console.log("ROUND 2 BOARD SENT TO HOST AND PLAYERS");
+                broadcastToUnity({
+                    type: "showRound2BoardIntro",
+                    ...round2BoardData
+                });
 
-            break;
+                io.emit("showRound2Board", round2BoardData);
+                io.emit("boardData", round2BoardData);
 
-            // UNKNOWN HOST ACTION
-            default:
-                console.warn("Unknown hostAction type:", data.type);
+                console.log("ROUND 2 BOARD SENT");
+
                 break;
-        }
+            }
     });
 
     // BUZZER SCREEN
