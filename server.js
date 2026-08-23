@@ -1428,7 +1428,7 @@ io.on("connection", (socket) => {
 
                 break;
             }
-
+            
             case "showRound2Board": {
                 console.log("HOST ACTION: showRound2Board");
 
