@@ -959,16 +959,32 @@
 
         #scoreCharacter {
             position: absolute;
-            left: 50%;
-            top: 50%;
+
+            /* Size one animation frame */
             width: 100vw;
             height: calc(100vw * 870 / 401);
-            transform: translate(-50%, -50%);
+
+            /* Center horizontally, anchor to bottom */
+            left: 50%;
+            bottom: 0;
+            transform: translateX(-50%);
+            transform-origin: bottom center;
+
+            /* 6-frame spritesheet */
             background-repeat: no-repeat;
             background-position: 0 0;
             background-size: 600% 100%;
+
             image-rendering: auto;
             z-index: 2;
+        }
+
+        /* Tall/narrow phones: scale based on height instead */
+        @media (max-aspect-ratio: 401/870) {
+            #scoreCharacter {
+                width: calc(100vh * 401 / 870);
+                height: 100vh;
+            }
         }
 
         #scoreCharacter.animate {
@@ -985,14 +1001,6 @@
 
             to {
                 background-position: 120% 0;
-            }
-        }
-
-        /* If the phone is narrower/taller than the sprite frame, size from height instead */
-        @media (max-aspect-ratio: 401/870) {
-            #scoreCharacter {
-                width: calc(100vh * 401 / 870);
-                height: 100vh;
             }
         }
 
