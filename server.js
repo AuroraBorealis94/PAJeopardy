@@ -1177,6 +1177,29 @@ io.on("connection", (socket) => {
 
                 break;
 
+            // CLOSE CLUE
+            case "closeClue":
+                console.log("HOST ACTION: closeClue");
+
+                game.currentClueId = null;
+                game.currentClueValue = 0;
+                game.currentClueIsDailyDouble = false;
+                buzzAccepted = false;
+                currentBuzzPlayer = null;
+                currentDailyDoubleWager = 0;
+                currentDailyDoublePlayer = null;
+                currentDailyDoubleWagerSubmitted = false;
+
+                broadcastToUnity({ type: "closeClue" });
+
+                game.players.forEach(player => {
+                    io.to(player.socketId).emit("showScoreScreen", {
+                        players: getScorePlayers()
+                    });
+                });
+
+                break;
+
             // ENABLE / RESUME BUZZERS
             case "resumeBuzzing":
                 console.log("HOST ACTION: resumeBuzzing");

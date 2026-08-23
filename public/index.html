@@ -1362,6 +1362,13 @@
                 <button onclick="hostAnswerWrong()">NO</button>
             </div>
         </div>
+
+        <button
+            id="closeAnswerBtn"
+            onclick="hostCloseAnswer()"
+            style="display:none;">
+            CLOSE ANSWER
+        </button>
     </div>
 
     <div id="hostScoreReviewPg" class="hidden">
@@ -2889,6 +2896,10 @@
         const judgement = document.getElementById("hostJudgementArea");
         const enableBtn = document.getElementById("enableBuzzerBtn");
         const dailyDoubleBanner = document.getElementById("dailyDoubleBanner");
+
+        const continueBtn = document.getElementById("clueContinueBtn");
+        const closeAnswerBtn = document.getElementById("closeAnswerBtn");
+
         if (!clue || !clue.clueData) {
             console.error("Invalid clue passed to showHostClue");
             return;
@@ -2903,6 +2914,9 @@
         inner.classList.remove("flipped");
         judgement.classList.remove("show");
         buzzersEnabled = false;
+
+        if (continueBtn) continueBtn.style.display = "block";
+        if (closeAnswerBtn) closeAnswerBtn.style.display = "none";
 
         // DAILY DOUBLE
         if (clue.clueData.dailyDouble === true) {
@@ -2976,28 +2990,44 @@
     }
 
     function hostAnswerCorrect() {
-        // DAILY DOUBLE
         if (currentDailyDouble) {
-            socket.emit("hostAction", {
-                type: "dailyDoubleCorrect"
-            });
-            return;
+            socket.emit("hostAction", { type: "dailyDoubleCorrect" });
+        } else {
+            socket.emit("hostAction", { type: "answerCorrect" });
         }
 
-        socket.emit("hostAction", {
-            type: "answerCorrect"
-        });
-
-        closeHostClue();
+        socket.emit("hostAction", { type: "revealAnswer" });
+        showHostAnswerState();
     }
 
     //HOST CONTINUE
     function hostContinue() {
-        socket.emit("hostAction", {
-            type: "continueClue"
-        });
+        socket.emit("hostAction", { type: "revealAnswer" });
+        showHostAnswerState();
+    }
 
-        closeHostClue();
+    function showHostAnswerState() {
+        const inner = document.getElementById("hostClueInner");
+        const judgement = document.getElementById("hostJudgementArea");
+        const enableBtn = document.getElementById("enableBuzzerBtn");
+        const continueBtn = document.getElementById("clueContinueBtn");
+        const closeAnswerBtn = document.getElementById("closeAnswerBtn");
+        const dailyDoublePlayerArea = document.getElementById("dailyDoublePlayerArea");
+
+        if (inner) inner.classList.add("flipped");
+
+        if (judgement) {
+            judgement.classList.remove("show");
+            judgement.style.display = "none";
+            judgement.style.pointerEvents = "none";
+        }
+
+        if (enableBtn) enableBtn.style.display = "none";
+        if (continueBtn) continueBtn.style.display = "none";
+        if (dailyDoublePlayerArea) dailyDoublePlayerArea.classList.add("hidden");
+        if (closeAnswerBtn) closeAnswerBtn.style.display = "block";
+
+        hostAnswerShowing = true;
     }
 
     function hostAnswerWrong() {
@@ -3046,8 +3076,13 @@
         }
     }
 
-    function closeHostClue() {
+    function hostCloseAnswer() {
+        console.log("HOST CLOSE ANSWER");
+        socket.emit("hostAction", { type: "closeClue" });
+        closeHostClue();
+    }
 
+    function closeHostClue() {
         const enableBtn =
             document.getElementById("enableBuzzerBtn");
 
@@ -3065,6 +3100,9 @@
 
         const dailyDoublePlayerArea =
             document.getElementById("dailyDoublePlayerArea");
+
+        const continueBtn = document.getElementById("clueContinueBtn");
+        const closeAnswerBtn = document.getElementById("closeAnswerBtn");
 
         if (enableBtn) {
             enableBtn.style.display = "none";
@@ -3091,6 +3129,9 @@
         if (dailyDoublePlayerArea) {
             dailyDoublePlayerArea.classList.add("hidden");
         }
+
+        if (continueBtn) continueBtn.style.display = "block";
+        if (closeAnswerBtn) closeAnswerBtn.style.display = "none";
 
         currentBuzzPlayer = null;
         hostAnswerShowing = false;
