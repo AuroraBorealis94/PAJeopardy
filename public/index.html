@@ -1088,8 +1088,8 @@
 
         #scoreHud {
             position: absolute;
-            left: 47%;
-            top: 58%;
+            left: 37%;
+            top: 68%;
             transform: translate(-50%, -50%);
             z-index: 10;
             width: min(75vw, 300px);
@@ -2567,10 +2567,6 @@
     socket.on("roundStarted", data => {
         currentRound = data.round;
         console.log("ROUND STARTED:", currentRound);
-
-        //if (!isHost) {
-        //    showPlayerScreen("instructionsHoldingScreen");
-        //}
     });
 
     // ROUND 2 TRANSITION
