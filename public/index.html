@@ -964,16 +964,15 @@
             height: 870px;
 
             left: 50%;
-            bottom: 0;
+            top: 50%;
 
-            transform: translateX(-50%) scale(0.5);
-            transform-origin: bottom center;
+            transform: translate(-50%, -50%) scale(calc(100vh / 870));
+            transform-origin: center center;
 
             background-repeat: no-repeat;
             background-position: 0 0;
 
             image-rendering: auto;
-
             z-index: 2;
         }
 
@@ -2022,11 +2021,11 @@
 
     // SHOW BOARD INTRO
     socket.on("showBoardIntro", data => {
-        const storedHost = localStorage.getItem("isHost") === "true";
-        const hostNow = isHost || storedHost;
+        //const storedHost = localStorage.getItem("isHost") === "true";
+        //const hostNow = isHost || storedHost;
 
         console.log("SHOW BOARD INTRO RECEIVED:", data);
-
+        /*
         if (hostNow) {
             console.log("HOST RECEIVED showBoardIntro - IGNORING PLAYER SCREEN CHANGE");
             return;
@@ -2036,7 +2035,7 @@
         if (lobby) lobby.style.display = "none";
 
         setMyScoreCharacter();
-        showPlayerScreen("scorePage");
+        showPlayerScreen("scorePage");*/
     });
 
     // ANIMATION HOLDING SCREEN
@@ -3855,35 +3854,27 @@
 
             if (!animationData || !animationData.src) {
                 console.warn("No score character animation data:", animationData);
-
-                character.style.backgroundImage = "none";
-                character.classList.remove("animate");
-
                 return;
             }
 
             console.log("SETTING SCORE CHARACTER:", animationData);
 
-            // Reset animation
+            // Stop current animation before changing spritesheet
             character.classList.remove("animate");
 
-            // Set sprite sheet
-            character.style.backgroundImage =
-                `url("${animationData.src}")`;
+            // Set this player's spritesheet
+            character.style.backgroundImage = `url("${animationData.src}")`;
 
-            // Set dimensions from server data
-            character.style.width =
-                `${animationData.frameWidth}px`;
+            // Reset to first frame
+            character.style.backgroundPosition = "0 0";
 
-            character.style.height =
-                `${animationData.frameHeight}px`;
-
+            // Use character-specific animation speed from server
             character.style.animationDuration = animationData.speed || "1.2s";
 
-            // Restart animation on next frame
-            requestAnimationFrame(() => {
-                character.classList.add("animate");
-            });
+            // Force browser to restart the animation
+            void character.offsetWidth;
+
+            character.classList.add("animate");
         }
 
         function showDailyDoublePlayerButtons() {

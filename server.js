@@ -947,13 +947,12 @@ io.on("connection", (socket) => {
 
             case "showBoardIntro":
                 console.log("HOST ACTION: showBoardIntro");
-
                 game.hostScreen = "hostBoard";
 
-                console.log("SENDING showBoardIntro TO PLAYERS");
-
-                io.emit("showBoardIntro", {
-                    round: game.round
+                game.players.forEach(player => {
+                    io.to(player.socketId).emit("showScoreScreen", {
+                        players: getScorePlayers()
+                    });
                 });
 
                 broadcastToUnity({
