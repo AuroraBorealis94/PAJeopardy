@@ -639,7 +639,9 @@
             transform: scale(1);
             opacity: 1;
         }
+    /* #endregion */
 
+    /* #region Daily Double Screens */
         #dailyDoubleBanner {
             position: fixed;
             top: 15%;
@@ -658,6 +660,96 @@
             display: block;
         }
 
+        #dailyDoublePage,
+        #dailyDoubleWagerScreen,
+        #dailyDoubleSubmittedScreen {
+            position: fixed;
+            inset: 0;
+            width: 100vw;
+            height: 100vh;
+            box-sizing: border-box;
+            background-image: url('/backgrounds/WHostBG.jpg');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 26px;
+            padding: 30px;
+            text-align: center;
+            z-index: 6000;
+        }
+
+        .dailyDoubleText,
+        .dailyDoubleWagerTitle,
+        .dailyDoubleSubmittedTitle {
+            color: #ffd900;
+            font-size: clamp(42px, 11vw, 72px);
+            font-weight: bold;
+            line-height: 1;
+            text-shadow:
+                3px 3px 0 #000,
+                -3px -3px 0 #000,
+                3px -3px 0 #000,
+                -3px 3px 0 #000;
+        }
+
+        .dailyDoubleSubtext,
+        .dailyDoubleCurrentScore,
+        .dailyDoubleWagerPrompt,
+        #dailyDoubleMaxWager,
+        .dailyDoubleSubmittedText,
+        #dailyDoubleSubmittedAmount {
+            font-size: clamp(24px, 6vw, 38px);
+            line-height: 1.25;
+        }
+
+        #dailyDoublePlayerName {
+            width: min(80vw, 360px);
+            color: orange;
+            font-size: clamp(28px, 7vw, 44px);
+            font-weight: bold;
+            line-height: 1.1;
+            overflow-wrap: break-word;
+        }
+
+        #dailyDoublePlayerScore {
+            font-weight: bold;
+        }
+
+        #dailyDoubleWagerInput {
+            width: min(65vw, 280px);
+            box-sizing: border-box;
+            padding: 12px 16px;
+            font-family: 'Korinna';
+            font-size: clamp(24px, 6vw, 36px);
+            text-align: center;
+            border: 3px solid white;
+            border-radius: 10px;
+        }
+
+        #dailyDoubleWagerSubmit {
+            font-family: 'Korinna';
+            font-size: clamp(20px, 5vw, 30px);
+            text-transform: uppercase;
+            padding: 14px 28px;
+            background: linear-gradient(135deg, #ffcc00, #ff6600);
+            color: black;
+            border: 1px solid white;
+            border-radius: 12px;
+            box-shadow: 0 0 15px rgba(255, 140, 0, 0.6);
+            cursor: pointer;
+        }
+
+        #dailyDoubleSubmittedAmount {
+            color: orange;
+            font-weight: bold;
+        }
+    /* #endregion */
+
+    /* #region HostClue */
         #hostClueInner {
             width: 100%;
             height: 100%;
@@ -996,8 +1088,8 @@
 
         #scoreHud {
             position: absolute;
-            left: 50%;
-            top: 52%;
+            left: 47%;
+            top: 58%;
             transform: translate(-50%, -50%);
             z-index: 10;
             width: min(75vw, 300px);
@@ -1024,8 +1116,8 @@
 
         #scoreChange {
             position: absolute;
-            left: calc(50% + 58px);
-            bottom: calc(100% + 5px);
+            left: calc(50% + 52px);
+            bottom: calc(100% + 4px);
             transform: translateX(-50%);
             font-size: clamp(16px, 4vw, 26px);
             font-weight: bold;
@@ -1153,45 +1245,25 @@
     </div>
 </div>
 
-<div id="dailyDoublePage" class="hidden">
-    <div class="dailyDoubleText">
-        DAILY DOUBLE!
-    </div>
-
-    <div class="dailyDoubleSubtext">
-        Wait for the host.
-    </div>
+<div id="dailyDoublePage" class="playerScreen hidden">
+    <div class="dailyDoubleText">DAILY DOUBLE!</div>
+    <div class="dailyDoubleSubtext">Wait for the host.</div>
 </div>
 
 <div id="dailyDoubleWagerScreen" class="playerScreen hidden">
-    <div class="dailyDoubleWagerTitle">
-        DAILY DOUBLE!
-    </div>
-
+    <div class="dailyDoubleWagerTitle">DAILY DOUBLE!</div>
     <div id="dailyDoublePlayerName"></div>
-
-    <div class="dailyDoubleCurrentScore">
-        Your score:
-        <span id="dailyDoublePlayerScore">$0</span>
-    </div>
-
-    <div class="dailyDoubleWagerPrompt">
-        How much do you want to wager?
-    </div>
-
-    <input
-        id="dailyDoubleWagerInput"
-        type="number"
-        min="0"
-    >
-
+    <div class="dailyDoubleCurrentScore">Your score: <span id="dailyDoublePlayerScore">$0</span></div>
+    <div class="dailyDoubleWagerPrompt">How much do you want to wager?</div>
+    <input id="dailyDoubleWagerInput" type="number" min="0">
     <div id="dailyDoubleMaxWager"></div>
+    <button id="dailyDoubleWagerSubmit" onclick="submitDailyDoubleWager()">SUBMIT WAGER</button>
+</div>
 
-    <button
-        id="dailyDoubleWagerSubmit"
-        onclick="submitDailyDoubleWager()">
-        SUBMIT WAGER
-    </button>
+<div id="dailyDoubleSubmittedScreen" class="playerScreen hidden">
+    <div class="dailyDoubleSubmittedTitle">WAGER SUBMITTED!</div>
+    <div id="dailyDoubleSubmittedAmount"></div>
+    <div class="dailyDoubleSubmittedText">Wait for the host to read the clue.</div>
 </div>
 
 <!-- HOST CONTROLS -->
@@ -2001,7 +2073,7 @@
         const currentPlayer = window.currentPlayers?.find(player => player.playerId === myPlayerId);
 
         if (scorePlayerName) {
-            scorePlayerName.textContent = currentPlayer?.name ? "Team " + currentPlayer.name : "";
+            scorePlayerName.textContent = currentPlayer?.name || "";
         }
 
         console.log("SHOW SCORE SCREEN:", me);
@@ -2273,7 +2345,7 @@
         }
 
         if (answeringName) {
-            answeringName.textContent = "Team " + data.playerName;
+            nameElement.textContent = data.playerName;
         }
 
         let character = null;
@@ -2317,91 +2389,6 @@
             banner.classList.remove("hidden");
         }
     });
-    /*
-    socket.on("dailyDoubleAnswering", data => {
-
-        console.log(
-            "DAILY DOUBLE ANSWERING:",
-            data
-        );
-
-        const myPlayerId =
-            localStorage.getItem("playerId");
-
-        // Only the selected player gets the wager screen
-        if (data.playerId !== myPlayerId) {
-            return;
-        }
-
-        canBuzz = false;
-
-        showDailyDoubleWagerScreen(data);
-
-        showPlayerScreen(
-            "dailyDoubleWagerScreen"
-        );
-
-        const playerName =
-            document.getElementById(
-                "dailyDoublePlayerName"
-            );
-
-        const score =
-            document.getElementById(
-                "dailyDoublePlayerScore"
-            );
-
-        const wagerInput =
-            document.getElementById(
-                "dailyDoubleWagerInput"
-            );
-
-        const submitBtn =
-            document.getElementById(
-                "dailyDoubleWagerSubmit"
-            );
-
-        if (playerName) {
-            playerName.textContent =
-                data.playerName;
-        }
-
-        const playerScore =
-            Number(data.score) || 0;
-
-        if (score) {
-            score.textContent =
-                "$" + playerScore;
-        }
-
-        if (wagerInput) {
-
-            wagerInput.value = "";
-
-            const maxWager =
-                playerScore > 0
-                    ? playerScore
-                    : (currentRound === 1 ? 500 : 1000);
-
-            wagerInput.max = maxWager;
-
-            const maxLabel =
-                document.getElementById(
-                    "dailyDoubleMaxWager"
-                );
-
-            if (maxLabel) {
-                maxLabel.textContent =
-                    "Maximum wager: $" +
-                    maxWager.toLocaleString();
-            }
-        }
-
-        if (submitBtn) {
-            submitBtn.disabled = false;
-        }
-    });
-    */
 
     socket.on("dailyDoubleAnswering", data => {
         console.log("================================");
@@ -2487,7 +2474,8 @@
     });
 
     socket.on("dailyDoubleWagerSubmitted", data => {
-        if (!isHost) return;
+        const storedHost = localStorage.getItem("isHost") === "true";
+        if (!isHost && !storedHost) return;
 
         currentDailyDoubleWager = {
             playerId: data.playerId,
@@ -2500,23 +2488,45 @@
         hideDailyDoublePlayerButtons();
 
         const judgement = document.getElementById("hostJudgementArea");
-        const playerName = document.getElementById("hostBuzzPlayerName");
+        const question = document.getElementById("hostJudgementQuestion");
 
-        if (playerName) {
-            playerName.textContent =
-                `${currentDailyDoubleWager.playerName} wagered $${currentDailyDoubleWager.wager}`;
+        if (question) {
+            question.textContent = `${currentDailyDoubleWager.playerName} wagered $${currentDailyDoubleWager.wager.toLocaleString()}. Read the clue, then mark their answer.`;
         }
 
         if (judgement) {
             judgement.classList.add("show");
             judgement.hidden = false;
             judgement.style.display = "flex";
+            judgement.style.flexDirection = "column";
             judgement.style.visibility = "visible";
             judgement.style.opacity = "1";
             judgement.style.pointerEvents = "auto";
             judgement.style.zIndex = "10000";
         }
     });
+
+    socket.on("dailyDoubleWagerAccepted", data => {
+        if (isHost) return;
+
+        const myPlayerId = localStorage.getItem("playerId");
+
+        if (data.playerId !== myPlayerId) {
+            return;
+        }
+
+        console.log("DAILY DOUBLE WAGER ACCEPTED:", data);
+
+        const amount = document.getElementById("dailyDoubleSubmittedAmount");
+
+        if (amount) {
+            amount.textContent = "$" + (Number(data.wager) || 0).toLocaleString();
+        }
+
+        hideAllPlayerScreens();
+        showPlayerScreen("dailyDoubleSubmittedScreen");
+    });
+
     // ROUNDS
     socket.on("roundComplete", data => {
         console.log("ROUND COMPLETE:", data);
@@ -3944,11 +3954,34 @@
             }
         }
 
-        function submitDailyDoubleWager(){
-            const input=document.getElementById("dailyDoubleWagerInput");
-            const wager=Math.max(0,parseInt(input?.value)||0);
-            socket.emit("dailyDoubleWager",{payload:{wager}});
-            showDailyDoubleSubmittedScreen();
+        function submitDailyDoubleWager() {
+            const input = document.getElementById("dailyDoubleWagerInput");
+            const submitBtn = document.getElementById("dailyDoubleWagerSubmit");
+            const maximum = Number(input?.max) || 0;
+            const wager = Math.max(0, parseInt(input?.value) || 0);
+
+            if (!input || wager <= 0) {
+                alert("Please enter a wager.");
+                return;
+            }
+
+            if (maximum > 0 && wager > maximum) {
+                alert("Your maximum wager is $" + maximum.toLocaleString() + ".");
+                return;
+            }
+
+            if (submitBtn) {
+                submitBtn.disabled = true;
+            }
+
+            console.log("SUBMITTING DAILY DOUBLE WAGER:", wager);
+
+            socket.emit("hostAction", {
+                type: "dailyDoubleWager",
+                payload: {
+                    wager: wager
+                }
+            });
         }
 
         // SHOW ROUND 2 BOARD

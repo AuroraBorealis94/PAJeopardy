@@ -1256,46 +1256,49 @@ io.on("connection", (socket) => {
                 break;
             }
 
-            case "dailyDoubleWager":{
-                if(!game.currentClueIsDailyDouble){
+            case "dailyDoubleWager": {
+                if (!game.currentClueIsDailyDouble) {
                     console.warn("Wager received but current clue is not a Daily Double.");
                     return;
                 }
 
-                const wager=Math.max(0,parseInt(data.payload?.wager)||0);
-
-                if(!currentDailyDoublePlayer){
+                if (!currentDailyDoublePlayer) {
                     console.warn("No Daily Double player selected.");
                     return;
                 }
 
-                const maxWager=Math.max(
-                    game.currentClueValue || 0,
-                    currentDailyDoublePlayer.score || 0
-                );
+                const requestedWager = Math.max(0, parseInt(data.payload?.wager) || 0);
+                const maxWager = Math.max(game.currentClueValue || 0, currentDailyDoublePlayer.score || 0);
+                currentDailyDoubleWager = Math.min(requestedWager, maxWager);
+                currentDailyDoublePlayer.dailyDoubleWager = currentDailyDoubleWager;
+                currentDailyDoubleWagerSubmitted = true;
+                currentBuzzPlayer = currentDailyDoublePlayer;
 
-                currentDailyDoubleWager=Math.min(wager,maxWager);
-                currentDailyDoublePlayer.dailyDoubleWager=currentDailyDoubleWager;
-                currentDailyDoubleWagerSubmitted=true;
-                currentBuzzPlayer=currentDailyDoublePlayer;
+                console.log("================================");
+                console.log("DAILY DOUBLE WAGER SUBMITTED");
+                console.log("Player:", currentDailyDoublePlayer.name);
+                console.log("Wager:", currentDailyDoubleWager);
+                console.log("================================");
 
-                console.log(
-                    "DAILY DOUBLE WAGER:",
-                    currentDailyDoublePlayer.name,
-                    currentDailyDoubleWager
-                );
-
-                io.emit("dailyDoubleWager",{
-                    playerId:currentDailyDoublePlayer.playerId,
-                    playerName:currentDailyDoublePlayer.name,
-                    wager:currentDailyDoubleWager
+                io.to(currentDailyDoublePlayer.socketId).emit("dailyDoubleWagerAccepted", {
+                    playerId: currentDailyDoublePlayer.playerId,
+                    playerName: currentDailyDoublePlayer.name,
+                    wager: currentDailyDoubleWager
                 });
 
+                if (hostSocketId) {
+                    io.to(hostSocketId).emit("dailyDoubleWagerSubmitted", {
+                        playerId: currentDailyDoublePlayer.playerId,
+                        playerName: currentDailyDoublePlayer.name,
+                        wager: currentDailyDoubleWager
+                    });
+                }
+
                 broadcastToUnity({
-                    type:"dailyDoubleWager",
-                    playerId:currentDailyDoublePlayer.playerId,
-                    playerName:currentDailyDoublePlayer.name,
-                    wager:currentDailyDoubleWager
+                    type: "dailyDoubleWager",
+                    playerId: currentDailyDoublePlayer.playerId,
+                    playerName: currentDailyDoublePlayer.name,
+                    wager: currentDailyDoubleWager
                 });
 
                 break;
