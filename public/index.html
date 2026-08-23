@@ -2025,27 +2025,17 @@
         const storedHost = localStorage.getItem("isHost") === "true";
         const hostNow = isHost || storedHost;
 
-        console.log("================================");
-        console.log("SHOW BOARD INTRO RECEIVED");
-        console.log("DATA:", data);
-        console.log("isHost:", isHost);
-        console.log("storedHost:", storedHost);
-        console.log("hostNow:", hostNow);
-        console.log("================================");
+        console.log("SHOW BOARD INTRO RECEIVED:", data);
 
         if (hostNow) {
             console.log("HOST RECEIVED showBoardIntro - IGNORING PLAYER SCREEN CHANGE");
             return;
         }
 
-        console.log("PLAYER CHANGING TO SCORE PAGE");
-
         const lobby = document.getElementById("lobbyUI");
+        if (lobby) lobby.style.display = "none";
 
-        if (lobby) {
-            lobby.style.display = "none";
-        }
-
+        setMyScoreCharacter();
         showPlayerScreen("scorePage");
     });
 
@@ -2794,54 +2784,49 @@
     //BUILD HOST BOARD
     function buildHostBoard(board) {
         const hostBoard = document.getElementById("hostBoardGrid");
-
         if (!hostBoard) {
             console.error("hostBoardGrid element not found.");
             return;
         }
 
+        if (!board || !Array.isArray(board.categories)) {
+            console.error("Invalid board passed to buildHostBoard:", board);
+            return;
+        }
+
+        console.log("BUILD HOST BOARD:", {
+            currentRound,
+            categoryCount: board.categories.length,
+            categories: board.categories.map(c => c.categoryName)
+        });
+
         hostBoard.innerHTML = "";
+        currentHostTile = null;
+        currentHostClue = null;
+
         const finishBtn = document.getElementById("finishRoundBtn");
-        const round2Btn = document.getElementById("round2Btn");
+        if (finishBtn) finishBtn.style.display = "none";
 
-        if (finishBtn) {
-            finishBtn.style.display = "none";
-        }
-
-        if (round2Btn) {
-            round2Btn.style.display = "none";
-        }
         const roundLabel = document.getElementById("hostRoundLabel");
+        if (roundLabel) roundLabel.textContent = currentRound === 2 ? "ROUND 2: DOUBLE JEOPARDY" : "ROUND 1: JEOPARDY";
 
-        if (roundLabel) {
-            roundLabel.textContent =
-                currentRound === 2
-                    ? "ROUND 2: DOUBLE JEOPARDY"
-                    : "ROUND 1: JEOPARDY";
-        }
+        board.categories.forEach(category => {
+            const header = document.createElement("div");
+            header.className = "hostHeader";
+            header.innerText = category.categoryName;
+            hostBoard.appendChild(header);
+        });
 
-        board.categories.forEach(
-            category => {
-                const header = document.createElement("div");
-                header.className = "hostHeader";
-                header.innerText = category.categoryName;
-                hostBoard.appendChild(header);
-            }
-        );
-
-        // CLUE VALUES
-        const values = currentRound === 2
-            ? ["400", "800", "1200", "1600", "2000"]
-            : ["200", "400", "600", "800", "1000"];
+        const values = currentRound === 2 ? ["400", "800", "1200", "1600", "2000"] : ["200", "400", "600", "800", "1000"];
 
         values.forEach(value => {
             board.categories.forEach(category => {
-                const clue = category.clues.find(c => c.value === value);
+                const clue = category.clues.find(c => String(c.value) === String(value));
                 const tile = document.createElement("div");
-
                 tile.className = "hostTile";
 
                 if (!clue) {
+                    console.warn("MISSING HOST CLUE:", category.categoryName, value);
                     tile.classList.add("empty");
                     hostBoard.appendChild(tile);
                     return;
@@ -2849,10 +2834,10 @@
 
                 tile.innerText = "$" + value;
                 tile.dataset.clueId = clue.clueData.id;
+
                 tile.onclick = () => {
-                    if (tile.classList.contains("used")) {
-                        return;
-                    }
+                    if (tile.classList.contains("used")) return;
+
                     currentHostClue = clue;
                     currentHostTile = tile;
                     currentDailyDouble = clue.clueData.dailyDouble ? clue : null;
@@ -2862,13 +2847,19 @@
                     socket.emit("hostAction", {
                         type: "selectClue",
                         payload: {
-                            value,
-                            clueData:clue.clueData
+                            value: clue.value,
+                            clueData: clue.clueData
                         }
                     });
                 };
+
                 hostBoard.appendChild(tile);
             });
+        });
+
+        console.log("HOST BOARD BUILT:", {
+            headers: hostBoard.querySelectorAll(".hostHeader").length,
+            tiles: hostBoard.querySelectorAll(".hostTile").length
         });
     }
 
@@ -3818,6 +3809,42 @@
             }, 30);
         }
 
+        function setMyScoreCharacter() {
+            let characterName = state.character?.name;
+
+            if (!characterName) {
+                const savedCharacter = localStorage.getItem("character");
+
+                if (savedCharacter) {
+                    try {
+                        characterName = JSON.parse(savedCharacter)?.name;
+                    } catch (error) {
+                        console.error("Could not parse saved character:", error);
+                    }
+                }
+            }
+
+            if (!characterName) {
+                console.warn("No character name available for score animation.");
+                return;
+            }
+
+            const character = characters.find(c => c.name === characterName);
+
+            if (!character) {
+                console.warn("Character not found in character list:", characterName);
+                return;
+            }
+
+            if (!character.animations?.idle) {
+                console.warn("No idle animation found for:", characterName);
+                return;
+            }
+
+            console.log("SETTING MY SCORE CHARACTER:", characterName, character.animations.idle);
+            setScoreCharacter(character.animations.idle);
+        }
+
         function setScoreCharacter(animationData) {
             const character = document.getElementById("scoreCharacter");
 
@@ -3850,6 +3877,8 @@
 
             character.style.height =
                 `${animationData.frameHeight}px`;
+
+            character.style.animationDuration = animationData.speed || "1.2s";
 
             // Restart animation on next frame
             requestAnimationFrame(() => {
