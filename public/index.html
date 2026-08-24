@@ -644,15 +644,16 @@
     /* #region Daily Double Screens */
         #dailyDoubleBanner {
             position: fixed;
-            top: 15%;
+            top: 2.5%;
             left: 50%;
             transform: translateX(-50%);
             z-index: 10000;
-            font-size: clamp(40px, 8vw, 100px);
+            font-size: clamp(34px, 7vw, 72px);
             color: gold;
             font-weight: bold;
-            text-shadow:
-                0 0 20px #000;
+            line-height: 1;
+            white-space: nowrap;
+            text-shadow: 0 0 20px #000;
             pointer-events: none;
         }
 
@@ -1092,7 +1093,7 @@
         #scoreHud {
             position: absolute;
             left: 48%;
-            top: 53%;
+            top: 55%;
             transform: translate(-50%, -50%);
             z-index: 10;
             width: min(75vw, 300px);
@@ -1145,7 +1146,7 @@
             margin-top: 16px;
             padding: 4px 6px;
             box-sizing: border-box;
-            font-size: clamp(16px, 4vw, 26px);
+            font-size: clamp(18px, 4.5vw, 30px);
             font-weight: bold;
             line-height: 1.05;
             text-align: center;
@@ -1266,7 +1267,7 @@
 <div id="dailyDoubleSubmittedScreen" class="playerScreen hidden">
     <div class="dailyDoubleSubmittedTitle">WAGER SUBMITTED!</div>
     <div id="dailyDoubleSubmittedAmount"></div>
-    <div class="dailyDoubleSubmittedText">Wait for the host to read the clue.</div>
+    <div class="dailyDoubleSubmittedText">Listen to the clue and get ready to answer.</div>
 </div>
 
 <!-- HOST CONTROLS -->
@@ -4013,10 +4014,16 @@
         function submitDailyDoubleWager() {
             const input = document.getElementById("dailyDoubleWagerInput");
             const submitBtn = document.getElementById("dailyDoubleWagerSubmit");
-            const maximum = Number(input?.max) || 0;
-            const wager = Math.max(0, parseInt(input?.value) || 0);
 
-            if (!input || wager <= 0) {
+            if (!input) {
+                console.error("dailyDoubleWagerInput not found.");
+                return;
+            }
+
+            const wager = Math.max(0, parseInt(input.value) || 0);
+            const maximum = Number(input.max) || 0;
+
+            if (wager <= 0) {
                 alert("Please enter a wager.");
                 return;
             }
@@ -4026,11 +4033,12 @@
                 return;
             }
 
+            console.log("SUBMITTING DAILY DOUBLE WAGER:", wager);
+
             if (submitBtn) {
                 submitBtn.disabled = true;
+                submitBtn.textContent = "SUBMITTED";
             }
-
-            console.log("SUBMITTING DAILY DOUBLE WAGER:", wager);
 
             socket.emit("hostAction", {
                 type: "dailyDoubleWager",

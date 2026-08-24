@@ -1280,6 +1280,8 @@ io.on("connection", (socket) => {
             }
 
             case "dailyDoubleWager": {
+                console.log("HOST ACTION: dailyDoubleWager");
+
                 if (!game.currentClueIsDailyDouble) {
                     console.warn("Wager received but current clue is not a Daily Double.");
                     return;
@@ -1292,6 +1294,7 @@ io.on("connection", (socket) => {
 
                 const requestedWager = Math.max(0, parseInt(data.payload?.wager) || 0);
                 const maxWager = Math.max(game.currentClueValue || 0, currentDailyDoublePlayer.score || 0);
+
                 currentDailyDoubleWager = Math.min(requestedWager, maxWager);
                 currentDailyDoublePlayer.dailyDoubleWager = currentDailyDoubleWager;
                 currentDailyDoubleWagerSubmitted = true;
@@ -1299,16 +1302,18 @@ io.on("connection", (socket) => {
 
                 console.log("================================");
                 console.log("DAILY DOUBLE WAGER SUBMITTED");
-                console.log("Player:", currentDailyDoublePlayer.name);
-                console.log("Wager:", currentDailyDoubleWager);
+                console.log("PLAYER:", currentDailyDoublePlayer.name);
+                console.log("WAGER:", currentDailyDoubleWager);
                 console.log("================================");
 
+                // SELECTED PLAYER
                 io.to(currentDailyDoublePlayer.socketId).emit("dailyDoubleWagerAccepted", {
                     playerId: currentDailyDoublePlayer.playerId,
                     playerName: currentDailyDoublePlayer.name,
                     wager: currentDailyDoubleWager
                 });
 
+                // HOST ONLY
                 if (hostSocketId) {
                     io.to(hostSocketId).emit("dailyDoubleWagerSubmitted", {
                         playerId: currentDailyDoublePlayer.playerId,
@@ -1317,6 +1322,7 @@ io.on("connection", (socket) => {
                     });
                 }
 
+                // UNITY
                 broadcastToUnity({
                     type: "dailyDoubleWager",
                     playerId: currentDailyDoublePlayer.playerId,
