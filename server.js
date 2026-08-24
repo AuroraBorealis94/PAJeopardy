@@ -9,8 +9,8 @@ app.use("/fonts", express.static("fonts"));
 app.use("/backgrounds", express.static("backgrounds"));
 app.use("/sprites", express.static("sprites"));
 app.use("/confetti", express.static("public/confetti"));
-app.use("/data/clueImages", express.static("clueImages"));
-app.use("/data/answerImages", express.static("answerImages"));
+app.use("/clueImages", express.static("clueImages"));
+app.use("/answerImages", express.static("answerImages"));
 
 // HOST CONNECTION
 let hostConnected = false;
@@ -924,11 +924,6 @@ io.on("connection", (socket) => {
         }
 
         // OTHER HOST ACTIONS
-        broadcastToUnity({
-            type: data.type,
-            payload: data.payload || null
-        });
-
         switch (data.type) {
             case "showInstructions":
                 console.log("HOST ACTION: showInstructions");
@@ -940,9 +935,13 @@ io.on("connection", (socket) => {
 
             case "showInstrucCutscene":
                 console.log("HOST ACTION: showInstrucCutscene");
+
                 game.hostScreen = "hostInstrucCutscenePg";
-                //io.emit("showAnimHolding");
-                broadcastToUnity({ type: "showInstrucCutscene" });
+
+                broadcastToUnity({
+                    type: "showInstrucCutscene"
+                });
+
                 break;
 
             case "showBoardIntro":
