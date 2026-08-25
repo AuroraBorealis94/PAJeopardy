@@ -722,6 +722,7 @@ io.on("connection", (socket) => {
             character,
             characterKey: normalized,
             score: 0,
+            screen: "waitingScreen",
             isHost: false,
             disconnected: false,
             disconnectTime: null
