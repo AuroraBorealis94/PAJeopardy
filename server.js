@@ -105,8 +105,7 @@ const io = require("socket.io")(http, {
     cors: {
         origin: "*"
     },
-    transports: ["polling"],
-    allowUpgrades: false,
+    transports: ["websocket", "polling"],
     pingInterval: 25000,
     pingTimeout: 60000,
     connectTimeout: 20000
@@ -558,16 +557,6 @@ io.on("connection", (socket) => {
             const reconnectToken = socket.handshake.auth?.hostReconnectToken;
 
             if (reconnectToken && reconnectToken === HOST_RECONNECT_TOKEN) {
-                console.log("================================");
-                console.log("HOST MANUAL RECONNECT ACCEPTED");
-                console.log("Socket:", socket.id);
-                console.log("================================");
-
-                if (hostDisconnectTimer) {
-                    clearTimeout(hostDisconnectTimer);
-                    hostDisconnectTimer = null;
-                }
-
                 hostConnected = true;
                 hostSocketId = socket.id;
                 socket.isHost = true;
@@ -578,7 +567,6 @@ io.on("connection", (socket) => {
                 console.log("Socket:", socket.id);
                 console.log("================================");
 
-                // Tell this browser specifically that it is the host
                 socket.emit("hostReconnectToken", HOST_RECONNECT_TOKEN);
                 socket.emit("hostConfirmed");
 

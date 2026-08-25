@@ -1506,8 +1506,6 @@
     console.log("Saved host reconnect token:", savedHostReconnectToken);
 
     const socket = io({
-        transports: ["polling"],
-        upgrade: false,
         auth: {
             hostReconnectToken: savedHostReconnectToken || null
         },
@@ -1981,10 +1979,16 @@
     // HOST RECONNECT TOKEN
     socket.on("hostReconnectToken", token => {
         console.log("Received host reconnect token");
-        localStorage.setItem("paHostReconnectToken", token);
-        console.log("Host reconnect token saved.");
-    });
 
+        localStorage.setItem("paHostReconnectToken", token);
+
+        // IMPORTANT: update the CURRENT Socket.IO client's auth too.
+        // Otherwise an automatic reconnect still uses the old/null token.
+        socket.auth = socket.auth || {};
+        socket.auth.hostReconnectToken = token;
+
+        console.log("Host reconnect token saved and applied to socket auth.");
+    });
     // HOST CONFIRMED
     socket.on("hostConfirmed", () => {
         console.log("================================");
