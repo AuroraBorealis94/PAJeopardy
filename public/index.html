@@ -1506,7 +1506,7 @@
     console.log("Saved host reconnect token:", savedHostReconnectToken);
 
     const socket = io({
-        transports: ["websocket"],
+        transports: ["polling"],
         upgrade: false,
         auth: {
             hostReconnectToken: savedHostReconnectToken || null
@@ -1666,44 +1666,23 @@
         if (hostPending) {
             isHost = true;
 
-            console.log("HOST STATE SYNC RECEIVED:", data.state);
+            localStorage.setItem("isHost", "true");
 
-            if (!localStorage.getItem("isHost")) {
-                localStorage.setItem("isHost", "true");
-            }
-
-            if (currentSession && !localStorage.getItem("hostSession")) {
+            if (currentSession) {
                 localStorage.setItem("hostSession", currentSession);
             }
 
-            if (data.state === "lobby") {
-                console.log("HOST RETURNING TO HOST JOIN PAGE");
+            const pageToRestore =
+                data.hostScreen ||
+                localStorage.getItem("lastHostPage") ||
+                "hostJoinPg";
 
-                localStorage.setItem("lastHostPage", "hostJoinPg");
-                showHostControls();
+            console.log("RESTORING HOST SCREEN:", pageToRestore);
 
-                return;
-            }
+            localStorage.setItem("lastHostPage", pageToRestore);
 
-            if (data.state === "playing") {
-                showHostControls();
-                restoreHostPage(
-                    data.hostScreen ||
-                    localStorage.getItem("lastHostPage") ||
-                    "hostBoard"
-                );
-
-                return;
-            }
-
-            if (data.state === "midCutscene") {
-                console.log("HOST RETURNING TO ROUND 2 CUTSCENE");
-
-                showHostControls();
-                restoreHostPage("hostMidCutscenePg");
-
-                return;
-            }
+            showHostControls();
+            restoreHostPage(pageToRestore);
 
             return;
         }
@@ -2816,6 +2795,11 @@
     function joinAsHost(){
         if(!currentSession){
             console.log("Cannot become host yet - session not received.");
+            return;
+        }
+        if (!socket.connected) {
+            console.warn("HOST JOIN BLOCKED - SOCKET NOT CONNECTED");
+            alert("The game server is reconnecting. Please try again.");
             return;
         }
         requestingHost=true;

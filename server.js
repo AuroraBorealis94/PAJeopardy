@@ -105,7 +105,7 @@ const io = require("socket.io")(http, {
     cors: {
         origin: "*"
     },
-    transports: ["websocket"],
+    transports: ["polling"],
     allowUpgrades: false,
     pingInterval: 25000,
     pingTimeout: 60000,
@@ -1189,7 +1189,11 @@ io.on("connection", (socket) => {
 
             case "roundComplete":
                 console.log("ROUND", game.round, "COMPLETE");
+
                 game.state = "roundComplete";
+                game.hostScreen = "hostScoreReviewPg";
+
+                setAllPlayerScreens("scorePage");
 
                 io.emit(
                     "roundComplete",
