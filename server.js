@@ -196,6 +196,18 @@ function getScorePlayers() {
     }));
 }
 
+function setPlayerScreen(player, screen) {
+    if (!player) return;
+    player.screen = screen;
+    console.log("PLAYER SCREEN:", player.name, "->", screen);
+}
+
+function setAllPlayerScreens(screen) {
+    game.players.forEach(player => {
+        setPlayerScreen(player, screen);
+    });
+}
+
 // WEBSOCKET TO UNITY
 function broadcastToUnity(data) {
     const message = JSON.stringify(data);
@@ -464,6 +476,8 @@ function sendHostState(socket) {
         currentClueId: game.currentClueId,
         currentClueValue: game.currentClueValue,
         currentClueIsDailyDouble: game.currentClueIsDailyDouble,
+        playerScreen: existingPlayer.screen || "waitingScreen",
+        playerScore: existingPlayer.score || 0,
         hostScreen: game.hostScreen || "hostJoinPg"
     });
 
@@ -843,6 +857,8 @@ io.on("connection", (socket) => {
                 console.log("HOST ACTION: showInstructions");
                 game.hostScreen = "hostInstructionsPg";
                 game.state = "playing";
+
+                setAllPlayerScreens("instructionsHoldingScreen");
                 io.emit("showInstructionsHolding");
                 broadcastToUnity({ type: "showInstructions" });
                 break;
@@ -879,6 +895,7 @@ io.on("connection", (socket) => {
             case "showBoardIntro":
                 console.log("HOST ACTION: showBoardIntro");
                 game.hostScreen = "hostBoard";
+                setAllPlayerScreens("scorePage");
 
                 game.players.forEach(player => {
                     io.to(player.socketId).emit("showScoreScreen", {
@@ -1011,6 +1028,8 @@ io.on("connection", (socket) => {
                         currentBuzzPlayer.score
                     );
 
+                    setAllPlayerScreens("scorePage");
+
                     io.emit("showScoreScreen", {
                         players: getScorePlayers()
                         /*
@@ -1125,6 +1144,7 @@ io.on("connection", (socket) => {
             // CLOSE CLUE
             case "closeClue":
                 console.log("HOST ACTION: closeClue");
+                setAllPlayerScreens("scorePage");
 
                 game.currentClueId = null;
                 game.currentClueValue = 0;
@@ -1156,6 +1176,12 @@ io.on("connection", (socket) => {
 
                 buzzAccepted = true;
                 currentBuzzPlayer = null;
+
+                game.players.forEach(player => {
+                    if (!buzzedPlayerIds.has(player.playerId)) {
+                        setPlayerScreen(player, "buzzerPage");
+                    }
+                });
 
                 io.emit("resumeBuzzing");
 
@@ -1207,6 +1233,14 @@ io.on("connection", (socket) => {
                 currentDailyDoubleWager = 0;
                 currentDailyDoubleWagerSubmitted = false;
 
+                setPlayerScreen(player, "dailyDoubleWagerScreen");
+
+                game.players.forEach(otherPlayer => {
+                    if (otherPlayer.playerId !== player.playerId) {
+                        setPlayerScreen(otherPlayer, "answeringPage");
+                    }
+                });
+
                 console.log("DAILY DOUBLE PLAYER:", player.name);
 
                 io.to(player.socketId).emit("dailyDoubleAnswering", {
@@ -1249,6 +1283,8 @@ io.on("connection", (socket) => {
                 currentDailyDoublePlayer.dailyDoubleWager = currentDailyDoubleWager;
                 currentDailyDoubleWagerSubmitted = true;
                 currentBuzzPlayer = currentDailyDoublePlayer;
+
+                setPlayerScreen(currentDailyDoublePlayer, "dailyDoubleSubmittedScreen");
 
                 console.log("================================");
                 console.log("DAILY DOUBLE WAGER SUBMITTED");
@@ -1485,6 +1521,12 @@ io.on("connection", (socket) => {
             playerName: player.name,
             character: player.character
         };
+
+        game.players.forEach(player => {
+            if (!buzzedPlayerIds.has(player.playerId)) {
+                setPlayerScreen(player, "buzzerPage");
+            }
+        });
 
         console.log("BUZZ ACCEPTED:", player.name);
 

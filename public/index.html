@@ -106,7 +106,7 @@
             flex-direction: column;
             align-items: center;
             gap: 22px;
-            padding: 45px;
+            padding: 30px;
             box-sizing: border-box;
         }
 
@@ -1206,7 +1206,7 @@
 <div id="lobbyUI">
     <!-- ROOM CODE -->
     <div id="roomCodeOverlay">
-        <div id="roomCodeBox" style="padding-top: 20px;">
+        <div id="roomCodeBox">
             <div id="roomCodePrompt">ROOM CODE</div>
             <input id="roomCodeInput" type="text" maxlength="8" autocomplete="off" autocapitalize="characters">
             <button id="roomCodeSubmit" onclick="submitRoomCode()">
@@ -1718,6 +1718,33 @@
         );
 
         updateLockedUI();
+
+        if (data.playerScreen) {
+            console.log("RESTORING PLAYER SCREEN:", data.playerScreen);
+
+            const lobby = document.getElementById("lobbyUI");
+
+            if (lobby) {
+                lobby.style.display = "none";
+            }
+
+            currentScore = Number(data.playerScore) || 0;
+
+            const scoreValue = document.getElementById("scoreValue");
+
+            if (scoreValue) {
+                scoreValue.textContent = "$" + currentScore.toLocaleString();
+            }
+
+            if (data.playerScreen === "scorePage") {
+                setScorePageBackground("holding");
+            }
+
+            hideAllPlayerScreens();
+            showPlayerScreen(data.playerScreen);
+
+            return;
+        }                                           
 
         if (data.state === "lobby") {
             hideAllPlayerScreens();
