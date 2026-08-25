@@ -87,6 +87,69 @@
             background-clip: text;
         }
 
+        #roomCodeOverlay {
+            position: fixed;
+            inset: 0;
+            z-index: 10000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-image: url('/backgrounds/WLobbyBG.png');
+            background-size: cover;
+            background-position: top center;
+            background-repeat: no-repeat;
+        }
+
+        #roomCodeBox {
+            width: min(82vw, 380px);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 22px;
+            padding: 30px;
+            box-sizing: border-box;
+        }
+
+        #roomCodeBox h1 {
+            font-size: clamp(38px, 10vw, 64px);
+        }
+
+        #roomCodePrompt {
+            font-size: clamp(20px, 5vw, 30px);
+            font-weight: bold;
+        }
+
+        #roomCodeInput {
+            width: min(70vw, 260px);
+            padding: 12px;
+            box-sizing: border-box;
+            text-align: center;
+            text-transform: uppercase;
+            font-family: 'Korinna';
+            font-size: 28px;
+            letter-spacing: 5px;
+            border-radius: 8px;
+            border: 2px solid white;
+        }
+
+        #roomCodeSubmit {
+            font-family: 'Korinna';
+            font-size: 22px;
+            text-transform: uppercase;
+            padding: 12px 30px;
+            background: linear-gradient(135deg, #ffcc00, #ff6600);
+            border: 1px solid #fff;
+            border-radius: 12px;
+            cursor: pointer;
+        }
+
+        #roomCodeError {
+            min-height: 24px;
+            color: #ffcc00;
+            font-size: 18px;
+            font-weight: bold;
+        }
+
         #lobbyUI {
             background-image: url('/backgrounds/WLobbyBG.png');
             position: fixed;
@@ -1143,6 +1206,16 @@
 
 <!-- LOBBY SCREEN -->
 <div id="lobbyUI">
+    <!-- ROOM CODE -->
+    <div id="roomCodeOverlay">
+        <div id="roomCodeBox">
+            <h1>PA JEOPARDY</h1>
+            <div id="roomCodePrompt">ENTER ROOM CODE</div>
+            <input id="roomCodeInput" type="text" maxlength="8" autocomplete="off" autocapitalize="characters">
+            <button id="roomCodeSubmit" onclick="submitRoomCode()">ENTER</button>
+            <div id="roomCodeError"></div>
+        </div>
+    </div>
     <!-- PREVIEW -->
     <div id="preview">
         <!-- HOST JOIN -->
@@ -1470,13 +1543,28 @@
     let serverHostTaken = false;
     let currentRound = 0;
     let currentDailyDouble = null;
+    let currentRoomCode = null;
     let currentCategoryRevealIndex = -1;
 
     console.log("LOCAL PLAYER ID ON LOAD:", localStorage.getItem("playerId"));
 
     // LOAD
     window.addEventListener("load", () => {
-        console.log("PAGE LOAD");
+        const roomCodeInput = document.getElementById("roomCodeInput");
+        const roomCodeOverlay = document.getElementById("roomCodeOverlay");
+
+        if (sessionStorage.getItem("roomCodeAccepted") === "true") {
+            if (roomCodeOverlay) roomCodeOverlay.classList.add("hidden");
+        }
+
+        if (roomCodeInput) {
+            roomCodeInput.addEventListener("keydown", event => {
+                if (event.key === "Enter") {
+                    submitRoomCode();
+                }
+            });
+        }
+
         const savedName = localStorage.getItem("name");
         const savedCharacter = localStorage.getItem("character");
         const savedIsHost = localStorage.getItem("isHost");
@@ -1802,10 +1890,7 @@
     // ROOM CODE
     socket.on("roomCode", code => {
         console.log("ROOM CODE:", code);
-        /*
-            Keep this listener available if you want to
-            display the room code on the host/player UI.
-        */
+        currentRoomCode = String(code).trim().toUpperCase();
     });
     
     // JOIN SUCCESS
@@ -3010,7 +3095,7 @@
         const judgement = document.getElementById("hostJudgementArea");
         const enableBtn = document.getElementById("enableBuzzerBtn");
         const dailyDoubleBanner = document.getElementById("dailyDoubleBanner");
-
+        const wagerNotice = document.getElementById("dailyDoubleWagerNotice");
         const continueBtn = document.getElementById("clueContinueBtn");
         const closeAnswerBtn = document.getElementById("closeAnswerBtn");
 
@@ -3029,6 +3114,7 @@
         judgement.classList.remove("show");
         buzzersEnabled = false;
 
+        if (wagerNotice) wagerNotice.classList.add("hidden");
         if (continueBtn) continueBtn.style.display = "block";
         if (closeAnswerBtn) closeAnswerBtn.style.display = "none";
 
@@ -3226,24 +3312,13 @@
     }
 
     function closeHostClue() {
-        const enableBtn =
-            document.getElementById("enableBuzzerBtn");
-
-        const overlay =
-            document.getElementById("hostClueOverlay");
-
-        const judgement =
-            document.getElementById("hostJudgementArea");
-
-        const inner =
-            document.getElementById("hostClueInner");
-
-        const dailyDoubleBanner =
-            document.getElementById("dailyDoubleBanner");
-
-        const dailyDoublePlayerArea =
-            document.getElementById("dailyDoublePlayerArea");
-
+        const enableBtn = document.getElementById("enableBuzzerBtn");
+        const overlay = document.getElementById("hostClueOverlay");
+        const judgement = document.getElementById("hostJudgementArea");
+        const inner = document.getElementById("hostClueInner");
+        const dailyDoubleBanner = document.getElementById("dailyDoubleBanner");
+        const wagerNotice = document.getElementById("dailyDoubleWagerNotice");
+        const dailyDoublePlayerArea = document.getElementById("dailyDoublePlayerArea");
         const continueBtn = document.getElementById("clueContinueBtn");
         const closeAnswerBtn = document.getElementById("closeAnswerBtn");
 
@@ -3267,6 +3342,10 @@
 
         if (dailyDoubleBanner) {
             dailyDoubleBanner.classList.add("hidden");
+        }
+
+        if (wagerNotice) {
+            wagerNotice.classList.add("hidden");
         }
 
         if (dailyDoublePlayerArea) {
@@ -3475,6 +3554,33 @@
     }
 
     /* #region LOBBY FUNCTIONS */
+        function submitRoomCode() {
+            const input = document.getElementById("roomCodeInput");
+            const overlay = document.getElementById("roomCodeOverlay");
+            const error = document.getElementById("roomCodeError");
+
+            if (!input || !overlay) return;
+
+            const enteredCode = input.value.trim().toUpperCase();
+
+            if (!currentRoomCode) {
+                if (error) error.textContent = "Connecting to game...";
+                return;
+            }
+
+            if (enteredCode !== currentRoomCode) {
+                if (error) error.textContent = "INVALID ROOM CODE";
+                input.value = "";
+                input.focus();
+                return;
+            }
+
+            console.log("ROOM CODE ACCEPTED");
+
+            sessionStorage.setItem("roomCodeAccepted", "true");
+            overlay.classList.add("hidden");
+        }
+
         function setName() {
             const nameInput = document.getElementById("name");
             if (!nameInput) return;
