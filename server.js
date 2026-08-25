@@ -944,6 +944,24 @@ io.on("connection", (socket) => {
 
                 break;
 
+            case "revealCategory": {
+                const index = Number(data.payload?.index);
+
+                if (!Number.isInteger(index) || index < 0 || index > 5) {
+                    console.warn("Invalid category reveal index:", index);
+                    return;
+                }
+
+                console.log("HOST REVEAL CATEGORY:", index);
+
+                broadcastToUnity({
+                    type: "revealCategory",
+                    index: index
+                });
+
+                break;
+            }
+
             case "showBoardIntro":
                 console.log("HOST ACTION: showBoardIntro");
                 game.hostScreen = "hostBoard";

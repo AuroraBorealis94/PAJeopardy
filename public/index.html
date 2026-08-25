@@ -1305,6 +1305,25 @@
         </button>
     </div>
 
+    <div id="hostCategoryRevealControls" style="display:none;">
+        <div id="hostCategoryRevealLabel">
+            Waiting for board...
+        </div>
+
+        <button
+            id="revealNextCategoryBtn"
+            onclick="hostRevealNextCategory()">
+            REVEAL FIRST CATEGORY
+        </button>
+
+        <button
+            id="beginRoundBtn"
+            onclick="hostBeginRound()"
+            style="display:none;">
+            BEGIN ROUND
+        </button>
+    </div>
+
     <div id="hostBoard" class="hostPage hidden">
         <div id="hostRoundLabel">
             ROUND 1
@@ -1477,6 +1496,7 @@
     let serverHostTaken = false;
     let currentRound = 0;
     let currentDailyDouble = null;
+    let currentCategoryRevealIndex = -1;
 
     console.log("LOCAL PLAYER ID ON LOAD:", localStorage.getItem("playerId"));
 
@@ -2122,6 +2142,7 @@
         //const hostNow = isHost || storedHost;
 
         console.log("SHOW BOARD INTRO RECEIVED:", data);
+
         /*
         if (hostNow) {
             console.log("HOST RECEIVED showBoardIntro - IGNORING PLAYER SCREEN CHANGE");
@@ -2797,11 +2818,46 @@
         localStorage.setItem("lastHostPage","hostInstrucCutscenePg");
         restoreHostPage("hostInstrucCutscenePg");
     }
+
+    function hostRevealNextCategory() {
+        currentCategoryRevealIndex++;
+
+        if (currentCategoryRevealIndex > 5) {
+            return;
+        }
+
+        console.log("REVEAL CATEGORY:", currentCategoryRevealIndex);
+
+        socket.emit("hostAction", {
+            type: "revealCategory",
+            payload: {
+                index: currentCategoryRevealIndex
+            }
+        });
+
+        const btn = document.getElementById("revealNextCategoryBtn");
+
+        if (currentCategoryRevealIndex === 0 && btn) {
+            btn.textContent = "NEXT CATEGORY";
+        }
+
+        if (currentCategoryRevealIndex === 5) {
+            if (btn) {
+                btn.style.display = "none";
+            }
+
+            const beginBtn = document.getElementById("beginRoundBtn");
+
+            if (beginBtn) {
+                beginBtn.style.display = "block";
+            }
+        }
+    }
     
     //HOST SHOW BOARD INTRO
     function hostShowBoardIntro() {
         console.log("HOST SHOW BOARD INTRO");
-
+        currentCategoryRevealIndex = -1;
         localStorage.setItem("lastHostPage", "hostBoard");
 
         restoreHostPage("hostBoard");
@@ -3837,38 +3893,6 @@
                     (direction > 0 && score >= newScore) ||
                     (direction < 0 && score <= newScore)
                 ) {
-                    score = newScore;
-                    clearInterval(timer);
-
-                    if (current) {
-                        current.textContent = "Score: $" + newScore;
-                    }
-
-                    setTimeout(() => {
-                        change.classList.add("hidden");
-                    }, 1200);
-                }
-
-                value.textContent = "$" + score;
-            }, 30);
-        }
-
-        function animateScoreGain(oldScore, newScore, earned){
-            const value = document.getElementById("scoreValue");
-            const change = document.getElementById("scoreChange");
-            const current = document.getElementById("scoreCurrent");
-            if (!value || !change) return;
-            if (current) {
-                current.textContent = "Score: $" + oldScore;
-            }
-
-            value.textContent = "$" + oldScore;
-            change.textContent = "+$" + earned;
-            change.classList.remove("hidden");
-            let score = oldScore;
-            const timer = setInterval(() => {
-                score += Math.max(1, Math.ceil(earned / 20));
-                if (score >= newScore) {
                     score = newScore;
                     clearInterval(timer);
 
