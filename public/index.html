@@ -639,6 +639,14 @@
             transform: scale(1);
             opacity: 1;
         }
+
+        #hostClueOverlay:has(#dailyDoubleBanner:not(.hidden)) #hostClueCard {
+            transform: translateY(-55px) scale(1);
+        }
+        /*
+        #hostClueOverlay.show:has(#dailyDoubleBanner:not(.hidden)) #hostClueCard {
+            transform: translateY(-55px) scale(1);
+        }*/
     /* #endregion */
 
     /* #region Daily Double Screens */
@@ -747,6 +755,20 @@
         #dailyDoubleSubmittedAmount {
             color: orange;
             font-weight: bold;
+        }
+
+        #dailyDoubleWagerNotice {
+            position: fixed;
+            top: 12%;
+            right: 3%;
+            z-index: 10030;
+            padding: 12px 18px;
+            border-radius: 10px;
+            background: rgba(0,0,0,0.85);
+            color: gold;
+            font-size: clamp(16px, 2.5vw, 24px);
+            font-weight: bold;
+            pointer-events: none;
         }
     /* #endregion */
 
@@ -952,6 +974,7 @@
         }
     /* #endregion */
 
+    /* #region DAILY DOUBLE */
         #dailyDoublePage {
 
             position: fixed;
@@ -1003,31 +1026,40 @@
         }
 
         #dailyDoublePlayerArea {
-            position: absolute;
-            bottom: 5%;
+            position: fixed;
             left: 50%;
+            bottom: 3%;
             transform: translateX(-50%);
-            z-index: 30;
+            width: min(94vw, 900px);
+            z-index: 10020;
             text-align: center;
+            box-sizing: border-box;
         }
 
         #dailyDoublePlayerTitle {
-            font-size: 1.4rem;
-            margin-bottom: 10px;
+            font-size: clamp(18px, 3vw, 28px);
+            margin-bottom: 12px;
         }
 
         #dailyDoublePlayerButtons {
+            width: 100%;
             display: flex;
-            gap: 10px;
-            justify-content: center;
             flex-wrap: wrap;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
         }
 
         .dailyDoublePlayerBtn {
-            padding: 10px 18px;
-            font-size: 1rem;
-            cursor: pointer;
+            flex: 0 1 auto;
+            min-width: 120px;
+            max-width: 240px;
+            padding: 10px 16px;
+            font-size: clamp(14px, 2.5vw, 20px);
+            white-space: normal;
+            overflow-wrap: break-word;
         }
+    /* #endregion */
 
     /* #region Score Screen */
         #scorePage {
@@ -1037,13 +1069,14 @@
             height: 100vh;
             overflow: hidden;
             text-align: center;
+            background: black;
         }
 
         #scoreBackground {
             position: absolute;
             inset: 0;
-            width: 100%;
-            height: 100%;
+            width: 100vw;
+            height: 100vh;
             background-size: cover;
             background-position: center bottom;
             background-repeat: no-repeat;
@@ -1053,10 +1086,10 @@
         #scoreHud {
             position: absolute;
             left: 50%;
-            bottom: 5%;
+            bottom: 3%;
             transform: translateX(-50%);
             z-index: 10;
-            width: min(78vw, 320px);
+            width: min(80vw, 340px);
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -1065,7 +1098,7 @@
 
         #scoreValue {
             position: relative;
-            font-size: clamp(30px, 7vw, 48px);
+            font-size: clamp(34px, 8vw, 54px);
             font-weight: bold;
             line-height: 1;
             white-space: nowrap;
@@ -1079,8 +1112,8 @@
 
         #scoreChange {
             position: absolute;
-            left: calc(50% - 70px);
-            bottom: calc(100% + 12px);
+            left: calc(50% - 72px);
+            bottom: calc(100% + 14px);
             transform: translateX(-50%);
             font-size: clamp(18px, 4.5vw, 30px);
             font-weight: bold;
@@ -1098,24 +1131,6 @@
         #scoreChange.hidden {
             opacity: 0;
             transform: translateX(-50%) translateY(-15px);
-        }
-
-        #scorePlayerName {
-            width: min(68vw, 240px);
-            margin-top: clamp(30px, 8vw, 48px);
-            padding: 4px 6px;
-            box-sizing: border-box;
-            font-size: clamp(20px, 5vw, 32px);
-            font-weight: bold;
-            line-height: 1.05;
-            text-align: center;
-            white-space: normal;
-            overflow-wrap: break-word;
-            text-shadow:
-                2px 2px 0 #000,
-                -2px -2px 0 #000,
-                2px -2px 0 #000,
-                -2px 2px 0 #000;
         }
     /* #endregion */
 </style>
@@ -1301,6 +1316,9 @@
         <div id="dailyDoubleBanner" class="hidden">
             DAILY DOUBLE!
         </div>
+        <div id="dailyDoubleWagerNotice" class="hidden">
+            WAGER SUBMITTED
+        </div>
         <div id="hostClueCard">
             <div id="hostClueInner">
                 <div id="hostClueFront" class="hostClueFace">
@@ -1315,7 +1333,7 @@
 
         <div id="dailyDoublePlayerArea" class="hidden">
             <div id="dailyDoublePlayerTitle">
-                Choose a Team to Answer
+                Choose the Team that Picked the Clue
             </div>
 
             <div id="dailyDoublePlayerButtons"></div>
@@ -1407,7 +1425,6 @@
     <div id="scoreHud">
         <div id="scoreChange" class="hidden"></div>
         <div id="scoreValue">$0</div>
-        <div id="scorePlayerName"></div>
     </div>
 </div>
 
@@ -1666,7 +1683,15 @@
                 lobby.style.display = "none";
             }
 
+            setScorePageBackground("holding");
             showPlayerScreen("scorePage");
+
+            const scoreValue = document.getElementById("scoreValue");
+
+            if (scoreValue) {
+                scoreValue.textContent = "$" + (Number(currentScore) || 0).toLocaleString();
+            }
+
             return;
         }
     });
@@ -2040,6 +2065,11 @@
         }
     });
 
+    socket.on("buzzAlreadyUsed", () => {
+        console.log("PLAYER ALREADY ANSWERED THIS CLUE");
+        canBuzz = false;
+    });
+
     socket.on("scoreUpdate",data=>{
         const scoreDisplay=document.getElementById("playerScoreDisplay");
 
@@ -2069,12 +2099,6 @@
         const newScore = Number(me.score) || 0;
         const oldScore = Number(currentScore) || 0;
         const earned = newScore - oldScore;
-
-        const playerName = document.getElementById("scorePlayerName");
-
-        if (playerName) {
-            playerName.textContent = localStorage.getItem("name") || "";
-        }
 
         // Winning player gets the win background.
         if (earned > 0) {
@@ -2129,14 +2153,9 @@
         showPlayerScreen("scorePage");
 
         const scoreValue = document.getElementById("scoreValue");
-        const playerName = document.getElementById("scorePlayerName");
 
         if (scoreValue) {
             scoreValue.textContent = "$" + (Number(currentScore) || 0).toLocaleString();
-        }
-
-        if (playerName) {
-            playerName.textContent = localStorage.getItem("name") || "";
         }
 
         console.log("PLAYER SHOWING HOLDING SCORE PAGE");
@@ -2359,8 +2378,8 @@
         console.log("PLAYER HANDLING BUZZ");
 
         canBuzz = false;
-        showPlayerScreen("answeringPage");
 
+        const answeringPage = document.getElementById("answeringPage");
         const answeringTitle = document.getElementById("answeringTitle");
         const answeringName = document.getElementById("answeringName");
         const answeringCharacter = document.getElementById("answeringCharacter");
@@ -2368,58 +2387,58 @@
         const myPlayerId = localStorage.getItem("playerId");
         const isMe = data.playerId === myPlayerId;
 
-        const answeringPage = document.getElementById("answeringPage");
+        hideAllPlayerScreens();
 
         if (isMe) {
+            console.log("THIS PLAYER WON THE BUZZ");
+
             setAnsweringPageBackground("answer");
 
             if (answeringCharacter) {
                 answeringCharacter.style.display = "none";
+                answeringCharacter.removeAttribute("src");
+            }
+
+            if (answeringName) {
+                answeringName.textContent = "";
+            }
+
+            if (answeringTitle) {
+                answeringTitle.textContent = "ANSWER NOW!";
             }
         } else {
+            console.log("ANOTHER PLAYER IS ANSWERING:", data.playerName);
+
             if (answeringPage) {
                 answeringPage.style.backgroundImage = "url('/backgrounds/WHostBG.jpg')";
+                answeringPage.style.backgroundSize = "cover";
                 answeringPage.style.backgroundPosition = "center";
+                answeringPage.style.backgroundRepeat = "no-repeat";
+            }
+
+            if (answeringTitle) {
+                answeringTitle.textContent = "IS ANSWERING";
+            }
+
+            if (answeringName) {
+                answeringName.textContent = "Team " + data.playerName;
             }
 
             if (answeringCharacter) {
                 answeringCharacter.style.display = "block";
-            }
-        }
 
-        if (answeringTitle) {
-            answeringTitle.textContent = isMe ? "ANSWER NOW!" : "IS ANSWERING";
-        }
+                const character = characters.find(c => c.name === data.character);
 
-        if (answeringName) {
-            nameElement.textContent = data.playerName;
-        }
-
-        let character = null;
-
-        if (typeof characters !== "undefined") {
-            character = characters.find(c => c.name === data.character);
-        }
-
-        if (!character) {
-            const savedCharacter = localStorage.getItem("character");
-
-            if (savedCharacter) {
-                try {
-                    const saved = JSON.parse(savedCharacter);
-
-                    if (saved.name === data.character) {
-                        character = saved;
-                    }
-                } catch (error) {
-                    console.error("Could not parse saved character:", error);
+                if (character?.front) {
+                    answeringCharacter.src = character.front;
+                } else {
+                    console.warn("Could not find answering character card:", data.character);
+                    answeringCharacter.removeAttribute("src");
                 }
             }
         }
 
-        if (character && character.front && answeringCharacter) {
-            answeringCharacter.src = character.front;
-        }
+        showPlayerScreen("answeringPage");
     });
 
     // DAILY DOUBLE
@@ -2536,9 +2555,21 @@
 
         const judgement = document.getElementById("hostJudgementArea");
         const question = document.getElementById("hostJudgementQuestion");
+        const wagerNotice = document.getElementById("dailyDoubleWagerNotice");
+        const enableBtn = document.getElementById("enableBuzzerBtn");
+
+        if (wagerNotice) {
+            wagerNotice.textContent = `${currentDailyDoubleWager.playerName} WAGERED $${currentDailyDoubleWager.wager.toLocaleString()}`;
+            wagerNotice.classList.remove("hidden");
+        }
 
         if (question) {
-            question.textContent = `${currentDailyDoubleWager.playerName} wagered $${currentDailyDoubleWager.wager.toLocaleString()}. Wager submitted — read the clue, then mark their answer.`;
+            question.textContent = `Did ${currentDailyDoubleWager.playerName} answer correctly?`;
+        }
+
+        if (enableBtn) {
+            enableBtn.style.display = "none";
+            enableBtn.disabled = true;
         }
 
         if (judgement) {
@@ -3073,23 +3104,56 @@
     }
 
     function hostAnswerCorrect() {
-        console.log("HOST ANSWER CORRECT");
-
         if (currentDailyDouble) {
-            socket.emit("hostAction", { type: "dailyDoubleCorrect" });
-        } else {
-            socket.emit("hostAction", { type: "answerCorrect" });
+            socket.emit("hostAction", {
+                type: "dailyDoubleCorrect"
+            });
+
+            closeDailyDoubleAfterJudgement();
+            return;
         }
 
-        socket.emit("hostAction", { type: "revealAnswer" });
+        socket.emit("hostAction", {
+            type: "answerCorrect"
+        });
+
+        socket.emit("hostAction", {
+            type: "revealAnswer"
+        });
+
         showHostAnswerState();
+    }
+
+    function closeDailyDoubleAfterJudgement() {
+        console.log("CLOSING DAILY DOUBLE AFTER JUDGEMENT");
+
+        socket.emit("hostAction", {
+            type: "closeClue"
+        });
+
+        closeHostClue();
     }
 
     //HOST CONTINUE
     function hostContinue() {
         console.log("HOST SKIP CLUE");
 
-        socket.emit("hostAction", { type: "revealAnswer" });
+        if (currentDailyDouble) {
+            socket.emit("hostAction", {
+                type: "closeClue"
+            });
+
+            closeHostClue();
+            return;
+        }
+
+        socket.emit("hostAction", {
+            type: "revealAnswer",
+            payload: {
+                skipped: true
+            }
+        });
+
         showHostAnswerState();
     }
 
@@ -3120,31 +3184,25 @@
     function hostAnswerWrong() {
         console.log("ANSWER WRONG");
 
-        // DAILY DOUBLE
         if (currentDailyDouble) {
-            socket.emit("hostAction", { type: "dailyDoubleIncorrect" });
-            socket.emit("hostAction", { type: "revealAnswer" });
-            showHostAnswerState();
+            socket.emit("hostAction", {
+                type: "dailyDoubleIncorrect"
+            });
+
+            closeDailyDoubleAfterJudgement();
             return;
         }
 
-        const judgement =
-            document.getElementById("hostJudgementArea");
+        const judgement = document.getElementById("hostJudgementArea");
+        const inner = document.getElementById("hostClueInner");
+        const enableBtn = document.getElementById("enableBuzzerBtn");
 
-        const inner =
-            document.getElementById("hostClueInner");
-
-        const enableBtn =
-            document.getElementById("enableBuzzerBtn");
-
-        // Hide judgement
         if (judgement) {
             judgement.classList.remove("show");
             judgement.style.display = "none";
             judgement.style.pointerEvents = "none";
         }
 
-        // Turn card back to clue
         if (inner) {
             inner.classList.remove("flipped");
         }
@@ -3152,12 +3210,10 @@
         hostAnswerShowing = false;
         currentBuzzPlayer = null;
 
-        // Resume buzzing
         socket.emit("hostAction", {
             type: "resumeBuzzing"
         });
 
-        // Keep enable button hidden because buzzers are now active
         if (enableBtn) {
             enableBtn.style.display = "none";
         }
@@ -3656,6 +3712,8 @@
                 "clueHoldingScreen",
                 "animHoldingScreen",
                 "dailyDoublePage",
+                "dailyDoubleWagerScreen",
+                "dailyDoubleSubmittedScreen",
                 "buzzerPage",
                 "answeringPage",
                 "scorePage"
@@ -4041,11 +4099,22 @@
             const background = document.getElementById("scoreBackground");
             const image = getCharacterScreenBackground(type);
 
-            if (!background || !image) return;
+            if (!background) {
+                console.error("scoreBackground element not found.");
+                return;
+            }
+
+            if (!image) {
+                console.error("No image path returned for score background.");
+                return;
+            }
 
             background.style.backgroundImage = `url("${image}")`;
+            background.style.backgroundSize = "cover";
+            background.style.backgroundPosition = "center bottom";
+            background.style.backgroundRepeat = "no-repeat";
 
-            console.log("SCORE BACKGROUND:", type, image);
+            console.log("SCORE BACKGROUND SET:", type, image);
         }
 
         function setAnsweringPageBackground(type = "answer") {
