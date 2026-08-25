@@ -105,12 +105,8 @@ const io = require("socket.io")(http, {
     cors: {
         origin: "*"
     },
-
-    transports: [
-        "websocket",
-        "polling"
-    ],
-
+    transports: ["websocket"],
+    allowUpgrades: false,
     pingInterval: 25000,
     pingTimeout: 60000,
     connectTimeout: 20000

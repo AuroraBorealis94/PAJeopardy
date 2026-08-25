@@ -1504,14 +1504,18 @@
     // SOCKET CONNECTION
     const savedHostReconnectToken = localStorage.getItem("paHostReconnectToken");
     console.log("Saved host reconnect token:", savedHostReconnectToken);
+
     const socket = io({
+        transports: ["websocket"],
+        upgrade: false,
         auth: {
             hostReconnectToken: savedHostReconnectToken || null
         },
         reconnection: true,
-        reconnectionAttempts: Infinity,
-        reconnectionDelay: 1000,
-        reconnectionDelayMax: 5000
+        reconnectionAttempts: 20,
+        reconnectionDelay: 2000,
+        reconnectionDelayMax: 10000,
+        timeout: 20000
     });
 
     //GAME STATE
@@ -1630,7 +1634,15 @@
 
     // CONNECT ERROR
     socket.on("connect_error", error => {
-        console.error("SOCKET CONNECTION ERROR:", error);
+        console.error("SOCKET CONNECTION ERROR:", error.message);
+
+        if (error.description) {
+            console.error("SOCKET ERROR DESCRIPTION:", error.description);
+        }
+
+        if (error.context) {
+            console.error("SOCKET ERROR CONTEXT:", error.context);
+        }
     });
     
     // GAME STATE SYNC
