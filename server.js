@@ -99,14 +99,6 @@ const unityHeartbeat = setInterval(() => {
 
 }, 30000);
 
-// SOCKET.IO
-/*
-const io = require("socket.io")(http, {
-    cors: {
-        origin: "*"
-    }
-});
-*/
 const io = require("socket.io")(http, {
     cors: {
         origin: "*"
@@ -141,154 +133,65 @@ const game = {
 
 // CHARACTER STORAGE
 const characters = [
-    { 
-        name: "The Boss", front: "/characters/thebossfront.png", back: "/characters/thebossback.png",
-        animations: {
-            idle: { 
-                src: "/characters/animations/thebossidle.png", 
-                frames: 6, 
-                speed: "1.0s",
-                frameWidth: 401,
-                frameHeight: 870
-            }/*,
-            victory: { 
-                src: "/characters/animations/thebossvictory.png", 
-                frames: 6, 
-                speed: "1.2s",
-                frameWidth: 401,
-                frameHeight: 870 
-            }*/
-        }
+    {
+        name: "The Boss",
+        front: "/characters/thebossfront.png",
+        back: "/characters/thebossback.png"
     },
-
-    { 
-        name: "Janice Mowes", front: "/characters/janicemowesfront.png", back: "/characters/janicemowesback.png",
-        animations: {
-            idle: { 
-                src: "/characters/animations/janicemowesidle.png", 
-                frames: 6, 
-                speed: "1.0s",
-                frameWidth: 401,
-                frameHeight: 870 
-            }
-        }
+    {
+        name: "Janice Mowes",
+        front: "/characters/janicemowesfront.png",
+        back: "/characters/janicemowesback.png"
     },
-
-    { 
-        name: "Tricerex", front: "/characters/tricerexfront.png", back: "/characters/tricerexback.png",
-        animations: {
-            idle: { 
-                src: "/characters/animations/tricerexidle.png", 
-                frames: 6, 
-                speed: "1.0s",
-                frameWidth: 401,
-                frameHeight: 870 
-            }
-        }
+    {
+        name: "Tricerex",
+        front: "/characters/tricerexfront.png",
+        back: "/characters/tricerexback.png"
     },
-
-    { 
-        name: "Fancy Dancer", front: "/characters/fancydancerpinkfront.png", back: "/characters/fancydancerpinkback.png",
-        animations: {
-            idle: { 
-                src: "/characters/animations/fancydanceridle.png", 
-                frames: 6, 
-                speed: "1.0s",
-                frameWidth: 401,
-                frameHeight: 870 
-            }
-        }
+    {
+        name: "Fancy Dancer",
+        front: "/characters/fancydancerpinkfront.png",
+        back: "/characters/fancydancerpinkback.png"
     },
-
-    { 
-        name: "Deerhead", front: "/characters/deerheadfront.png", back: "/characters/deerheadback.png",
-        animations: {
-            idle: { 
-                src: "/characters/animations/deerheadidle.png", 
-                frames: 6, 
-                speed: "1.0s",
-                frameWidth: 401,
-                frameHeight: 870 
-            }
-        }
+    {
+        name: "Deerhead",
+        front: "/characters/deerheadfront.png",
+        back: "/characters/deerheadback.png"
     },
-
-    { 
-        name: "Caity Satyr", front: "/characters/caitysatyrfront.png", back: "/characters/caitysatyrback.png",
-        animations: {
-            idle: { 
-                src: "/characters/animations/caitysatyridle.png", 
-                frames: 6, 
-                speed: "1.0s",
-                frameWidth: 401,
-                frameHeight: 870 
-            }
-        }
+    {
+        name: "Caity Satyr",
+        front: "/characters/caitysatyrfront.png",
+        back: "/characters/caitysatyrback.png"
     },
-
-    { 
-        name: "The Holy Spirit", front: "/characters/jesusfront.png", back: "/characters/jesusback.png",
-        animations: {
-            idle: { 
-                src: "/characters/animations/jesusidle.png", 
-                frames: 6, 
-                speed: "1.0s",
-                frameWidth: 401,
-                frameHeight: 870 
-            }
-        }
+    {
+        name: "The Holy Spirit",
+        front: "/characters/jesusfront.png",
+        back: "/characters/jesusback.png"
     },
-
-    { 
-        name: "The Newlyweds", front: "/characters/thenewlywedsfront.png", back: "/characters/thenewlywedsback.png",
-        animations: {
-            idle: { 
-                src: "/characters/animations/thenewlywedsidle.png", 
-                frames: 6, 
-                speed: "1.0s",
-                frameWidth: 401,
-                frameHeight: 870 
-            }
-        }
+    {
+        name: "The Newlyweds",
+        front: "/characters/thenewlywedsfront.png",
+        back: "/characters/thenewlywedsback.png"
     },
-
-    { 
-        name: "Lorenzo", front: "/characters/lorenzofront.png", back: "/characters/lorenzoback.png",
-        animations: {
-            idle: { 
-                src: "/characters/animations/lorenzoidle.png", 
-                frames: 6, 
-                speed: "1.0s",
-                frameWidth: 401,
-                frameHeight: 870 
-            }
-        }
+    {
+        name: "Lorenzo",
+        front: "/characters/lorenzofront.png",
+        back: "/characters/lorenzoback.png"
     },
-    { 
-        name: "The Guitarist", front: "/characters/theguitaristfront.png", back: "/characters/theguitaristback.png",
-        animations: {
-            idle: { 
-                src: "/characters/animations/guitaristidle.png", 
-                frames: 6, 
-                speed: "1.0s",
-                frameWidth: 401,
-                frameHeight: 870 
-            }
-        }
+    {
+        name: "The Guitarist",
+        front: "/characters/theguitaristfront.png",
+        back: "/characters/theguitaristback.png"
     }
 ];
 
 function getScorePlayers() {
-    return game.players.map(player => {
-        const character = characters.find(c => c.name === player.character);
-
-        return {
-            playerId: player.playerId,
-            character: player.character,
-            score: player.score || 0,
-            animation: character?.animations?.idle || null
-        };
-    });
+    return game.players.map(player => ({
+        playerId: player.playerId,
+        name: player.name,
+        character: player.character,
+        score: player.score || 0
+    }));
 }
 
 // WEBSOCKET TO UNITY
@@ -317,6 +220,10 @@ function generateBoard(roundNumber) {
     console.log("================================");
 
     const allCategories = loadCategories();
+
+    // Clear the previous round's board before building this one.
+    game.board = {};
+    game.dailyDoubleIds = new Set();
 
     // Only categories that have NOT been used in a previous round
     const availableCategories = allCategories.filter(categoryData => {
@@ -347,6 +254,10 @@ function generateBoard(roundNumber) {
 
     // Pick 6 completely unused categories
     const selectedCategories = shuffled.slice(0, 6);
+
+    selectedCategories.forEach(categoryData => {
+        usedCategoryNames.add(categoryData.category);
+    });
 
     console.log(
         "SELECTED CATEGORIES FOR ROUND",
@@ -1207,9 +1118,13 @@ io.on("connection", (socket) => {
                 currentDailyDoublePlayer = null;
                 currentDailyDoubleWagerSubmitted = false;
 
-                broadcastToUnity({ type: "closeClue" });
+                broadcastToUnity({
+                    type: "closeClue"
+                });
 
                 game.players.forEach(player => {
+                    io.to(player.socketId).emit("closeClue");
+
                     io.to(player.socketId).emit("showScoreScreen", {
                         players: getScorePlayers()
                     });

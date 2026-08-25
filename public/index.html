@@ -1042,71 +1042,30 @@
         #scoreBackground {
             position: absolute;
             inset: 0;
-            background-position: center;
+            width: 100%;
+            height: 100%;
             background-size: cover;
+            background-position: center bottom;
             background-repeat: no-repeat;
             z-index: 0;
         }
 
-        #scoreCharacter {
-            position: absolute;
-            width: 100vw;
-            height: calc(100vw * 870 / 401);
-            left: 50%;
-            top: 50%;
-            transform: translate(-50%, -50%);
-            transform-origin: center center;
-            background-repeat: no-repeat;
-            background-position: 0 0;
-            background-size: 600% 100%;
-            image-rendering: auto;
-            z-index: 2;
-        }
-
-        @media (max-aspect-ratio: 401/870) {
-            #scoreCharacter {
-                width: calc(100vh * 401 / 870);
-                height: 100vh;
-                left: 50%;
-                top: 50%;
-                transform: translate(-50%, -50%);
-            }
-        }
-
-        #scoreCharacter.animate {
-            animation-name: scoreCharacterIdle;
-            animation-duration: 1.2s;
-            animation-timing-function: steps(6);
-            animation-iteration-count: infinite;
-        }
-
-        @keyframes scoreCharacterIdle {
-            from {
-                background-position: 0% 0;
-            }
-
-            to {
-                background-position: 120% 0;
-            }
-        }
-
         #scoreHud {
             position: absolute;
-            left: 48%;
-            top: 59%;
-            transform: translate(-50%, -50%);
+            left: 50%;
+            bottom: 5%;
+            transform: translateX(-50%);
             z-index: 10;
-            width: min(75vw, 300px);
+            width: min(78vw, 320px);
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
             pointer-events: none;
         }
 
         #scoreValue {
             position: relative;
-            font-size: clamp(26px, 6vw, 42px);
+            font-size: clamp(30px, 7vw, 48px);
             font-weight: bold;
             line-height: 1;
             white-space: nowrap;
@@ -1120,10 +1079,10 @@
 
         #scoreChange {
             position: absolute;
-            left: calc(50% + 52px);
-            bottom: calc(100% + 2px);
+            left: calc(50% - 70px);
+            bottom: calc(100% + 12px);
             transform: translateX(-50%);
-            font-size: clamp(16px, 4vw, 26px);
+            font-size: clamp(18px, 4.5vw, 30px);
             font-weight: bold;
             line-height: 1;
             white-space: nowrap;
@@ -1142,17 +1101,16 @@
         }
 
         #scorePlayerName {
-            width: min(65vw, 220px);
-            margin-top: clamp(34px, 9vw, 52px);
+            width: min(68vw, 240px);
+            margin-top: clamp(30px, 8vw, 48px);
             padding: 4px 6px;
             box-sizing: border-box;
-            font-size: clamp(18px, 4.5vw, 30px);
+            font-size: clamp(20px, 5vw, 32px);
             font-weight: bold;
             line-height: 1.05;
             text-align: center;
             white-space: normal;
             overflow-wrap: break-word;
-            word-break: normal;
             text-shadow:
                 2px 2px 0 #000,
                 -2px -2px 0 #000,
@@ -1445,10 +1403,9 @@
 <!-- SCORE PAGE -->
 <div id="scorePage" class="hidden">
     <div id="scoreBackground"></div>
-    <div id="scoreCharacter"></div>
 
     <div id="scoreHud">
-        <div id="scoreChange"></div>
+        <div id="scoreChange" class="hidden"></div>
         <div id="scoreValue">$0</div>
         <div id="scorePlayerName"></div>
     </div>
@@ -2093,9 +2050,12 @@
 
     // SCORE SCREEN
     socket.on("showScoreScreen", data => {
+        if (isHost) return;
+
         if (!data || !Array.isArray(data.players)) {
             return;
         }
+
         const myPlayerId = localStorage.getItem("playerId");
         const me = data.players.find(player => player.playerId === myPlayerId);
 
@@ -2104,26 +2064,28 @@
             return;
         }
 
-        const scorePlayerName = document.getElementById("scorePlayerName");
-        const currentPlayer = window.currentPlayers?.find(player => player.playerId === myPlayerId);
-
-        if (scorePlayerName) {
-            scorePlayerName.textContent = currentPlayer?.name || "";
-        }
-
         console.log("SHOW SCORE SCREEN:", me);
 
         const newScore = Number(me.score) || 0;
         const oldScore = Number(currentScore) || 0;
+        const earned = newScore - oldScore;
 
-        // My character's idle animation
-        setScoreCharacter(me.animation);
-        // Show the score page
+        const playerName = document.getElementById("scorePlayerName");
+
+        if (playerName) {
+            playerName.textContent = localStorage.getItem("name") || "";
+        }
+
+        // Winning player gets the win background.
+        if (earned > 0) {
+            setScorePageBackground("win");
+        } else {
+            setScorePageBackground("holding");
+        }
+
         showPlayerScreen("scorePage");
 
-        // Animate only if my score changed
         if (newScore !== oldScore) {
-            const earned = newScore - oldScore;
             animateScoreGain(oldScore, newScore, earned);
         } else {
             const scoreValue = document.getElementById("scoreValue");
@@ -2133,27 +2095,51 @@
             }
         }
 
-        currentScore = me.score;
+        currentScore = newScore;
+    });
+
+    // CLOSE CLUE
+    socket.on("closeClue", () => {
+        if (isHost) return;
+
+        console.log("CLUE CLOSED - RETURNING TO HOLDING BACKGROUND");
+
+        setScorePageBackground("holding");
+        showPlayerScreen("scorePage");
     });
 
     // SHOW BOARD INTRO
     socket.on("showBoardIntro", data => {
-        //const storedHost = localStorage.getItem("isHost") === "true";
-        //const hostNow = isHost || storedHost;
-
         console.log("SHOW BOARD INTRO RECEIVED:", data);
 
-        /*
-        if (hostNow) {
+        const storedHost = localStorage.getItem("isHost") === "true";
+
+        if (isHost || storedHost) {
             console.log("HOST RECEIVED showBoardIntro - IGNORING PLAYER SCREEN CHANGE");
             return;
         }
 
         const lobby = document.getElementById("lobbyUI");
-        if (lobby) lobby.style.display = "none";
 
-        setMyScoreCharacter();
-        showPlayerScreen("scorePage");*/
+        if (lobby) {
+            lobby.style.display = "none";
+        }
+
+        setScorePageBackground("holding");
+        showPlayerScreen("scorePage");
+
+        const scoreValue = document.getElementById("scoreValue");
+        const playerName = document.getElementById("scorePlayerName");
+
+        if (scoreValue) {
+            scoreValue.textContent = "$" + (Number(currentScore) || 0).toLocaleString();
+        }
+
+        if (playerName) {
+            playerName.textContent = localStorage.getItem("name") || "";
+        }
+
+        console.log("PLAYER SHOWING HOLDING SCORE PAGE");
     });
 
     // ANIMATION HOLDING SCREEN
@@ -2235,7 +2221,7 @@
         }
         showPlayerScreen("clueHoldingScreen");
     });
-    
+
     // SELECT CLUE
     socket.on("selectClue", ({ payload }) => {
         if (!isHost) return;
@@ -2268,6 +2254,12 @@
     socket.on("resumeBuzzing", () => {
         const storedHost = localStorage.getItem("isHost") === "true";
         const hostNow = isHost || storedHost;
+
+        const answeringPage = document.getElementById("answeringPage");
+
+        if (answeringPage) {
+            answeringPage.style.backgroundImage = "";
+        }
 
         console.log("RESUME BUZZING RECEIVED:", {
             isHost,
@@ -2375,6 +2367,25 @@
 
         const myPlayerId = localStorage.getItem("playerId");
         const isMe = data.playerId === myPlayerId;
+
+        const answeringPage = document.getElementById("answeringPage");
+
+        if (isMe) {
+            setAnsweringPageBackground("answer");
+
+            if (answeringCharacter) {
+                answeringCharacter.style.display = "none";
+            }
+        } else {
+            if (answeringPage) {
+                answeringPage.style.backgroundImage = "url('/backgrounds/WHostBG.jpg')";
+                answeringPage.style.backgroundPosition = "center";
+            }
+
+            if (answeringCharacter) {
+                answeringCharacter.style.display = "block";
+            }
+        }
 
         if (answeringTitle) {
             answeringTitle.textContent = isMe ? "ANSWER NOW!" : "IS ANSWERING";
@@ -3909,6 +3920,7 @@
             }, 30);
         }
 
+        /*
         function setMyScoreCharacter() {
             let characterName = state.character?.name;
 
@@ -3944,7 +3956,7 @@
             console.log("SETTING MY SCORE CHARACTER:", characterName, character.animations.idle);
             setScoreCharacter(character.animations.idle);
         }
-
+        
         function setScoreCharacter(animationData) {
             const character = document.getElementById("scoreCharacter");
 
@@ -3965,6 +3977,87 @@
 
             void character.offsetWidth;
             character.classList.add("animate");
+        }
+        */
+
+        function getPlayerCharacterName() {
+            if (state.character?.name) {
+                return state.character.name;
+            }
+
+            const savedCharacter = localStorage.getItem("character");
+
+            if (savedCharacter) {
+                try {
+                    return JSON.parse(savedCharacter)?.name || null;
+                } catch (error) {
+                    console.error("Could not parse saved character:", error);
+                }
+            }
+
+            return null;
+        }
+
+        function getCharacterScreenBackground(type = "holding") {
+            const characterName = getPlayerCharacterName();
+
+            if (!characterName) {
+                console.warn("No character available for character background.");
+                return null;
+            }
+
+            const characterFiles = {
+                "The Boss": "theboss",
+                "Janice Mowes": "janicemowes",
+                "Tricerex": "tricerex",
+                "Fancy Dancer": "fancydancer",
+                "Deerhead": "deerhead",
+                "Caity Satyr": "caitysatyr",
+                "The Holy Spirit": "theholyspirit",
+                "The Newlyweds": "thenewlyweds",
+                "Lorenzo": "lorenzo",
+                "The Guitarist": "theguitarist"
+            };
+
+            const baseName = characterFiles[characterName];
+
+            if (!baseName) {
+                console.error("No background mapping for:", characterName);
+                return null;
+            }
+
+            const suffixes = {
+                holding: "clueholding",
+                answer: "clueanswer",
+                win: "cluewin"
+            };
+
+            const suffix = suffixes[type] || suffixes.holding;
+
+            return `/backgrounds/clueholding/${baseName}${suffix}.png`;
+        }
+
+        function setScorePageBackground(type = "holding") {
+            const background = document.getElementById("scoreBackground");
+            const image = getCharacterScreenBackground(type);
+
+            if (!background || !image) return;
+
+            background.style.backgroundImage = `url("${image}")`;
+
+            console.log("SCORE BACKGROUND:", type, image);
+        }
+
+        function setAnsweringPageBackground(type = "answer") {
+            const page = document.getElementById("answeringPage");
+            const image = getCharacterScreenBackground(type);
+
+            if (!page || !image) return;
+
+            page.style.backgroundImage = `url("${image}")`;
+            page.style.backgroundSize = "cover";
+            page.style.backgroundPosition = "center bottom";
+            page.style.backgroundRepeat = "no-repeat";
         }
 
         function showDailyDoublePlayerButtons() {
