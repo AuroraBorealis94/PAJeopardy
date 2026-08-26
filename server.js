@@ -1398,10 +1398,10 @@ io.on("connection", (socket) => {
                     "HOST ACTION: revealFinalJeopardyClue"
                 );
 
-                game.state =
-                    "finalAnswering";
+                game.state = "finalAnswering";
 
-                const clueData = {
+                // What player phones are allowed to receive.
+                const publicClueData = {
                     category:
                         game.finalJeopardy.category,
 
@@ -1412,13 +1412,7 @@ io.on("connection", (socket) => {
                         game.finalJeopardy.clue,
 
                     clueImage:
-                        game.finalJeopardy.clueImage,
-
-                    answer:
-                        game.finalJeopardy.answer,
-
-                    answerImage:
-                        game.finalJeopardy.answerImage
+                        game.finalJeopardy.clueImage
                 };
 
                 game.players.forEach(player => {
@@ -1429,13 +1423,22 @@ io.on("connection", (socket) => {
 
                     io.to(player.socketId).emit(
                         "finalJeopardyClue",
-                        clueData
+                        publicClueData
                     );
                 });
 
+                // Unity receives the answer as well,
+                // because Unity will eventually reveal it.
                 broadcastToUnity({
                     type: "finalJeopardyClue",
-                    ...clueData
+
+                    ...publicClueData,
+
+                    answer:
+                        game.finalJeopardy.answer,
+
+                    answerImage:
+                        game.finalJeopardy.answerImage
                 });
 
                 break;
