@@ -1327,6 +1327,39 @@
     <div class="dailyDoubleSubmittedText">Listen to the clue and get ready to answer.</div>
 </div>
 
+<div id="finalJeopardyWagerScreen" class="playerScreen hidden">
+    <div class="finalJeopardyTitle">
+        FINAL JEOPARDY
+    </div>
+
+    <div class="finalJeopardyLabel">
+        CATEGORY
+    </div>
+
+    <div id="finalJeopardyCategory"></div>
+
+    <div class="finalJeopardyScore">
+        YOUR SCORE:
+        <span id="finalJeopardyScore">$0</span>
+    </div>
+
+    <div>
+        ENTER YOUR WAGER
+    </div>
+
+    <input
+        id="finalJeopardyWagerInput"
+        type="number"
+        min="0"
+    >
+
+    <div id="finalJeopardyMaxWager"></div>
+
+    <button onclick="submitFinalJeopardyWager()">
+        SUBMIT WAGER
+    </button>
+</div>
+
 <!-- HOST CONTROLS -->
 <div id="hostControls">
     <img id="hostLogo" src="/backgrounds/HostImg.png">
@@ -1465,7 +1498,7 @@
         
         <div id="hostScoreReviewStats"></div>
         <br>
-        <button id="nextRoundBtn" onclick="hostStartRound2()">
+        <button id="nextRoundBtn" onclick="hostNextRound()">
             START NEXT ROUND
         </button>
     </div>
@@ -1510,6 +1543,30 @@
         <div id="scoreChange" class="hidden"></div>
         <div id="scoreValue">$0</div>
     </div>
+</div>
+
+<div id="hostFinalJeopardyPg" class="hostPage hidden">
+    <h1>FINAL JEOPARDY</h1>
+
+    <div id="hostFinalCategory"></div>
+
+    <div id="hostFinalWagerStatus">
+        Waiting for wagers...
+    </div>
+
+    <div id="hostFinalPlayerStatus"></div>
+
+    <button
+        id="hostRevealFinalClueBtn"
+        onclick="hostRevealFinalClue()"
+        style="display:none;">
+        REVEAL FINAL CLUE
+    </button>
+</div>
+
+<div id="finalJeopardyWagerWaitingScreen" class="playerScreen hidden">
+    <h1>WAGER LOCKED IN</h1>
+    <p>Wait for the Final Jeopardy clue.</p>
 </div>
 
 <script src="/socket.io/socket.io.js"></script>
@@ -2655,29 +2712,34 @@
         console.log("ROUND COMPLETE:", data);
 
         if (!isHost) {
-            showPlayerScreen("instructionsHoldingScreen");
             return;
         }
 
+        const nextRoundBtn =
+            document.getElementById("nextRoundBtn");
+
         if (data.round === 1) {
-            const btn = document.getElementById("round2Btn");
-            if (btn) {
-                btn.style.display = "block";
+            currentRound = 1;
+
+            if (nextRoundBtn) {
+                nextRoundBtn.textContent =
+                    "START ROUND 2";
+                nextRoundBtn.style.display = "block";
             }
-            const finishBtn = document.getElementById("finishRoundBtn");
-            if (finishBtn) {
-                finishBtn.style.display = "none";
-            }
+
             return;
         }
 
         if (data.round === 2) {
-            console.log("FINAL ROUND COMPLETE");
-            const finishBtn = document.getElementById("finishRoundBtn");
+            currentRound = 2;
 
-            if (finishBtn) {
-                finishBtn.style.display = "none";
+            if (nextRoundBtn) {
+                nextRoundBtn.textContent =
+                    "START FINAL JEOPARDY";
+                nextRoundBtn.style.display = "block";
             }
+
+            return;
         }
     });
 
@@ -2721,6 +2783,66 @@
         showHostControls();
         restoreHostPage("hostBoard");
     });
+
+    socket.on("finalJeopardyStart", data => {
+        console.log("FINAL JEOPARDY START:", data);
+
+        if (isHost) {
+            const category =
+                document.getElementById(
+                    "hostFinalCategory"
+                );
+
+            const status =
+                document.getElementById(
+                    "hostFinalWagerStatus"
+                );
+
+            const playerStatus =
+                document.getElementById(
+                    "hostFinalPlayerStatus"
+                );
+
+            if (category) {
+                category.textContent =
+                    data.category;
+            }
+
+            if (status) {
+                status.textContent =
+                    "WAITING FOR WAGERS";
+            }
+
+            if (playerStatus) {
+                playerStatus.innerHTML = "";
+            }
+
+            localStorage.setItem(
+                "lastHostPage",
+                "hostFinalJeopardyPg"
+            );
+
+            showHostControls();
+
+            restoreHostPage(
+                "hostFinalJeopardyPg"
+            );
+
+            return;
+        }
+
+        showFinalJeopardyWagerScreen(data);
+    });
+
+    socket.on("finalJeopardyWagerAccepted", data => {
+        if (isHost) return;
+
+        console.log("FINAL WAGER ACCEPTED:", data);
+        hideAllPlayerScreens();
+
+        showPlayerScreen("finalJeopardyWagerWaitingScreen");
+    }
+);
 
     document.addEventListener("click", e => {
         const overlay = document.getElementById("hostClueOverlay");
@@ -2807,7 +2929,8 @@
             "hostInstrucCutscenePg",
             "hostBoard",
             "hostMidCutscenePg",
-            "hostScoreReviewPg"
+            "hostScoreReviewPg",
+            "hostFinalJeopardyPg"
         ];
 
         const instructionsBtn = document.getElementById("instructionsBtn");
@@ -3516,6 +3639,25 @@
         });
     }
 
+    function hostNextRound() {
+        if (currentRound === 1) {
+            hostStartRound2();
+            return;
+        }
+
+        if (currentRound === 2) {
+            hostStartFinalJeopardy();
+        }
+    }
+
+    function hostStartFinalJeopardy() {
+        console.log("HOST STARTING FINAL JEOPARDY");
+
+        socket.emit("hostAction", {
+            type: "startFinalJeopardy"
+        });
+    }
+
     function updateFinishRoundButton() {
         const finishBtn = document.getElementById("finishRoundBtn");
         if (!finishBtn) return;
@@ -3825,7 +3967,8 @@
                 "dailyDoubleSubmittedScreen",
                 "buzzerPage",
                 "answeringPage",
-                "scorePage"
+                "scorePage",
+                "finalJeopardyWagerWaitingScreen"
             ];
 
             screens.forEach(id => {
@@ -4348,6 +4491,110 @@
             restoreHostPage("hostRound2Board");
             socket.emit("hostAction", {
                 type: "showRound2Board"
+            });
+        }
+
+        function showFinalJeopardyWagerScreen(data) {
+            const category =
+                document.getElementById(
+                    "finalJeopardyCategory"
+                );
+
+            const score =
+                document.getElementById(
+                    "finalJeopardyScore"
+                );
+
+            const input =
+                document.getElementById(
+                    "finalJeopardyWagerInput"
+                );
+
+            const max =
+                document.getElementById(
+                    "finalJeopardyMaxWager"
+                );
+
+            const currentPlayerScore =
+                Number(data.score) || 0;
+
+            if (category) {
+                category.textContent =
+                    data.category;
+            }
+
+            if (score) {
+                score.textContent =
+                    "$" +
+                    currentPlayerScore.toLocaleString();
+            }
+
+            if (input) {
+                input.value = "";
+                input.min = 0;
+
+                // Standard Final Jeopardy:
+                // cannot wager more than current score.
+                input.max =
+                    Math.max(0, currentPlayerScore);
+            }
+
+            if (max) {
+                max.textContent =
+                    "MAXIMUM WAGER: $" +
+                    Math.max(
+                        0,
+                        currentPlayerScore
+                    ).toLocaleString();
+            }
+
+            hideAllPlayerScreens();
+
+            showPlayerScreen(
+                "finalJeopardyWagerScreen"
+            );
+        }
+
+        function submitFinalJeopardyWager() {
+            const input =
+                document.getElementById(
+                    "finalJeopardyWagerInput"
+                );
+
+            if (!input) return;
+
+            const wager =
+                Math.max(
+                    0,
+                    parseInt(input.value) || 0
+                );
+
+            const max =
+                Math.max(
+                    0,
+                    Number(input.max) || 0
+                );
+
+            if (wager > max) {
+                alert(
+                    "Your maximum wager is $" +
+                    max.toLocaleString()
+                );
+
+                return;
+            }
+
+            socket.emit(
+                "finalJeopardyWagerSubmit",
+                {
+                    wager
+                }
+            );
+        }
+
+        function hostRevealFinalClue() {
+            socket.emit("hostAction", {
+                type: "revealFinalJeopardyClue"
             });
         }
     /* #endregion */

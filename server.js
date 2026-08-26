@@ -127,7 +127,21 @@ const game = {
     currentClueId: null,
     currentClueValue: 0,
     currentClueIsDailyDouble: false,
-    hostScreen: "hostJoinPg"
+    hostScreen: "hostJoinPg",
+
+    finalJeopardy: {
+        category: "",
+        clueId: "",
+        clue: "",
+        clueImage: "",
+        answer: "",
+        answerImage: "",
+        wagers: {},
+        answers: {},
+        wagerSubmitted: {},
+        answerSubmitted: {},
+        judged: {}
+    }
 };
 
 // CHARACTER STORAGE
@@ -372,6 +386,87 @@ function generateBoard(roundNumber) {
     console.log("================================");
 }
 
+function generateFinalJeopardy() {
+    console.log("================================");
+    console.log("GENERATING FINAL JEOPARDY");
+    console.log("================================");
+
+    const allCategories = loadCategories();
+
+    // Final Jeopardy must come from a category that was never
+    // used in Round 1 or Round 2.
+    const unusedCategories = allCategories.filter(categoryData => {
+        return !usedCategoryNames.has(categoryData.category);
+    });
+
+    console.log(
+        "UNUSED CATEGORIES AVAILABLE FOR FINAL:",
+        unusedCategories.map(c => c.category)
+    );
+
+    if (unusedCategories.length === 0) {
+        console.error("NO UNUSED CATEGORY AVAILABLE FOR FINAL JEOPARDY.");
+        return false;
+    }
+
+    // Only categories with at least one usable $1000 clue.
+    const eligibleCategories = unusedCategories.filter(categoryData => {
+        const options = categoryData.clues?.["1000"];
+
+        if (!Array.isArray(options) || options.length === 0) {
+            return false;
+        }
+
+        return options.some(clue => {
+            return clue?.id && !game.usedClueIds.has(clue.id);
+        });
+    });
+
+    if (eligibleCategories.length === 0) {
+        console.error("NO UNUSED CATEGORY HAS AN AVAILABLE $1000 CLUE.");
+        return false;
+    }
+
+    const categoryData =
+        eligibleCategories[
+            Math.floor(Math.random() * eligibleCategories.length)
+        ];
+
+    const availableClues =
+        categoryData.clues["1000"].filter(clue => {
+            return clue?.id && !game.usedClueIds.has(clue.id);
+        });
+
+    const chosen =
+        availableClues[
+            Math.floor(Math.random() * availableClues.length)
+        ];
+
+    game.finalJeopardy = {
+        category: categoryData.category,
+        clueId: chosen.id,
+        clue: chosen.clue,
+        clueImage: chosen.clueImage || "",
+        answer: chosen.answer,
+        answerImage: chosen.answerImage || "",
+        wagers: {},
+        answers: {},
+        wagerSubmitted: {},
+        answerSubmitted: {},
+        judged: {}
+    };
+
+    // Reserve the clue so nothing else can ever use it.
+    game.usedClueIds.add(chosen.id);
+
+    console.log("FINAL JEOPARDY CATEGORY:", game.finalJeopardy.category);
+    console.log("FINAL JEOPARDY CLUE ID:", game.finalJeopardy.clueId);
+    console.log("FINAL JEOPARDY SOURCE VALUE: 1000");
+    console.log("================================");
+
+    return true;
+}
+
 function resetGameState() {
     game.players = [];
     game.state = "lobby";
@@ -390,6 +485,20 @@ function resetGameState() {
     GAME_SESSION = Date.now();
     console.log("GAME STATE RESET");
     console.log("NEW GAME SESSION:", GAME_SESSION);
+
+    game.finalJeopardy = {
+        category: "",
+        clueId: "",
+        clue: "",
+        clueImage: "",
+        answer: "",
+        answerImage: "",
+        wagers: {},
+        answers: {},
+        wagerSubmitted: {},
+        answerSubmitted: {},
+        judged: {}
+    };
 }
 
 // ROOM CODE
@@ -1249,6 +1358,117 @@ io.on("connection", (socket) => {
                 break;
             }
 
+            case "startFinalJeopardy": {
+                console.log("HOST ACTION: startFinalJeopardy");
+
+                const generated =
+                    generateFinalJeopardy();
+
+                if (!generated) {
+                    console.error(
+                        "FINAL JEOPARDY COULD NOT BE GENERATED."
+                    );
+                    return;
+                }
+
+                game.state = "finalWager";
+                game.round = 3;
+                game.hostScreen = "hostFinalJeopardyPg";
+
+                buzzAccepted = false;
+                currentBuzzPlayer = null;
+                buzzedPlayerIds.clear();
+
+                // Everyone begins Final Jeopardy on the wager screen.
+                game.players.forEach(player => {
+                    setPlayerScreen(
+                        player,
+                        "finalJeopardyWagerScreen"
+                    );
+
+                    io.to(player.socketId).emit(
+                        "finalJeopardyStart",
+                        {
+                            category:
+                                game.finalJeopardy.category,
+
+                            score:
+                                player.score || 0
+                        }
+                    );
+                });
+
+                // Host sees category, but NOT the clue yet.
+                if (hostSocketId) {
+                    io.to(hostSocketId).emit(
+                        "finalJeopardyStart",
+                        {
+                            category:
+                                game.finalJeopardy.category,
+
+                            players:
+                                getScorePlayers()
+                        }
+                    );
+                }
+
+                // Unity gets only the category initially.
+                broadcastToUnity({
+                    type: "finalJeopardyStart",
+                    category:
+                        game.finalJeopardy.category
+                });
+
+                console.log(
+                    "FINAL JEOPARDY STARTED:",
+                    game.finalJeopardy.category
+                );
+
+                break;
+            }
+
+            case "revealFinalJeopardyClue": {
+                console.log(
+                    "HOST ACTION: revealFinalJeopardyClue"
+                );
+
+                game.state =
+                    "finalAnswering";
+
+                const clueData = {
+                    category:
+                        game.finalJeopardy.category,
+
+                    clueId:
+                        game.finalJeopardy.clueId,
+
+                    clue:
+                        game.finalJeopardy.clue,
+
+                    clueImage:
+                        game.finalJeopardy.clueImage
+                };
+
+                game.players.forEach(player => {
+                    setPlayerScreen(
+                        player,
+                        "finalJeopardyAnswerScreen"
+                    );
+
+                    io.to(player.socketId).emit(
+                        "finalJeopardyClue",
+                        clueData
+                    );
+                });
+
+                broadcastToUnity({
+                    type: "finalJeopardyClue",
+                    ...clueData
+                });
+
+                break;
+            }
+
             // DAILY DOUBLE SELECT PLAYER
             case "dailyDoubleSelectPlayer": {
                 console.log("HOST ACTION: dailyDoubleSelectPlayer");
@@ -1579,6 +1799,87 @@ io.on("connection", (socket) => {
             playerName: currentDailyDoublePlayer.name,
             wager: currentDailyDoubleWager
         });
+    });
+
+    socket.on("finalJeopardyWagerSubmit",  data => {
+        if (game.state !== "finalWager") {
+            console.warn("Final wager received outside wager phase.");
+            return;
+        }
+
+        const player = game.players.find(p => p.socketId ===socket.id);
+
+        if (!player) {
+            console.warn("Final wager player not found:", socket.id);
+            return;
+        }
+
+        const maxWager = Math.max(0, player.score || 0);
+        const requested = Math.max(0, parseInt(data?.wager) || 0);
+        const wager = Math.min(requested, maxWager);
+
+        game.finalJeopardy.wagers[
+            player.playerId
+        ] = wager;
+
+        game.finalJeopardy.wagerSubmitted[
+            player.playerId
+        ] = true;
+
+        console.log(
+            "FINAL WAGER:",
+            player.name,
+            wager
+        );
+
+        io.to(player.socketId).emit(
+            "finalJeopardyWagerAccepted",
+            {
+                wager
+            }
+        );
+
+        const submitted = game.players.filter(p => game.finalJeopardy.wagerSubmitted[p.playerId]).length;
+        const total = game.players.length;
+
+        if (hostSocketId) {
+            io.to(hostSocketId).emit("finalJeopardyWagerStatus",
+                {
+                    submitted,
+                    total
+                }
+            );
+        }
+
+        if (total > 0 && submitted === total) {
+            if (hostSocketId) {
+                io.to(hostSocketId).emit("finalJeopardyAllWagers");
+            }
+        }
+    });
+
+    socket.on("finalJeopardyWagerStatus", data => {
+        if (!isHost) return;
+        const status = document.getElementById("hostFinalWagerStatus");
+
+        if (status) {
+            status.textContent = `${data.submitted} OF ${data.total} WAGERS SUBMITTED`;
+        }
+    });
+
+    socket.on("finalJeopardyAllWagers", () => {
+        if (!isHost) return;
+
+        const status = document.getElementById("hostFinalWagerStatus");
+        const button = document.getElementById("hostRevealFinalClueBtn");
+
+        if (status) {
+            status.textContent = "ALL WAGERS SUBMITTED";
+        }
+
+        if (button) {
+            button.style.display = "block";
+        }
     });
 
     // BUZZER SCREEN
