@@ -649,7 +649,7 @@
             flex-shrink: 0;
         }
 
-        #hostScoreReview {
+        #hostScoreReviewPg {
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -2422,7 +2422,7 @@
             }
 
             if (answeringTitle) {
-                answeringTitle.textContent = "ANSWER NOW!";
+                answeringTitle.textContent = "";
             }
         } else {
             console.log("ANOTHER PLAYER IS ANSWERING:", data.playerName);
