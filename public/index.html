@@ -2920,8 +2920,19 @@
     //HOST SHOW INSTRUCTION CUTSCENE
     function hostShowInstrucCutscene() {
         console.log("HOST SHOW INSTRUCTION CUTSCENE");
-        localStorage.setItem("lastHostPage","hostInstrucCutscenePg");
-        restoreHostPage("hostInstrucCutscenePg");
+
+        localStorage.setItem(
+            "lastHostPage",
+            "hostInstrucCutscenePg"
+        );
+
+        restoreHostPage(
+            "hostInstrucCutscenePg"
+        );
+
+        socket.emit("hostAction", {
+            type: "showInstrucCutscene"
+        });
     }
 
     function hostRevealNextCategory() {
@@ -2974,95 +2985,187 @@
 
     // BUILD HOST BOARD
     function buildHostBoard(board) {
-        const hostBoard = document.getElementById("hostBoardGrid");
+        const hostBoard =
+            document.getElementById("hostBoardGrid");
 
         if (!hostBoard) {
-            console.error("hostBoardGrid element not found.");
+            console.error(
+                "hostBoardGrid element not found."
+            );
             return;
         }
 
-        if (!board || !Array.isArray(board.categories)) {
-            console.error("Invalid board received:", board);
+        if (
+            !board ||
+            !Array.isArray(board.categories)
+        ) {
+            console.error(
+                "Invalid board received:",
+                board
+            );
             return;
         }
 
         hostBoard.innerHTML = "";
 
-        const finishBtn = document.getElementById("finishRoundBtn");
-        const round2Btn = document.getElementById("round2Btn");
-        const roundLabel = document.getElementById("hostRoundLabel");
+        const finishBtn =
+            document.getElementById("finishRoundBtn");
 
-        if (finishBtn) finishBtn.style.display = "none";
-        if (round2Btn) round2Btn.style.display = "none";
+        const round2Btn =
+            document.getElementById("round2Btn");
 
-        if (roundLabel) {
-            roundLabel.textContent = currentRound === 2 ? "ROUND 2: DOUBLE JEOPARDY" : "ROUND 1: JEOPARDY";
+        const roundLabel =
+            document.getElementById("hostRoundLabel");
+
+        if (finishBtn) {
+            finishBtn.style.display = "none";
         }
 
-        const categories = board.categories.slice(0, 6);
+        if (round2Btn) {
+            round2Btn.style.display = "none";
+        }
 
+        if (roundLabel) {
+            roundLabel.textContent =
+                currentRound === 2
+                    ? "ROUND 2: DOUBLE JEOPARDY"
+                    : "ROUND 1: JEOPARDY";
+        }
+
+        // Safety: host board should always use six categories.
+        const categories =
+            board.categories.slice(0, 6);
+
+        console.log("================================");
         console.log("BUILDING HOST BOARD");
         console.log("ROUND:", currentRound);
-        console.log("RAW CATEGORY COUNT:", board.categories.length);
-        console.log("USING CATEGORY COUNT:", categories.length);
-        console.log("CATEGORIES:", categories.map(category => category.categoryName));
+        console.log(
+            "RAW CATEGORY COUNT:",
+            board.categories.length
+        );
+        console.log(
+            "USING CATEGORY COUNT:",
+            categories.length
+        );
+        console.log(
+            "CATEGORIES:",
+            categories.map(
+                category => category.categoryName
+            )
+        );
+        console.log("================================");
 
-        // HEADERS
+        // CATEGORY HEADERS
         categories.forEach(category => {
-            const header = document.createElement("div");
+            const header =
+                document.createElement("div");
+
             header.className = "hostHeader";
-            header.innerText = category.categoryName;
+            header.innerText =
+                category.categoryName;
+
             hostBoard.appendChild(header);
         });
 
-        const displayValues = currentRound === 2 ? ["400", "800", "1200", "1600", "2000"] : ["200", "400", "600", "800", "1000"];
-        const sourceValues = ["200", "400", "600", "800", "1000"];
+        // These are DISPLAY values, not JSON/source values.
+        const displayValues =
+            currentRound === 2
+                ? [
+                    "400",
+                    "800",
+                    "1200",
+                    "1600",
+                    "2000"
+                ]
+                : [
+                    "200",
+                    "400",
+                    "600",
+                    "800",
+                    "1000"
+                ];
 
-        for (let row = 0; row < 5; row++) {
+        // CLUE ROWS
+        displayValues.forEach(displayValue => {
             categories.forEach(category => {
-                const sourceValue = sourceValues[row];
-                const displayValue = displayValues[row];
-                const clue = category.clues.find(c => String(c.value) === sourceValue);
-                const tile = document.createElement("div");
+                const clue =
+                    category.clues.find(
+                        c =>
+                            String(c.value) ===
+                            String(displayValue)
+                    );
+
+                const tile =
+                    document.createElement("div");
 
                 tile.className = "hostTile";
 
                 if (!clue) {
+                    console.warn(
+                        "NO HOST CLUE:",
+                        category.categoryName,
+                        displayValue
+                    );
+
                     tile.classList.add("empty");
                     hostBoard.appendChild(tile);
                     return;
                 }
 
-                tile.innerText = "$" + value;
-                tile.dataset.clueId = clue.clueData.id;
+                tile.innerText =
+                    "$" + displayValue;
 
-                if (clue.clueData.used === true) {
+                tile.dataset.clueId =
+                    clue.clueData.id;
+
+                // Restore used clues after refresh/reconnect.
+                if (
+                    clue.clueData.used === true
+                ) {
                     tile.classList.add("used");
                 }
 
                 tile.onclick = () => {
-                    if (tile.classList.contains("used")) {
+                    if (
+                        tile.classList.contains("used")
+                    ) {
                         return;
                     }
 
                     currentHostClue = clue;
                     currentHostTile = tile;
-                    currentDailyDouble = clue.clueData.dailyDouble ? clue : null;
+
+                    currentDailyDouble =
+                        clue.clueData.dailyDouble
+                            ? clue
+                            : null;
 
                     showHostClue(clue);
 
-                    socket.emit("hostAction", {
-                        type: "selectClue",
-                        payload: {
-                            value: displayValue,
-                            clueData: clue.clueData
+                    socket.emit(
+                        "hostAction",
+                        {
+                            type: "selectClue",
+                            payload: {
+                                value:
+                                    displayValue,
+                                clueData:
+                                    clue.clueData
+                            }
                         }
-                    });
+                    );
                 };
 
                 hostBoard.appendChild(tile);
             });
-        }
+        });
+
+        console.log(
+            "HOST BOARD COMPLETE. CHILDREN:",
+            hostBoard.children.length
+        );
+
+        updateFinishRoundButton();
     }
 
     
