@@ -1131,57 +1131,6 @@ io.on("connection", (socket) => {
                     return;
                 }
 
-                if(game.currentClueIsDailyDouble){
-                    const wager=currentBuzzPlayer.dailyDoubleWager||0;
-
-                    currentBuzzPlayer.score=
-                        (currentBuzzPlayer.score||0)+wager;
-
-                    currentBuzzPlayer.correctAnswers=
-                        (currentBuzzPlayer.correctAnswers||0)+1;
-
-                    console.log(
-                        "DAILY DOUBLE CORRECT:",
-                        currentBuzzPlayer.name,
-                        "wager:",
-                        wager,
-                        "new score:",
-                        currentBuzzPlayer.score
-                    );
-
-                    setAllPlayerScreens("scorePage");
-
-                    io.emit("showScoreScreen", {
-                        players: getScorePlayers()
-                        /*
-                        players: game.players.map(player => {
-                            const character = characters.find(
-                                c => c.name === player.character
-                            );
-
-                            return {
-                                playerId: player.playerId,
-                                character: player.character,
-                                score: player.score || 0,
-                                animation: character?.animations?.idle || null
-                            };
-                        })
-                        */
-                    });
-
-                    broadcastToUnity({
-                        type:"showScoreScreen",
-                        playerId:currentBuzzPlayer.playerId,
-                        character:currentBuzzPlayer.character,
-                        score:currentBuzzPlayer.score,
-                        earned:wager
-                    });
-
-                    currentBuzzPlayer.dailyDoubleWager=0;
-
-                    return;
-                }
-
                 const earned = game.currentClueValue || 0;
 
                 currentBuzzPlayer.score =
@@ -1270,7 +1219,7 @@ io.on("connection", (socket) => {
             case "closeClue":
                 console.log("HOST ACTION: closeClue");
                 setAllPlayerScreens("scorePage");
-
+                clearAnswerTimer();
                 game.currentClueId = null;
                 game.currentClueValue = 0;
                 game.currentClueIsDailyDouble = false;
@@ -1298,7 +1247,7 @@ io.on("connection", (socket) => {
             // ENABLE / RESUME BUZZERS
             case "resumeBuzzing":
                 console.log("HOST ACTION: resumeBuzzing");
-
+                clearAnswerTimer();
                 buzzAccepted = true;
                 currentBuzzPlayer = null;
 
@@ -1542,6 +1491,8 @@ io.on("connection", (socket) => {
             }
 
             case "dailyDoubleCorrect": {
+                clearAnswerTimer();
+
                 if (
                     !currentDailyDoublePlayer ||
                     !currentDailyDoubleWagerSubmitted
@@ -1603,6 +1554,8 @@ io.on("connection", (socket) => {
             }
 
             case "dailyDoubleIncorrect": {
+                clearAnswerTimer();
+
                 if (
                     !currentDailyDoublePlayer ||
                     !currentDailyDoubleWagerSubmitted
@@ -1759,13 +1712,9 @@ io.on("connection", (socket) => {
             return;
         }
 
-        const requestedWager =
-            Math.max(0, parseInt(data?.wager) || 0);
-
-        const maxWager = Math.max(
-            game.currentClueValue || 0,
-            currentDailyDoublePlayer.score || 0
-        );
+        const requestedWager = Math.max(0, parseInt(data?.wager) || 0);
+        const playerScore = Number(currentDailyDoublePlayer.score) || 0;
+        const maxWager = playerScore > 0 ? playerScore : 500;
 
         currentDailyDoubleWager =
             Math.min(requestedWager, maxWager);
@@ -1872,30 +1821,6 @@ io.on("connection", (socket) => {
             if (hostSocketId) {
                 io.to(hostSocketId).emit("finalJeopardyAllWagers");
             }
-        }
-    });
-
-    socket.on("finalJeopardyWagerStatus", data => {
-        if (!isHost) return;
-        const status = document.getElementById("hostFinalWagerStatus");
-
-        if (status) {
-            status.textContent = `${data.submitted} OF ${data.total} WAGERS SUBMITTED`;
-        }
-    });
-
-    socket.on("finalJeopardyAllWagers", () => {
-        if (!isHost) return;
-
-        const status = document.getElementById("hostFinalWagerStatus");
-        const button = document.getElementById("hostRevealFinalClueBtn");
-
-        if (status) {
-            status.textContent = "ALL WAGERS SUBMITTED";
-        }
-
-        if (button) {
-            button.style.display = "block";
         }
     });
 

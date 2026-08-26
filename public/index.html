@@ -687,6 +687,70 @@
             background: rgba(0,0,0,0.85);
         }
 
+        #hostClueOverlay.dailyDoubleMode {
+            justify-content: flex-start;
+            padding-top: 7vh;
+            padding-bottom: 3vh;
+            box-sizing: border-box;
+        }
+
+        #hostClueOverlay.dailyDoubleMode #hostClueCard {
+            width: min(86vw, 650px);
+            height: min(42vh, 320px);
+            flex-shrink: 0;
+        }
+
+        #hostClueOverlay.dailyDoubleMode #dailyDoublePlayerArea {
+            position: relative;
+            left: auto;
+            bottom: auto;
+            transform: none;
+
+            width: min(94vw, 760px);
+            margin-top: 12px;
+
+            padding: 0 8px;
+            box-sizing: border-box;
+
+            z-index: 10020;
+        }
+
+        #hostClueOverlay.dailyDoubleMode #dailyDoublePlayerTitle {
+            margin: 0 0 8px 0;
+            font-size: clamp(15px, 2.5vw, 22px);
+            line-height: 1;
+        }
+
+        #hostClueOverlay.dailyDoubleMode #dailyDoublePlayerButtons {
+            width: 100%;
+
+            display: grid;
+            grid-template-columns:
+                repeat(3, minmax(0, 1fr));
+
+            gap: 6px;
+        }
+
+        #hostClueOverlay.dailyDoubleMode .dailyDoublePlayerBtn {
+            width: 100%;
+            min-width: 0;
+
+            padding: 7px 4px;
+
+            font-size:
+                clamp(10px, 1.8vw, 16px);
+
+            line-height: 1;
+
+            white-space: normal;
+            overflow-wrap: anywhere;
+        }
+
+        #hostClueOverlay.dailyDoubleMode #hostClueControls {
+            margin-top: 10px;
+            flex-shrink: 0;
+        }
+
         #hostClueCard {
             width: min(90vw, 700px);
             height: min(60vh, 450px);
@@ -1225,6 +1289,76 @@
             transform: translateX(-50%) translateY(-15px);
         }
     /* #endregion */
+
+    /* #region FINAL JEOPARDY */
+        #finalJeopardyWagerScreen {
+            position: fixed;
+            inset: 0;
+
+            background:
+                url('/backgrounds/WHostBG.jpg')
+                center / cover no-repeat;
+
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+
+            gap: clamp(18px, 4vh, 34px);
+
+            text-align: center;
+            z-index: 6000;
+
+            padding: 7vh 7vw;
+            box-sizing: border-box;
+        }
+
+        .finalJeopardyWagerTitle {
+            color: gold;
+
+            font-size:
+                clamp(38px, 10vw, 72px);
+
+            font-weight: bold;
+        }
+
+        .finalJeopardyCategoryLabel {
+            font-size:
+                clamp(18px, 5vw, 30px);
+        }
+
+        #finalJeopardyCategory {
+            color: orange;
+
+            font-size:
+                clamp(26px, 7vw, 46px);
+
+            font-weight: bold;
+        }
+
+        .finalJeopardyCurrentScore,
+        .finalJeopardyWagerPrompt,
+        #finalJeopardyMaxWager {
+            font-size:
+                clamp(20px, 5vw, 34px);
+        }
+
+        #finalJeopardyWagerInput {
+            width: min(70vw, 280px);
+
+            font-size:
+                clamp(24px, 6vw, 38px);
+
+            text-align: center;
+        }
+
+        #finalJeopardyWagerSubmit {
+            font-size:
+                clamp(20px, 5vw, 32px);
+
+            padding: 12px 28px;
+        }
+    /* #endregion */
 </style>
 
 
@@ -1333,7 +1467,7 @@
     <div id="dailyDoublePlayerName"></div>
     <div class="dailyDoubleCurrentScore">Your score: <span id="dailyDoublePlayerScore">$0</span></div>
     <div class="dailyDoubleWagerPrompt">How much do you want to wager?</div>
-    <input id="dailyDoubleWagerInput" type="number" min="0">
+    <input id="dailyDoubleWagerInput" type="number" min="0" step="10">
     <div id="dailyDoubleMaxWager"></div>
     <button id="dailyDoubleWagerSubmit" onclick="submitDailyDoubleWager()">SUBMIT WAGER</button>
 </div>
@@ -1345,34 +1479,36 @@
 </div>
 
 <div id="finalJeopardyWagerScreen" class="playerScreen hidden">
-    <div class="finalJeopardyTitle">
-        FINAL JEOPARDY
+    <div class="finalJeopardyWagerTitle">
+        FINAL JEOPARDY!
     </div>
 
-    <div class="finalJeopardyLabel">
+    <div class="finalJeopardyCategoryLabel">
         CATEGORY
     </div>
 
     <div id="finalJeopardyCategory"></div>
 
-    <div class="finalJeopardyScore">
-        YOUR SCORE:
+    <div class="finalJeopardyCurrentScore">
+        Your score:
         <span id="finalJeopardyScore">$0</span>
     </div>
 
-    <div>
-        ENTER YOUR WAGER
+    <div class="finalJeopardyWagerPrompt">
+        How much do you want to wager?
     </div>
 
     <input
         id="finalJeopardyWagerInput"
         type="number"
         min="0"
-    >
+        step="10">
 
     <div id="finalJeopardyMaxWager"></div>
 
-    <button onclick="submitFinalJeopardyWager()">
+    <button
+        id="finalJeopardyWagerSubmit"
+        onclick="submitFinalJeopardyWager()">
         SUBMIT WAGER
     </button>
 </div>
@@ -1499,13 +1635,6 @@
                 <button onclick="hostAnswerWrong()">NO</button>
             </div>
         </div>
-
-        <button
-            id="closeAnswerBtn"
-            onclick="hostCloseAnswer()"
-            style="display:none;">
-            CLOSE ANSWER
-        </button>
     </div>
 
     <div id="hostScoreReviewPg" class="hidden">
@@ -1528,6 +1657,33 @@
             id="showRound2BoardBtn"
             onclick="hostShowRound2Board()">
             Show Round 2 Board
+        </button>
+    </div>
+
+    <div id="hostFinalJeopardyPg" class="hostPage hidden">
+        <h1>FINAL JEOPARDY</h1>
+
+        <div class="hostFinalTitle">
+            FINAL JEOPARDY
+        </div>
+
+        <div id="hostFinalCategory"></div>
+
+        <div id="hostFinalWagerStatus">
+            WAITING FOR WAGERS...
+        </div>
+
+        <div
+            id="hostFinalWagerNotice"
+            class="hidden">
+            ALL WAGERS ARE LOCKED IN!
+        </div>
+
+        <button
+            id="hostRevealFinalClueBtn"
+            onclick="hostRevealFinalClue()"
+            style="display:none;">
+            SHOW FINAL CLUE
         </button>
     </div>
 </div>
@@ -1561,25 +1717,6 @@
         <div id="scoreChange" class="hidden"></div>
         <div id="scoreValue">$0</div>
     </div>
-</div>
-
-<div id="hostFinalJeopardyPg" class="hostPage hidden">
-    <h1>FINAL JEOPARDY</h1>
-
-    <div id="hostFinalCategory"></div>
-
-    <div id="hostFinalWagerStatus">
-        Waiting for wagers...
-    </div>
-
-    <div id="hostFinalPlayerStatus"></div>
-
-    <button
-        id="hostRevealFinalClueBtn"
-        onclick="hostRevealFinalClue()"
-        style="display:none;">
-        REVEAL FINAL CLUE
-    </button>
 </div>
 
 <div id="finalJeopardyWagerWaitingScreen" class="playerScreen hidden">
@@ -2608,6 +2745,14 @@
         hideAllPlayerScreens();
         showPlayerScreen("dailyDoubleWagerScreen");
 
+        const submitBtn = document.getElementById("dailyDoubleWagerSubmit");
+
+        if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.textContent =
+                "SUBMIT WAGER";
+        }
+
         const nameElement = document.getElementById("dailyDoublePlayerName");
         if (nameElement) {
             nameElement.textContent = "Team " + data.playerName;
@@ -2618,12 +2763,15 @@
             scoreElement.textContent = "$" + (data.score || 0);
         }
 
-        const maximum = Math.max(data.score || 0, data.clueValue || 0);
+        const playerScore = Number(data.score) || 0;
+        const maximum = playerScore > 0 ? playerScore : 500;
 
         const wagerInput = document.getElementById("dailyDoubleWagerInput");
         if (wagerInput) {
             wagerInput.value = "";
+            wagerInput.min = "0";
             wagerInput.max = maximum;
+            wagerInput.step = "10";
         }
 
         const maxWager = document.getElementById("dailyDoubleMaxWager");
@@ -2862,34 +3010,37 @@
     socket.on("finalJeopardyStart", data => {
         console.log("FINAL JEOPARDY START:", data);
 
+        // HOST
         if (isHost) {
             const category =
-                document.getElementById(
-                    "hostFinalCategory"
-                );
+                document.getElementById("hostFinalCategory");
 
             const status =
-                document.getElementById(
-                    "hostFinalWagerStatus"
-                );
+                document.getElementById("hostFinalWagerStatus");
 
-            const playerStatus =
-                document.getElementById(
-                    "hostFinalPlayerStatus"
-                );
+            const notice =
+                document.getElementById("hostFinalWagerNotice");
+
+            const revealBtn =
+                document.getElementById("hostRevealFinalClueBtn");
 
             if (category) {
                 category.textContent =
-                    data.category;
+                    data.category || "";
             }
 
             if (status) {
                 status.textContent =
-                    "WAITING FOR WAGERS";
+                    "WAITING FOR WAGERS...";
             }
 
-            if (playerStatus) {
-                playerStatus.innerHTML = "";
+            // Reset these every time Final Jeopardy starts.
+            if (notice) {
+                notice.classList.add("hidden");
+            }
+
+            if (revealBtn) {
+                revealBtn.style.display = "none";
             }
 
             localStorage.setItem(
@@ -2898,15 +3049,87 @@
             );
 
             showHostControls();
-
-            restoreHostPage(
-                "hostFinalJeopardyPg"
-            );
+            restoreHostPage("hostFinalJeopardyPg");
 
             return;
         }
 
+        // PLAYER
         showFinalJeopardyWagerScreen(data);
+    });
+
+    socket.on("finalJeopardyWagerStatus", data => {
+        if (!isHost) return;
+
+        console.log(
+            "FINAL JEOPARDY WAGER STATUS:",
+            data
+        );
+
+        const status =
+            document.getElementById(
+                "hostFinalWagerStatus"
+            );
+
+        if (!status) {
+            return;
+        }
+
+        const submitted =
+            Number(data.submitted) || 0;
+
+        const total =
+            Number(data.total) || 0;
+
+        status.textContent =
+            `${submitted} OF ${total} WAGERS SUBMITTED`;
+    });
+
+    socket.on("finalJeopardyAllWagers", () => {
+        if (!isHost) return;
+
+        console.log(
+            "ALL FINAL JEOPARDY WAGERS ARE IN"
+        );
+
+        const status =
+            document.getElementById(
+                "hostFinalWagerStatus"
+            );
+
+        const notice =
+            document.getElementById(
+                "hostFinalWagerNotice"
+            );
+
+        const button =
+            document.getElementById(
+                "hostRevealFinalClueBtn"
+            );
+
+        const totalPlayers =
+            Array.isArray(window.currentPlayers)
+                ? window.currentPlayers.length
+                : 0;
+
+        if (status) {
+            status.textContent =
+                totalPlayers > 0
+                    ? `${totalPlayers} OF ${totalPlayers} WAGERS SUBMITTED`
+                    : "ALL WAGERS SUBMITTED";
+        }
+
+        if (notice) {
+            notice.textContent =
+                "ALL WAGERS ARE LOCKED IN — READY TO SHOW THE CLUE";
+
+            notice.classList.remove("hidden");
+        }
+
+        if (button) {
+            button.style.display = "block";
+            button.disabled = false;
+        }
     });
 
     socket.on("finalJeopardyWagerAccepted", data => {
@@ -2916,8 +3139,7 @@
         hideAllPlayerScreens();
 
         showPlayerScreen("finalJeopardyWagerWaitingScreen");
-    }
-);
+    });
 
     document.addEventListener("click", e => {
         const overlay = document.getElementById("hostClueOverlay");
@@ -3412,6 +3634,10 @@
         const continueBtn = document.getElementById("clueContinueBtn");
         const closeAnswerBtn = document.getElementById("closeAnswerBtn");
 
+        if (enableBtn) {
+            enableBtn.disabled = false;
+        }
+
         if (!clue || !clue.clueData) {
             console.error("Invalid clue passed to showHostClue");
             return;
@@ -3439,8 +3665,14 @@
                 dailyDoubleBanner.classList.remove("hidden");
             }
 
-            // Daily Doubles do NOT use the buzzer.
-            enableBtn.style.display = "none";
+            if (enableBtn) {
+                enableBtn.style.display = "none";
+                enableBtn.disabled = true;
+            }
+
+            overlay.classList.add(
+                "dailyDoubleMode"
+            );
 
             socket.emit("hostAction", {
                 type: "dailyDouble",
@@ -3463,8 +3695,13 @@
 
             // Normal clue uses buzzer
             if (enableBtn) {
+                enableBtn.disabled = false;
                 enableBtn.style.display = "block";
             }
+
+            overlay.classList.remove(
+                "dailyDoubleMode"
+            );
 
             hideDailyDoublePlayerButtons();
         }
@@ -3637,11 +3874,16 @@
 
         if (enableBtn) {
             enableBtn.style.display = "none";
+            enableBtn.disabled = false;
         }
 
         if (overlay) {
             overlay.classList.remove("show");
         }
+
+        overlay.classList.remove(
+            "dailyDoubleMode"
+        );
 
         if (judgement) {
             judgement.classList.remove("show");
@@ -4043,7 +4285,8 @@
                 "buzzerPage",
                 "answeringPage",
                 "scorePage",
-                "finalJeopardyWagerWaitingScreen"
+                "finalJeopardyWagerWaitingScreen",
+                "finalJeopardyWagerScreen"
             ];
 
             screens.forEach(id => {
@@ -4636,6 +4879,11 @@
                     "finalJeopardyWagerInput"
                 );
 
+            const submitBtn =
+                document.getElementById(
+                    "finalJeopardyWagerSubmit"
+                );
+
             if (!input) return;
 
             const wager =
@@ -4658,6 +4906,17 @@
 
                 return;
             }
+
+            if (submitBtn) {
+                submitBtn.disabled = true;
+                submitBtn.textContent =
+                    "SUBMITTED";
+            }
+
+            console.log(
+                "SUBMITTING FINAL JEOPARDY WAGER:",
+                wager
+            );
 
             socket.emit(
                 "finalJeopardyWagerSubmit",
