@@ -1177,12 +1177,48 @@ io.on("connection", (socket) => {
                 currentBuzzPlayer = null;
 
                 game.players.forEach(player => {
-                    if (!buzzedPlayerIds.has(player.playerId)) {
-                        setPlayerScreen(player, "buzzerPage");
-                    }
-                });
+                    // Anyone who has already attempted this clue
+                    // cannot buzz again.
+                    if (
+                        buzzedPlayerIds.has(
+                            player.playerId
+                        )
+                    ) {
+                        console.log(
+                            "NOT RE-ENABLING BUZZER FOR:",
+                            player.name
+                        );
 
-                io.emit("resumeBuzzing");
+                        setPlayerScreen(
+                            player,
+                            "scorePage"
+                        );
+
+                        io.to(player.socketId).emit(
+                            "showScoreScreen",
+                            {
+                                players:
+                                    getScorePlayers()
+                            }
+                        );
+
+                        return;
+                    }
+
+                    console.log(
+                        "RE-ENABLING BUZZER FOR:",
+                        player.name
+                    );
+
+                    setPlayerScreen(
+                        player,
+                        "buzzerPage"
+                    );
+
+                    io.to(player.socketId).emit(
+                        "resumeBuzzing"
+                    );
+                });
 
                 broadcastToUnity({
                     type: "resumeBuzzing"
@@ -1260,7 +1296,8 @@ io.on("connection", (socket) => {
 
                     io.to(otherPlayer.socketId).emit("dailyDoubleWaiting", {
                         playerId: player.playerId,
-                        playerName: player.name
+                        playerName: player.name,
+                        character: player.character
                     });
                 });
 
@@ -1458,92 +1495,92 @@ io.on("connection", (socket) => {
                 break;
             }
         }
+    });
 
-        // PLAYER DAILY DOUBLE WAGER
-        socket.on("dailyDoubleWagerSubmit", data => {
-            console.log("DAILY DOUBLE WAGER SUBMIT RECEIVED:", data);
+    // PLAYER DAILY DOUBLE WAGER
+    socket.on("dailyDoubleWagerSubmit", data => {
+        console.log("DAILY DOUBLE WAGER SUBMIT RECEIVED:", data);
 
-            if (!game.currentClueIsDailyDouble) {
-                console.warn("Wager received but current clue is not a Daily Double.");
-                return;
-            }
+        if (!game.currentClueIsDailyDouble) {
+            console.warn("Wager received but current clue is not a Daily Double.");
+            return;
+        }
 
-            if (!currentDailyDoublePlayer) {
-                console.warn("No Daily Double player selected.");
-                return;
-            }
+        if (!currentDailyDoublePlayer) {
+            console.warn("No Daily Double player selected.");
+            return;
+        }
 
-            // Only the selected player may submit the wager.
-            if (socket.id !== currentDailyDoublePlayer.socketId) {
-                console.warn(
-                    "DAILY DOUBLE WAGER REJECTED - WRONG PLAYER:",
-                    socket.id
-                );
-                return;
-            }
-
-            if (currentDailyDoubleWagerSubmitted) {
-                console.warn("Daily Double wager already submitted.");
-                return;
-            }
-
-            const requestedWager =
-                Math.max(0, parseInt(data?.wager) || 0);
-
-            const maxWager = Math.max(
-                game.currentClueValue || 0,
-                currentDailyDoublePlayer.score || 0
+        // Only the selected player may submit the wager.
+        if (socket.id !== currentDailyDoublePlayer.socketId) {
+            console.warn(
+                "DAILY DOUBLE WAGER REJECTED - WRONG PLAYER:",
+                socket.id
             );
+            return;
+        }
 
-            currentDailyDoubleWager =
-                Math.min(requestedWager, maxWager);
+        if (currentDailyDoubleWagerSubmitted) {
+            console.warn("Daily Double wager already submitted.");
+            return;
+        }
 
-            currentDailyDoublePlayer.dailyDoubleWager =
-                currentDailyDoubleWager;
+        const requestedWager =
+            Math.max(0, parseInt(data?.wager) || 0);
 
-            currentDailyDoubleWagerSubmitted = true;
-            currentBuzzPlayer = currentDailyDoublePlayer;
+        const maxWager = Math.max(
+            game.currentClueValue || 0,
+            currentDailyDoublePlayer.score || 0
+        );
 
-            setPlayerScreen(
-                currentDailyDoublePlayer,
-                "dailyDoubleSubmittedScreen"
-            );
+        currentDailyDoubleWager =
+            Math.min(requestedWager, maxWager);
 
-            console.log("================================");
-            console.log("DAILY DOUBLE WAGER SUBMITTED");
-            console.log("PLAYER:", currentDailyDoublePlayer.name);
-            console.log("WAGER:", currentDailyDoubleWager);
-            console.log("================================");
+        currentDailyDoublePlayer.dailyDoubleWager =
+            currentDailyDoubleWager;
 
-            // Selected player's phone
-            io.to(currentDailyDoublePlayer.socketId).emit(
-                "dailyDoubleWagerAccepted",
+        currentDailyDoubleWagerSubmitted = true;
+        currentBuzzPlayer = currentDailyDoublePlayer;
+
+        setPlayerScreen(
+            currentDailyDoublePlayer,
+            "dailyDoubleSubmittedScreen"
+        );
+
+        console.log("================================");
+        console.log("DAILY DOUBLE WAGER SUBMITTED");
+        console.log("PLAYER:", currentDailyDoublePlayer.name);
+        console.log("WAGER:", currentDailyDoubleWager);
+        console.log("================================");
+
+        // Selected player's phone
+        io.to(currentDailyDoublePlayer.socketId).emit(
+            "dailyDoubleWagerAccepted",
+            {
+                playerId: currentDailyDoublePlayer.playerId,
+                playerName: currentDailyDoublePlayer.name,
+                wager: currentDailyDoubleWager
+            }
+        );
+
+        // Host browser
+        if (hostSocketId) {
+            io.to(hostSocketId).emit(
+                "dailyDoubleWagerSubmitted",
                 {
                     playerId: currentDailyDoublePlayer.playerId,
                     playerName: currentDailyDoublePlayer.name,
                     wager: currentDailyDoubleWager
                 }
             );
+        }
 
-            // Host browser
-            if (hostSocketId) {
-                io.to(hostSocketId).emit(
-                    "dailyDoubleWagerSubmitted",
-                    {
-                        playerId: currentDailyDoublePlayer.playerId,
-                        playerName: currentDailyDoublePlayer.name,
-                        wager: currentDailyDoubleWager
-                    }
-                );
-            }
-
-            // Reveal the actual Daily Double clue in Unity now.
-            broadcastToUnity({
-                type: "revealDailyDoubleClue",
-                playerId: currentDailyDoublePlayer.playerId,
-                playerName: currentDailyDoublePlayer.name,
-                wager: currentDailyDoubleWager
-            });
+        // Reveal the actual Daily Double clue in Unity now.
+        broadcastToUnity({
+            type: "revealDailyDoubleClue",
+            playerId: currentDailyDoublePlayer.playerId,
+            playerName: currentDailyDoublePlayer.name,
+            wager: currentDailyDoubleWager
         });
     });
 

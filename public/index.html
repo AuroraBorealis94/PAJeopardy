@@ -706,12 +706,8 @@
         }
 
         #hostClueOverlay:has(#dailyDoubleBanner:not(.hidden)) #hostClueCard {
-            transform: translateY(-55px) scale(1);
+            transform: translateY(-25px) scale(0.92);
         }
-        /*
-        #hostClueOverlay.show:has(#dailyDoubleBanner:not(.hidden)) #hostClueCard {
-            transform: translateY(-55px) scale(1);
-        }*/
     /* #endregion */
 
     /* #region Daily Double Screens */
@@ -1105,36 +1101,38 @@
         #dailyDoublePlayerArea {
             position: fixed;
             left: 50%;
-            bottom: 3%;
+            bottom: 7%;
             transform: translateX(-50%);
-            width: min(94vw, 900px);
+            width: min(96vw, 900px);
             z-index: 10020;
             text-align: center;
             box-sizing: border-box;
+            padding: 0 10px;
         }
 
         #dailyDoublePlayerTitle {
-            font-size: clamp(18px, 3vw, 28px);
-            margin-bottom: 12px;
+            font-size: clamp(16px, 2.5vw, 24px);
+            margin-bottom: 8px;
+            line-height: 1.1;
         }
 
         #dailyDoublePlayerButtons {
             width: 100%;
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: center;
-            align-items: center;
-            gap: 10px;
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 7px;
         }
 
         .dailyDoublePlayerBtn {
-            flex: 0 1 auto;
-            min-width: 120px;
-            max-width: 240px;
-            padding: 10px 16px;
-            font-size: clamp(14px, 2.5vw, 20px);
+            width: 100%;
+            min-width: 0;
+            max-width: none;
+            padding: 8px 5px;
+            box-sizing: border-box;
+            font-size: clamp(11px, 1.8vw, 17px);
+            line-height: 1.05;
             white-space: normal;
-            overflow-wrap: break-word;
+            overflow-wrap: anywhere;
         }
     /* #endregion */
 
@@ -2513,17 +2511,32 @@
             return;
         }
 
+        console.log("DAILY DOUBLE - ANOTHER PLAYER IS ANSWERING:", data);
+
         canBuzz = false;
 
         const lobby = document.getElementById("lobbyUI");
+
         if (lobby) {
             lobby.style.display = "none";
         }
 
         hideAllPlayerScreens();
 
+        const answeringPage = document.getElementById("answeringPage");
         const answeringTitle = document.getElementById("answeringTitle");
         const answeringName = document.getElementById("answeringName");
+        const answeringCharacter = document.getElementById("answeringCharacter");
+
+        // Use the same neutral screen as a normal clue when
+        // another player is answering.
+        if (answeringPage) {
+            answeringPage.style.backgroundImage =
+                "url('/backgrounds/WHostBG.jpg')";
+            answeringPage.style.backgroundSize = "cover";
+            answeringPage.style.backgroundPosition = "center";
+            answeringPage.style.backgroundRepeat = "no-repeat";
+        }
 
         if (answeringTitle) {
             answeringTitle.textContent = "IS ANSWERING";
@@ -2531,6 +2544,24 @@
 
         if (answeringName) {
             answeringName.textContent = "Team " + data.playerName;
+        }
+
+        if (answeringCharacter) {
+            answeringCharacter.style.display = "block";
+
+            const character =
+                characters.find(c => c.name === data.character);
+
+            if (character?.front) {
+                answeringCharacter.src = character.front;
+            } else {
+                console.warn(
+                    "Could not find Daily Double character card:",
+                    data.character
+                );
+
+                answeringCharacter.removeAttribute("src");
+            }
         }
 
         showPlayerScreen("answeringPage");
