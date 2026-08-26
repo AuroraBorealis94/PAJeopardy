@@ -2342,29 +2342,34 @@
                 "hostJudgementQuestion"
             );
 
-        const inner =
+        const enableBtn =
             document.getElementById(
-                "hostClueInner"
+                "enableBuzzerBtn"
             );
 
         if (question) {
             question.textContent =
-                `TIME'S UP FOR ${data.playerName}!`;
+                `TIME'S UP FOR TEAM ${data.playerName}! PRESS NO TO CONTINUE.`;
         }
 
-        if (inner) {
-            inner.classList.remove("flipped");
+        if (judgement) {
+            judgement.classList.add("show");
+
+            judgement.hidden = false;
+            judgement.style.display = "flex";
+            judgement.style.flexDirection = "column";
+            judgement.style.visibility = "visible";
+            judgement.style.opacity = "1";
+            judgement.style.pointerEvents = "auto";
         }
 
-        hostAnswerShowing = false;
-        currentBuzzPlayer = null;
+        // Do NOT clear currentBuzzPlayer here.
+        // Do NOT hide the judgement area.
+        // Do NOT resume buzzers.
 
-        setTimeout(() => {
-            if (judgement) {
-                judgement.classList.remove("show");
-                judgement.style.display = "none";
-            }
-        }, 1200);
+        if (enableBtn) {
+            enableBtn.style.display = "none";
+        }
     });
 
     socket.on("scoreUpdate",data=>{
@@ -2678,8 +2683,7 @@
                     (Number(currentScore) || 0)
                         .toLocaleString();
 
-                answeringScore.style.display =
-                    "block";
+                answeringScore.style.display = "block";
             }
         } else {
             console.log("ANOTHER PLAYER IS ANSWERING:", data.playerName);
@@ -2821,6 +2825,10 @@
         const answeringTitle = document.getElementById("answeringTitle");
         const answeringName = document.getElementById("answeringName");
         const answeringCharacter = document.getElementById("answeringCharacter");
+        const answeringScore =
+            document.getElementById(
+                "answeringScore"
+            );
 
         // Use the same neutral screen as a normal clue when
         // another player is answering.
@@ -2857,7 +2865,10 @@
                 answeringCharacter.removeAttribute("src");
             }
         }
-
+        if (answeringScore) {
+            answeringScore.textContent = "";
+            answeringScore.style.display = "none";
+        }
         showPlayerScreen("answeringPage");
     });
 

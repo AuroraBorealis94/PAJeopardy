@@ -61,8 +61,8 @@
       {
         "id": "B_800_1",
         "clue": "This family member admires Khutulun, Mongolian warrior princess, a great-great-granddaughter of Genghis Khan who was undefeated in wrestling and military strategy.",
-        "answer": "Who is Sammy?",
-	"answerImage": "/answerImages/Princess_Sammy.jpg"
+	"clueImage": "/clueImages/Princess_Sammy.jpg"
+        "answer": "Who is Sammy?"
       },
       {
         "id": "B_800_2",

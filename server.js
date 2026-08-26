@@ -48,7 +48,12 @@ let currentDailyDoubleWagerSubmitted=false;
 
 let answerTimer = null;
 
-const ANSWER_TIME_MS = 10000;
+const ANSWER_TIME_SECONDS = 12;
+const ANSWER_TIME_MS = ANSWER_TIME_SECONDS * 1000;
+
+// Gives Unity a fraction of a second to visibly finish
+// before the server changes the game state.
+const ANSWER_TIMER_GRACE_MS = 600;
 
 // BRIDGE FROM SOCKET.IO TO WEBSOCKET
 const WebSocket = require("ws");
@@ -1868,7 +1873,7 @@ io.on("connection", (socket) => {
 
         broadcastToUnity({
             type: "startAnswerTimer",
-            duration: ANSWER_TIME_MS / 1000
+            duration: ANSWER_TIME_SECONDS
         });
 
         answerTimer = setTimeout(() => {
@@ -1884,10 +1889,14 @@ io.on("connection", (socket) => {
                 player.name
             );
 
+            // Unity finishes the visible timer / shows TIME'S UP.
             broadcastToUnity({
-                type: "answerTimeUp"
+                type: "answerTimeUp",
+                playerId: player.playerId,
+                playerName: player.name
             });
 
+            // Tell host, but KEEP judgement open.
             if (hostSocketId) {
                 io.to(hostSocketId).emit(
                     "answerTimeUp",
@@ -1898,31 +1907,34 @@ io.on("connection", (socket) => {
                 );
             }
 
-            currentBuzzPlayer = null;
+            // Everyone goes back to their normal holding score page.
+            setAllPlayerScreens("scorePage");
 
-            // Re-enable only players that have not already tried.
-            game.players.forEach(otherPlayer => {
-                if (
-                    buzzedPlayerIds.has(
-                        otherPlayer.playerId
-                    )
-                ) {
-                    return;
-                }
-
-                setPlayerScreen(
-                    otherPlayer,
-                    "buzzerPage"
-                );
-
-                io.to(otherPlayer.socketId).emit(
-                    "resumeBuzzing"
+            game.players.forEach(gamePlayer => {
+                io.to(gamePlayer.socketId).emit(
+                    "showScoreScreen",
+                    {
+                        players: getScorePlayers(),
+                        reason: "answerTimeUp"
+                    }
                 );
             });
 
-            buzzAccepted = true;
+            // IMPORTANT:
+            // Do not clear currentBuzzPlayer.
+            //
+            // Host still has to press NO before this clue
+            // can continue.
+
+            buzzAccepted = false;
+
             answerTimer = null;
-        }, ANSWER_TIME_MS);
+
+            console.log(
+                "TIME EXPIRED - WAITING FOR HOST TO PRESS NO"
+            );
+
+        }, ANSWER_TIME_MS + ANSWER_TIMER_GRACE_MS);
 
         const buzzData = {
             playerId: player.playerId,
