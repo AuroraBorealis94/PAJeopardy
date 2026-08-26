@@ -1412,7 +1412,7 @@ io.on("connection", (socket) => {
                         game.finalJeopardy.clue,
 
                     clueImage:
-                        game.finalJeopardy.clueImage
+                        game.finalJeopardy.clueImage,
 
                     answer:
                         game.finalJeopardy.answer,

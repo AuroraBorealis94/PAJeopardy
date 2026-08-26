@@ -1239,6 +1239,20 @@
             z-index: 0;
         }
 
+        .playerBottomScore {
+            font-size: clamp(34px, 8vw, 54px);
+            font-weight: bold;
+            line-height: 1;
+            white-space: nowrap;
+            text-align: center;
+
+            text-shadow:
+                3px 3px 0 #000,
+                -3px -3px 0 #000,
+                3px -3px 0 #000,
+                -3px 3px 0 #000;
+        }
+
         #scoreHud {
             position: absolute;
             left: 50%;
@@ -1706,7 +1720,7 @@
         <div id="answeringName"></div>
         <div id="answeringTitle"></div>
     </div>
-    <div id="answeringScore">$0</div>
+    <div id="answeringScore" class="playerBottomScore">$0</div>
 </div>
 
 <!-- SCORE PAGE -->
@@ -1715,7 +1729,7 @@
 
     <div id="scoreHud">
         <div id="scoreChange" class="hidden"></div>
-        <div id="scoreValue">$0</div>
+        <div id="scoreValue" class="playerBottomScore">$0</div>
     </div>
 </div>
 
