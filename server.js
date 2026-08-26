@@ -46,6 +46,10 @@ let currentDailyDoubleWager=0;
 let currentDailyDoublePlayer=null;
 let currentDailyDoubleWagerSubmitted=false;
 
+let answerTimer = null;
+
+const ANSWER_TIME_MS = 10000;
+
 // BRIDGE FROM SOCKET.IO TO WEBSOCKET
 const WebSocket = require("ws");
 const wss = new WebSocket.Server({
@@ -384,6 +388,13 @@ function generateBoard(roundNumber) {
     }
 
     console.log("================================");
+}
+
+function clearAnswerTimer() {
+    if (answerTimer) {
+        clearTimeout(answerTimer);
+        answerTimer = null;
+    }
 }
 
 function generateFinalJeopardy() {
@@ -1113,6 +1124,8 @@ io.on("connection", (socket) => {
             case "answerCorrect": {
                 console.log("HOST ACTION: answerCorrect");
 
+                clearAnswerTimer();
+
                 if (!currentBuzzPlayer) {
                     console.warn("No player to award points to.");
                     return;
@@ -1206,6 +1219,8 @@ io.on("connection", (socket) => {
             case "continueClue":
                 console.log("HOST ACTION: continueClue");
 
+                clearAnswerTimer();
+
                 game.currentClueId = null;
                 game.currentClueValue = 0;
                 game.currentClueIsDailyDouble = false;
@@ -1229,6 +1244,8 @@ io.on("connection", (socket) => {
             // REVEAL ANSWER
             case "revealAnswer": {
                 console.log("HOST ACTION: revealAnswer");
+
+                clearAnswerTimer();
 
                 buzzAccepted = false;
 
@@ -1905,6 +1922,66 @@ io.on("connection", (socket) => {
         buzzAccepted = false;
         buzzedPlayerIds.add(player.playerId);
         currentBuzzPlayer = player;
+
+        clearAnswerTimer();
+
+        broadcastToUnity({
+            type: "startAnswerTimer",
+            duration: ANSWER_TIME_MS / 1000
+        });
+
+        answerTimer = setTimeout(() => {
+            if (
+                !currentBuzzPlayer ||
+                currentBuzzPlayer.playerId !== player.playerId
+            ) {
+                return;
+            }
+
+            console.log(
+                "ANSWER TIME UP:",
+                player.name
+            );
+
+            broadcastToUnity({
+                type: "answerTimeUp"
+            });
+
+            if (hostSocketId) {
+                io.to(hostSocketId).emit(
+                    "answerTimeUp",
+                    {
+                        playerId: player.playerId,
+                        playerName: player.name
+                    }
+                );
+            }
+
+            currentBuzzPlayer = null;
+
+            // Re-enable only players that have not already tried.
+            game.players.forEach(otherPlayer => {
+                if (
+                    buzzedPlayerIds.has(
+                        otherPlayer.playerId
+                    )
+                ) {
+                    return;
+                }
+
+                setPlayerScreen(
+                    otherPlayer,
+                    "buzzerPage"
+                );
+
+                io.to(otherPlayer.socketId).emit(
+                    "resumeBuzzing"
+                );
+            });
+
+            buzzAccepted = true;
+            answerTimer = null;
+        }, ANSWER_TIME_MS);
 
         const buzzData = {
             playerId: player.playerId,

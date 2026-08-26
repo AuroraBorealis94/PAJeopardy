@@ -1038,6 +1038,23 @@
             text-align: center;
         }
 
+        #answeringScore {
+            position: absolute;
+            left: 50%;
+            bottom: 5%;
+            transform: translateX(-50%);
+            z-index: 20;
+
+            font-size: clamp(30px, 7vw, 48px);
+            font-weight: bold;
+
+            text-shadow:
+                3px 3px 0 #000,
+                -3px -3px 0 #000,
+                3px -3px 0 #000,
+                -3px 3px 0 #000;
+        }
+
         #answeringCharacter {
             display: block;
             width: 220px;
@@ -1533,6 +1550,7 @@
         <div id="answeringName"></div>
         <div id="answeringTitle"></div>
     </div>
+    <div id="answeringScore">$0</div>
 </div>
 
 <!-- SCORE PAGE -->
@@ -2155,6 +2173,49 @@
         canBuzz = false;
     });
 
+    socket.on("answerTimeUp", data => {
+        if (!isHost) return;
+
+        console.log(
+            "TIME UP FOR:",
+            data.playerName
+        );
+
+        const judgement =
+            document.getElementById(
+                "hostJudgementArea"
+            );
+
+        const question =
+            document.getElementById(
+                "hostJudgementQuestion"
+            );
+
+        const inner =
+            document.getElementById(
+                "hostClueInner"
+            );
+
+        if (question) {
+            question.textContent =
+                `TIME'S UP FOR ${data.playerName}!`;
+        }
+
+        if (inner) {
+            inner.classList.remove("flipped");
+        }
+
+        hostAnswerShowing = false;
+        currentBuzzPlayer = null;
+
+        setTimeout(() => {
+            if (judgement) {
+                judgement.classList.remove("show");
+                judgement.style.display = "none";
+            }
+        }, 1200);
+    });
+
     socket.on("scoreUpdate",data=>{
         const scoreDisplay=document.getElementById("playerScoreDisplay");
 
@@ -2364,7 +2425,6 @@
         console.log("================================");
 
         const storedHost = localStorage.getItem("isHost") === "true";
-
         if (storedHost && !isHost) {
             console.warn("RESTORING HOST STATE FROM LOCAL STORAGE.");
             isHost = true;
@@ -2439,6 +2499,8 @@
         const myPlayerId = localStorage.getItem("playerId");
         const isMe = data.playerId === myPlayerId;
 
+        const answeringScore = document.getElementById("answeringScore");
+
         hideAllPlayerScreens();
 
         if (isMe) {
@@ -2457,6 +2519,16 @@
 
             if (answeringTitle) {
                 answeringTitle.textContent = "";
+            }
+
+            if (answeringScore) {
+                answeringScore.textContent =
+                    "$" +
+                    (Number(currentScore) || 0)
+                        .toLocaleString();
+
+                answeringScore.style.display =
+                    "block";
             }
         } else {
             console.log("ANOTHER PLAYER IS ANSWERING:", data.playerName);
@@ -2487,6 +2559,9 @@
                     console.warn("Could not find answering character card:", data.character);
                     answeringCharacter.removeAttribute("src");
                 }
+            }
+            if (answeringScore) {
+                answeringScore.style.display = "none";
             }
         }
 
