@@ -1413,6 +1413,12 @@ io.on("connection", (socket) => {
 
                     clueImage:
                         game.finalJeopardy.clueImage
+
+                    answer:
+                        game.finalJeopardy.answer,
+
+                    answerImage:
+                        game.finalJeopardy.answerImage
                 };
 
                 game.players.forEach(player => {
@@ -1818,9 +1824,16 @@ io.on("connection", (socket) => {
         }
 
         if (total > 0 && submitted === total) {
+            console.log("ALL FINAL JEOPARDY WAGERS SUBMITTED");
+
             if (hostSocketId) {
                 io.to(hostSocketId).emit("finalJeopardyAllWagers");
             }
+
+            // Unity removes the Final Jeopardy cover.
+            broadcastToUnity({
+                type: "finalJeopardyAllWagers"
+            });
         }
     });
 
