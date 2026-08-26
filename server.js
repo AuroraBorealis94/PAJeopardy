@@ -1458,17 +1458,14 @@ io.on("connection", (socket) => {
                 );
                 console.log("================================");
 
-                // All phones return to their normal holding screen.
-                setAllPlayerScreens("clueHoldingScreen");
+                // Players return to their character score/holding page
+                // while the Round 2 board is being shown in Unity.
+                setAllPlayerScreens("scorePage");
 
                 game.players.forEach(player => {
-                    io.to(player.socketId).emit(
-                        "showClueHolding",
-                        {
-                            round: 2,
-                            score: player.score || 0
-                        }
-                    );
+                    io.to(player.socketId).emit("showScoreScreen", {
+                        players: getScorePlayers()
+                    });
                 });
 
                 // Unity leaves ScoresUI and returns to BoardIntroUI.
