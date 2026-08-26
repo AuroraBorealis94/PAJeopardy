@@ -1506,13 +1506,11 @@
     console.log("Saved host reconnect token:", savedHostReconnectToken);
 
     const socket = io({
-        auth: {
-            hostReconnectToken: savedHostReconnectToken || null
-        },
         reconnection: true,
-        reconnectionAttempts: 20,
-        reconnectionDelay: 2000,
+        reconnectionAttempts: Infinity,
+        reconnectionDelay: 1500,
         reconnectionDelayMax: 10000,
+        randomizationFactor: 0.5,
         timeout: 20000
     });
 
@@ -1532,10 +1530,8 @@
     let currentIndex = 0;
     let currentScore = 0;
     let requestingHost = false;
-    let socketConnected = false;
-    let sessionReceived = false;
     let currentSession = null;
-    let reconnectAttempted = false;
+    let resumeRequested = false;
     let realCards = [];
     let lockedSet = new Set();
     let canBuzz = true;
@@ -1613,15 +1609,12 @@
 
         updatePreview();
         updateHostButton();
-        tryReconnect();
     });
 
     // CONNECT
     socket.on("connect", () => {
         console.log("SOCKET CONNECTED:", socket.id);
-        socketConnected = true;
-        reconnectAttempted = false;
-        tryReconnect();
+        resumeRequested = false;
     });
 
     // DISCONNECT
@@ -1646,38 +1639,29 @@
     // GAME STATE SYNC
     socket.on("gameStateSync", data => {
         console.log("SYNC STATE:", data);
-
-        const storedIsHost = localStorage.getItem("isHost") === "true";
-        const hostPending = requestingHost || storedIsHost || isHost || socket.isHost;
-
-        console.log("GAME STATE HOST CHECK:", {
-            isHost,
-            storedIsHost,
-            requestingHost,
-            hostPending,
-            socketIsHost: socket.isHost,
-            hostSession: localStorage.getItem("hostSession"),
-            currentSession
-        });
-
         // HOST
-        if (hostPending) {
-            isHost = true;
+        if (data.role === "host") {
+            console.log("SERVER CONFIRMED THIS CLIENT IS HOST");
 
-            localStorage.setItem("isHost", "true");
+            isHost = true;
+            requestingHost = false;
+
+            localStorage.setItem("clientRole", "host");
 
             if (currentSession) {
-                localStorage.setItem("hostSession", currentSession);
+                localStorage.setItem("gameSession", currentSession);
             }
 
             const pageToRestore =
                 data.hostScreen ||
-                localStorage.getItem("lastHostPage") ||
                 "hostJoinPg";
 
-            console.log("RESTORING HOST SCREEN:", pageToRestore);
+            console.log("RESTORING HOST PAGE:", pageToRestore);
 
-            localStorage.setItem("lastHostPage", pageToRestore);
+            localStorage.setItem(
+                "lastHostPage",
+                pageToRestore
+            );
 
             showHostControls();
             restoreHostPage(pageToRestore);
@@ -1685,212 +1669,109 @@
             return;
         }
 
-        // SAFETY CHECK: NEVER LET A SERVER-AUTHENTICATED HOST BECOME A PLAYER
-        if (socket.isHost) {
-            console.warn("GAME STATE SYNC: SOCKET IS HOST. PRESERVING HOST STATE.");
+        // PLAYER
+        if (data.role === "player") {
+            console.log("SERVER CONFIRMED THIS CLIENT IS PLAYER");
 
-            isHost = true;
-            localStorage.setItem("isHost", "true");
+            isHost = false;
+            requestingHost = false;
+
+            localStorage.setItem(
+                "clientRole",
+                "player"
+            );
 
             if (currentSession) {
-                localStorage.setItem("hostSession", currentSession);
+                localStorage.setItem(
+                    "gameSession",
+                    currentSession
+                );
             }
+
+            lockedSet = new Set(
+                (data.lockedCharacters || [])
+                    .map(c => c.toLowerCase())
+            );
+
+            updateLockedUI();
+
+            currentScore =
+                Number(data.playerScore) || 0;
+
+            restorePlayerScreen(data);
 
             return;
         }
 
-        // PLAYER
-        isHost = false;
-
-        lockedSet = new Set(
-            (data.lockedCharacters || []).map(c => c.toLowerCase())
+        console.log(
+            "GAME STATE SYNC RECEIVED WITHOUT ROLE:",
+            data
         );
-
-        updateLockedUI();
-
-        if (data.playerScreen) {
-            console.log("RESTORING PLAYER SCREEN:", data.playerScreen);
-
-            const lobby = document.getElementById("lobbyUI");
-
-            if (lobby) {
-                lobby.style.display = "none";
-            }
-
-            currentScore = Number(data.playerScore) || 0;
-
-            const scoreValue = document.getElementById("scoreValue");
-
-            if (scoreValue) {
-                scoreValue.textContent = "$" + currentScore.toLocaleString();
-            }
-
-            if (data.playerScreen === "scorePage") {
-                setScorePageBackground("holding");
-            }
-
-            hideAllPlayerScreens();
-            showPlayerScreen(data.playerScreen);
-
-            return;
-        }                                           
-
-        if (data.state === "lobby") {
-            hideAllPlayerScreens();
-
-            const lobby = document.getElementById("lobbyUI");
-
-            if (lobby) {
-                lobby.style.display = "block";
-                lobby.classList.remove("hidden");
-                lobby.style.pointerEvents = "auto";
-            }
-
-            const waiting = document.getElementById("waitingScreen");
-
-            if (waiting) {
-                waiting.classList.remove("show");
-                waiting.classList.add("hidden");
-            }
-
-            return;
-        }
-
-        if (data.state === "playing") {
-            const lobby = document.getElementById("lobbyUI");
-
-            if (lobby) {
-                lobby.style.display = "none";
-            }
-
-            return;
-        }
-
-        if (data.state === "buzzer") {
-            const lobby = document.getElementById("lobbyUI");
-
-            if (lobby) {
-                lobby.style.display = "none";
-            }
-
-            showPlayerScreen("waitingScreen");
-            return;
-        }
-
-        if (data.state === "midCutscene") {
-            const lobby = document.getElementById("lobbyUI");
-
-            if (lobby) {
-                lobby.style.display = "none";
-            }
-
-            setScorePageBackground("holding");
-            showPlayerScreen("scorePage");
-
-            const scoreValue = document.getElementById("scoreValue");
-
-            if (scoreValue) {
-                scoreValue.textContent = "$" + (Number(currentScore) || 0).toLocaleString();
-            }
-
-            return;
-        }
     });
 
     // GAME SESSION
     socket.on("gameSession", session => {
-        const savedSession = localStorage.getItem("gameSession");
-        const savedHostSession = localStorage.getItem("hostSession");
-        const storedIsHost = localStorage.getItem("isHost") === "true";
-
         currentSession = String(session);
-        sessionReceived = true;
 
-        console.log("================================");
-        console.log("GAME SESSION RECEIVED");
-        console.log("SERVER SESSION:", session);
-        console.log("SAVED PLAYER SESSION:", savedSession);
-        console.log("SAVED HOST SESSION:", savedHostSession);
-        console.log("STORED IS HOST:", storedIsHost);
-        console.log("REQUESTING HOST:", requestingHost);
-        console.log("CURRENT isHost:", isHost);
-        console.log("================================");
+        console.log("GAME SESSION:", currentSession);
 
-        /*
-         * IMPORTANT:
-         *
-         * Do NOT clear host state simply because isHost has
-         * not been confirmed yet.
-         *
-         * The server's hostConfirmed event is responsible for
-         * establishing host identity.
-         */
+        if (resumeRequested) {
+            return;
+        }
 
-        if (storedIsHost && savedHostSession) {
+        resumeRequested = true;
 
-            if (String(savedHostSession) === String(session)) {
+        const storedRole = localStorage.getItem("clientRole");
+        const storedSession = localStorage.getItem("gameSession");
 
-                console.log("VALID SAVED HOST SESSION.");
+        if (!storedRole || !storedSession) {
+            console.log("No saved client session to resume.");
+            return;
+        }
 
-                isHost = true;
-                requestingHost = false;
+        if (String(storedSession) !== currentSession) {
+            console.log("Saved session belongs to an old server session.");
 
-                console.log("HOST STATE PRESERVED.");
+            clearSavedGameIdentity();
+            return;
+        }
 
-            } else {
+        if (storedRole === "host") {
+            const hostToken = localStorage.getItem("paHostReconnectToken");
 
-                console.log(
-                    "SERVER SESSION CHANGED. CLEARING OLD HOST STATE."
-                );
-
-                localStorage.removeItem("isHost");
-                localStorage.removeItem("hostSession");
-                localStorage.removeItem("lastHostPage");
-                localStorage.removeItem("paHostReconnectToken");
-
-                isHost = false;
-                requestingHost = false;
+            if (!hostToken) {
+                console.log("No host token available.");
+                clearSavedGameIdentity();
+                return;
             }
-        }
 
-        /*
-         * If we are currently requesting the host slot,
-         * DO NOT treat this temporary gameSession message
-         * as proof that we are a player.
-         */
-        if (requestingHost) {
-            console.log(
-                "HOST REQUEST IN PROGRESS - WAITING FOR HOST CONFIRMATION."
-            );
+            console.log("REQUESTING HOST RESUME");
 
-            tryReconnect();
+            socket.emit("resumeClient", {
+                role: "host",
+                session: currentSession,
+                hostToken
+            });
+
             return;
         }
 
-        /*
-         * PLAYER SESSION CHECK
-         */
-        if (
-            savedSession &&
-            String(savedSession) !== String(session) &&
-            !isHost &&
-            !storedIsHost
-        ) {
-            console.log(
-                "SERVER SESSION CHANGED. CLEARING PLAYER STATE."
-            );
+        if (storedRole === "player") {
+            const playerId = localStorage.getItem("playerId");
 
-            localStorage.removeItem("playerId");
-            localStorage.removeItem("name");
-            localStorage.removeItem("character");
-            localStorage.removeItem("hasJoined");
-            localStorage.removeItem("gameSession");
+            if (!playerId) {
+                clearSavedGameIdentity();
+                return;
+            }
 
-            location.reload();
-            return;
+            console.log("REQUESTING PLAYER RESUME:", playerId);
+
+            socket.emit("resumeClient", {
+                role: "player",
+                session: currentSession,
+                playerId
+            });
         }
-
-        tryReconnect();
     });
     
     // RESET SERVER
@@ -1941,6 +1822,7 @@
         }
 
         // PLAYER
+        localStorage.setItem("clientRole", "player");
         localStorage.setItem("gameSession", currentSession);
         localStorage.setItem("hasJoined", "true");
 
@@ -1961,10 +1843,6 @@
         document.querySelectorAll("#characters button").forEach(b => { b.disabled = true; b.style.pointerEvents = "none";});
         const alreadyJoined = document.getElementById("waitingScreen")?.classList.contains("show");
 
-        socket.emit("scoreUpdate",{
-            score:player.score||0
-        });
-
         if (!alreadyJoined) {
             confettiBurst();
 
@@ -1978,40 +1856,39 @@
 
     // HOST RECONNECT TOKEN
     socket.on("hostReconnectToken", token => {
-        console.log("Received host reconnect token");
+        console.log("HOST TOKEN RECEIVED");
 
         localStorage.setItem("paHostReconnectToken", token);
-
-        // IMPORTANT: update the CURRENT Socket.IO client's auth too.
-        // Otherwise an automatic reconnect still uses the old/null token.
-        socket.auth = socket.auth || {};
-        socket.auth.hostReconnectToken = token;
-
-        console.log("Host reconnect token saved and applied to socket auth.");
     });
+
+    socket.on("resumeFailed", data => {
+        console.warn("RESUME FAILED:", data);
+
+        if (data?.reason === "sessionMismatch" || data?.reason === "playerNotFound" || data?.reason === "invalidHostToken") {
+            clearSavedGameIdentity();
+        }
+    });
+
     // HOST CONFIRMED
     socket.on("hostConfirmed", () => {
-        console.log("================================");
-        console.log("HOST CONFIRMED BY SERVER.");
-        console.log("================================");
+        console.log("HOST CONFIRMED BY SERVER");
 
         isHost = true;
         requestingHost = false;
 
-        localStorage.setItem("isHost", "true");
+        localStorage.setItem("clientRole", "host");
 
         if (currentSession) {
-            localStorage.setItem("hostSession", String(currentSession));
+            localStorage.setItem("gameSession", currentSession);
         }
 
-        console.log("HOST STATE SAVED:", {
-            isHost,
-            storedIsHost: localStorage.getItem("isHost"),
-            hostSession: localStorage.getItem("hostSession"),
-            currentSession
-        });
-
         updateHostButton();
+
+        const overlay = document.getElementById("roomCodeOverlay");
+
+        if (overlay) {
+            overlay.classList.add("hidden");
+        }
     });
 
     // HOST STATUS
@@ -2796,22 +2673,24 @@
     });
     
     //BECOME HOST
-    function joinAsHost(){
-        if(!currentSession){
-            console.log("Cannot become host yet - session not received.");
-            return;
-        }
+    function joinAsHost() {
         if (!socket.connected) {
-            console.warn("HOST JOIN BLOCKED - SOCKET NOT CONNECTED");
-            alert("The game server is reconnecting. Please try again.");
+            alert("Not connected to the game server.");
             return;
         }
-        requestingHost=true;
-        if(!localStorage.getItem("lastHostPage")){
-            localStorage.setItem("lastHostPage","hostJoinPg");
+
+        if (!currentSession) {
+            alert("Waiting for the game server.");
+            return;
         }
-        console.log("REQUESTING HOST SLOT. SESSION:",currentSession);
-        socket.emit("join",{isHost:true});
+
+        requestingHost = true;
+
+        console.log("REQUESTING HOST SLOT");
+
+        socket.emit("join", {
+            isHost: true
+        });
     }
 
     //SHOW HOST CONTROLS
@@ -2948,6 +2827,31 @@
         console.log("HOST PAGE SAVED:", pageId);
     }
 
+    function restorePlayerScreen(data) {
+        const screen = data.playerScreen || "waitingScreen";
+
+        console.log("RESTORING PLAYER SCREEN:", screen);
+
+        const lobby = document.getElementById("lobbyUI");
+
+        if (lobby) {
+            lobby.style.display = "none";
+        }
+
+        const scoreValue = document.getElementById("scoreValue");
+
+        if (scoreValue) {
+            scoreValue.textContent = "$" + currentScore.toLocaleString();
+        }
+
+        if (screen === "scorePage") {
+            setScorePageBackground("holding");
+        }
+
+        hideAllPlayerScreens();
+        showPlayerScreen(screen);
+    }
+
     //HOST ENABLE LOBBY
     function hostEnableLobby() {
         console.log("HOST ENABLE LOBBY");
@@ -2955,6 +2859,23 @@
         socket.emit("hostAction",{type:"enableLobby"});
         restoreHostPage("hostLobbyPg");
     }
+
+    function clearSavedGameIdentity() {
+        localStorage.removeItem("clientRole");
+        localStorage.removeItem("gameSession");
+        localStorage.removeItem("isHost");
+        localStorage.removeItem("hostSession");
+        localStorage.removeItem("paHostReconnectToken");
+        localStorage.removeItem("lastHostPage");
+        localStorage.removeItem("playerId");
+        localStorage.removeItem("hasJoined");
+
+        isHost = false;
+        requestingHost = false;
+
+        console.log("OLD GAME IDENTITY CLEARED");
+    }
+
     //HOST SHOW INSTRUCTIONS
     function hostShowInstructions() {
         console.log("HOST SHOW INSTRUCTIONS");
@@ -3463,118 +3384,6 @@
 
         btn.style.display = "block";
         btn.classList.remove("hidden");
-    }
-
-    // RECONNECT
-    function tryReconnect() {
-        if (!socketConnected) {
-            console.log("Reconnect waiting for socket...");
-            return;
-        }
-
-        if (!sessionReceived) {
-            console.log("Reconnect waiting for game session...");
-            return;
-        }
-
-        if (reconnectAttempted) {
-            console.log("Reconnect already attempted for this socket.");
-            return;
-        }
-
-        reconnectAttempted = true;
-        const storedIsHost = localStorage.getItem("isHost") === "true";
-
-        console.log(
-            "TRY RECONNECT:",
-            {
-                storedIsHost,
-                isHost,
-                currentSession,
-                savedHostSession:
-                    localStorage.getItem("hostSession"),
-                savedPlayerSession:
-                    localStorage.getItem("gameSession"),
-                socketId: socket.id
-            }
-        );
-
-        //HOST RECONNECT
-        if (storedIsHost) {
-            const savedHostSession = localStorage.getItem("hostSession");
-
-            if (savedHostSession && String(savedHostSession) === String(currentSession)) {
-                console.log("RECONNECTING AS HOST");
-                requestingHost = true;
-
-                socket.emit("join", {
-                    isHost: true
-                });
-
-                return;
-            }
-
-            console.log("HOST SESSION DOES NOT MATCH CURRENT SERVER SESSION.");
-
-            localStorage.removeItem("isHost");
-            localStorage.removeItem("hostSession");
-            localStorage.removeItem("lastHostPage");
-
-            isHost = false;
-            requestingHost = false;
-
-            updateHostButton();
-
-            return;
-        }
-
-        //PLAYER RECONNECT
-        const playerId = localStorage.getItem("playerId");
-        const savedName = localStorage.getItem("name");
-        const savedCharacter = localStorage.getItem("character");
-        const savedGameSession = localStorage.getItem("gameSession");
-
-        if (!playerId || !savedName || !savedCharacter) {
-            console.log("No player reconnect information found.");
-            return;
-        }
-
-        if (savedGameSession && String(savedGameSession) !== String(currentSession)) {
-            console.log("PLAYER SESSION CHANGED. CLEARING PLAYER STATE.");
-
-            localStorage.removeItem("playerId");
-            localStorage.removeItem("name");
-            localStorage.removeItem("character");
-            localStorage.removeItem("hasJoined");
-            localStorage.removeItem("gameSession");
-            location.reload();
-            return;
-        }
-
-        let character;
-
-        try {
-            character = JSON.parse(savedCharacter);
-        } catch (error) {
-            console.error("Could not parse saved character:", error);
-            return;
-        }
-
-        console.log(
-            "RECONNECTING AS PLAYER:",
-            {
-                playerId,
-                name: savedName,
-                character: character.name
-            }
-        );
-
-        socket.emit("join", {
-            playerId,
-            name: savedName,
-            character: character.name,
-            isHost: false
-        });
     }
 
     /* #region LOBBY FUNCTIONS */

@@ -19,7 +19,7 @@ let hostSocketId = null;
 const HOST_RECONNECT_TOKEN = "HOST_" + Math.random().toString(36).substring(2) + "_" + Date.now();
 
 let hostDisconnectTimer = null;
-const HOST_RECONNECT_WINDOW = 15000;
+const HOST_RECONNECT_WINDOW = 300000;
 
 // CURRENT GAME SESSION
 let GAME_SESSION = Date.now();
@@ -445,24 +445,16 @@ function sendHostState(socket) {
     socket.emit("gameSession", GAME_SESSION);
     socket.emit("roomCode", ROOM_CODE);
     socket.emit("characterList", characters);
-
-    socket.emit(
-        "playerList",
-        game.players.map(p => ({
-            playerId: p.playerId,
-            name: p.name,
-            character: p.character,
-            score: p.score,
-            disconnected: p.disconnected
-        }))
-    );
-
-    socket.emit(
-        "lockedCharacters",
-        Array.from(lockedCharacters)
-    );
-
+    socket.emit("playerList", game.players.map(p => ({
+        playerId: p.playerId,
+        name: p.name,
+        character: p.character,
+        score: p.score || 0,
+        disconnected: p.disconnected
+    })));
+    socket.emit("lockedCharacters", Array.from(lockedCharacters));
     socket.emit("gameStateSync", {
+        role: "host",
         state: game.state,
         round: game.round,
         players: game.players,
@@ -471,17 +463,36 @@ function sendHostState(socket) {
         currentClueId: game.currentClueId,
         currentClueValue: game.currentClueValue,
         currentClueIsDailyDouble: game.currentClueIsDailyDouble,
-        playerScreen: existingPlayer.screen || "waitingScreen",
-        playerScore: existingPlayer.score || 0,
         hostScreen: game.hostScreen || "hostJoinPg"
     });
 
     console.log("Host state synchronized:", {
         state: game.state,
         round: game.round,
-        players: game.players.length,
-        boardCategories:
-            Object.keys(game.board).length
+        hostScreen: game.hostScreen,
+        players: game.players.length
+    });
+}
+
+function sendPlayerState(socket, player) {
+    socket.emit("gameSession", GAME_SESSION);
+    socket.emit("roomCode", ROOM_CODE);
+    socket.emit("characterList", characters);
+    socket.emit("lockedCharacters", Array.from(lockedCharacters));
+
+    socket.emit("gameStateSync", {
+        role: "player",
+        state: game.state,
+        round: game.round,
+        players: getScorePlayers(),
+        board: convertBoardForUnity(game.board),
+        lockedCharacters: Array.from(lockedCharacters),
+        currentClueId: game.currentClueId,
+        currentClueValue: game.currentClueValue,
+        currentClueIsDailyDouble: game.currentClueIsDailyDouble,
+        playerScreen: player.screen || "waitingScreen",
+        playerScore: player.score || 0,
+        playerId: player.playerId
     });
 }
 
@@ -542,6 +553,86 @@ io.on("connection", (socket) => {
     }
     console.log("A player connected:", socket.id);
 
+    socket.on("resumeClient", data => {
+        console.log("RESUME CLIENT:", data);
+
+        if (!data || String(data.session) !== String(GAME_SESSION)) {
+            socket.emit("resumeFailed", {
+                reason: "sessionMismatch",
+                session: GAME_SESSION
+            });
+            return;
+        }
+
+        if (data.role === "host") {
+            if (!data.hostToken || data.hostToken !== HOST_RECONNECT_TOKEN) {
+                socket.emit("resumeFailed", {
+                    reason: "invalidHostToken"
+                });
+                return;
+            }
+
+            if (hostDisconnectTimer) {
+                clearTimeout(hostDisconnectTimer);
+                hostDisconnectTimer = null;
+            }
+
+            hostConnected = true;
+            hostSocketId = socket.id;
+            socket.isHost = true;
+            socket.data.joined = true;
+
+            console.log("HOST RESUMED:", socket.id);
+
+            socket.emit("hostConfirmed");
+            socket.emit("hostReconnectToken", HOST_RECONNECT_TOKEN);
+            sendHostState(socket);
+            io.emit("hostStatus", true);
+            return;
+        }
+
+        if (data.role === "player") {
+            const player = game.players.find(p => p.playerId === data.playerId);
+
+            if (!player) {
+                socket.emit("resumeFailed", {
+                    reason: "playerNotFound"
+                });
+                return;
+            }
+
+            player.socketId = socket.id;
+            player.disconnected = false;
+            player.disconnectTime = null;
+
+            socket.isHost = false;
+            socket.data.joined = true;
+            socket.data.playerId = player.playerId;
+
+            console.log("PLAYER RESUMED:", player.name, socket.id);
+
+            socket.emit("joinSuccess", {
+                reconnect: true
+            });
+
+            sendPlayerState(socket, player);
+
+            io.emit("playerList", game.players.map(p => ({
+                playerId: p.playerId,
+                name: p.name,
+                character: p.character,
+                score: p.score || 0,
+                disconnected: p.disconnected
+            })));
+
+            return;
+        }
+
+        socket.emit("resumeFailed", {
+            reason: "unknownRole"
+        });
+    });
+
     // JOIN LOBBY
     socket.on("join", ({ playerId, name, character, isHost }) => {
         console.log("JOIN ATTEMPT:", {
@@ -554,28 +645,6 @@ io.on("connection", (socket) => {
 
         // HOST JOIN
         if (isHost) {
-            const reconnectToken = socket.handshake.auth?.hostReconnectToken;
-
-            if (reconnectToken && reconnectToken === HOST_RECONNECT_TOKEN) {
-                hostConnected = true;
-                hostSocketId = socket.id;
-                socket.isHost = true;
-                socket.data.joined = true;
-
-                console.log("================================");
-                console.log("HOST CONNECTED");
-                console.log("Socket:", socket.id);
-                console.log("================================");
-
-                socket.emit("hostReconnectToken", HOST_RECONNECT_TOKEN);
-                socket.emit("hostConfirmed");
-
-                sendHostState(socket);
-                io.emit("hostStatus", true);
-
-                return;
-            }
-
             if (hostConnected) {
                 console.log("HOST CONNECTION REJECTED - HOST ALREADY CONNECTED");
                 socket.emit("hostTaken");
@@ -587,12 +656,10 @@ io.on("connection", (socket) => {
             socket.isHost = true;
             socket.data.joined = true;
 
-            console.log("================================");
-            console.log("HOST CONNECTED");
-            console.log("Socket:", socket.id);
-            console.log("================================");
+            console.log("NEW HOST CLAIMED:", socket.id);
 
             socket.emit("hostReconnectToken", HOST_RECONNECT_TOKEN);
+            socket.emit("hostConfirmed");
 
             sendHostState(socket);
             io.emit("hostStatus", true);
@@ -619,6 +686,7 @@ io.on("connection", (socket) => {
         let existingPlayer = game.players.find(p => p.playerId === playerId);
 
         // PLAYER RECONNECT
+        /*
         if (existingPlayer && existingPlayer.disconnected) {
             console.log(
                 "PLAYER RECONNECT:",
@@ -684,6 +752,24 @@ io.on("connection", (socket) => {
 
             return;
         }
+        */
+        /*
+        if (existingPlayer) {
+            existingPlayer.socketId = socket.id;
+            existingPlayer.disconnected = false;
+            existingPlayer.disconnectTime = null;
+
+            socket.data.joined = true;
+            socket.data.playerId = existingPlayer.playerId;
+
+            socket.emit("joinSuccess", {
+                reconnect: true
+            });
+
+            sendPlayerState(socket, existingPlayer);
+
+            return;
+        }*/
 
         // CHARACTER TAKEN
         const characterOwnedBySomeoneElse =
