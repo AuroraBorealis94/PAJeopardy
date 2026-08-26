@@ -1789,44 +1789,58 @@
     
     // JOIN SUCCESS
     socket.on("joinSuccess", data => {
-        console.log(
-            "JOIN SUCCESS:",
-            data,
-            "isHost:",
-            isHost,
-            "requestingHost:",
-            requestingHost
-        );
+        console.log("JOIN SUCCESS:", data, "isHost:", isHost, "requestingHost:", requestingHost);
 
-        const joiningAsHost=requestingHost||isHost||localStorage.getItem("isHost")==="true";
+        const joiningAsHost = requestingHost || isHost || localStorage.getItem("clientRole") === "host";
 
         // HOST
         if (joiningAsHost) {
             requestingHost = false;
             isHost = true;
-            localStorage.setItem("isHost", "true");
+
+            localStorage.setItem("clientRole", "host");
 
             if (currentSession) {
-                localStorage.setItem("hostSession", currentSession);
+                localStorage.setItem("gameSession", currentSession);
             }
-            console.log("HOST SLOT CONFIRMED.", "SESSION:", currentSession);
+
+            console.log("HOST SLOT CONFIRMED. SESSION:", currentSession);
+
             let savedPage = localStorage.getItem("lastHostPage");
 
             if (!savedPage) {
                 savedPage = "hostJoinPg";
                 localStorage.setItem("lastHostPage", savedPage);
             }
+
             console.log("HOST PAGE TO RESTORE:", savedPage);
+
+            const roomCodeOverlay = document.getElementById("roomCodeOverlay");
+
+            if (roomCodeOverlay) {
+                roomCodeOverlay.classList.add("hidden");
+            }
+
             showHostControls();
+            restoreHostPage(savedPage);
             return;
         }
 
         // PLAYER
+        isHost = false;
+
         localStorage.setItem("clientRole", "player");
-        localStorage.setItem("gameSession", currentSession);
+
+        if (currentSession) {
+            localStorage.setItem("gameSession", currentSession);
+        }
+
         localStorage.setItem("hasJoined", "true");
 
         const joinBtn = document.getElementById("joinBtn");
+        const nameInput = document.getElementById("name");
+        const enterBtn = document.getElementById("enterBtn");
+        const roomCodeOverlay = document.getElementById("roomCodeOverlay");
 
         if (joinBtn) {
             joinBtn.disabled = true;
@@ -1834,23 +1848,34 @@
             joinBtn.style.opacity = "0.6";
         }
 
-        const nameInput = document.getElementById("name");
-        const enterBtn = document.getElementById("enterBtn");
+        if (nameInput) {
+            nameInput.disabled = true;
+        }
 
-        if (nameInput) nameInput.disabled = true;
-        if (enterBtn) enterBtn.disabled = true;
+        if (enterBtn) {
+            enterBtn.disabled = true;
+        }
 
-        document.querySelectorAll("#characters button").forEach(b => { b.disabled = true; b.style.pointerEvents = "none";});
-        const alreadyJoined = document.getElementById("waitingScreen")?.classList.contains("show");
+        document.querySelectorAll("#characters button").forEach(button => {
+            button.disabled = true;
+            button.style.pointerEvents = "none";
+        });
 
-        if (!alreadyJoined) {
-            confettiBurst();
+        if (roomCodeOverlay) {
+            roomCodeOverlay.classList.add("hidden");
+        }
 
-            setTimeout(() => {
-                showWaitingScreen();
-            }, 300);
-        } else {
-            showWaitingScreen();
+        // Show the waiting screen FIRST so the confetti is actually visible.
+        showWaitingScreen();
+
+        // Do not replay join confetti on a reconnect.
+        if (!data?.reconnect) {
+            requestAnimationFrame(() => {
+                requestAnimationFrame(() => {
+                    console.log("PLAYING FIRST-JOIN CONFETTI");
+                    confettiBurst();
+                });
+            });
         }
     });
 
