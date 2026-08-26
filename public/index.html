@@ -1031,11 +1031,23 @@
             object-fit:cover;
         }
 
-        #answeringText{
-            position:relative;
+        #answeringText {
+            position: relative;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            text-align: center;
+        }
 
-            color:white;
-            text-align:center;
+        #answeringCharacter {
+            display: block;
+            width: 220px;
+            max-width: 50vw;
+            height: auto;
+            margin: 0 auto 25px auto;
         }
     /* #endregion */
 
@@ -2192,71 +2204,38 @@
     });
 
     // CLUE HOLDING SCREEN
-    socket.on("showClueHolding", () => {
-        console.log("SHOWING PERSONAL CLUE HOLDING SCREEN");
+    socket.on("showClueHolding", data => {
+        if (isHost) return;
 
-        if (isHost) {
-            console.log("Host received showClueHolding - ignoring player screen.");
-            return;
-        }
-        const lobby = document.getElementById("lobbyUI");
+        console.log("SHOW CLUE HOLDING:", data);
 
-        if (lobby) {
-            lobby.style.display = "none";
+        // Round 2 may send the current round/score with this event.
+        if (data?.round !== undefined) {
+            currentRound =
+                Number(data.round) || currentRound;
         }
 
-        const hostControls = document.getElementById("hostControls");
-
-        if (hostControls) {
-            hostControls.classList.add("hidden");
+        if (data?.score !== undefined) {
+            currentScore =
+                Number(data.score) || 0;
         }
 
-        // Get the player's selected character
-        let character = state.character;
+        const scoreDisplay =
+            document.getElementById(
+                "playerScoreDisplay"
+            );
 
-        // If state.character isn't populated, restore it from localStorage
-        if (!character) {
-            const savedCharacter = localStorage.getItem("character");
-
-            if (savedCharacter) {
-                try {
-                    character = JSON.parse(savedCharacter);
-                    state.character = character;
-                } catch (error) {
-                    console.error("Could not parse saved character:", error);
-                }
-            }
+        if (scoreDisplay) {
+            scoreDisplay.textContent =
+                "$" +
+                (Number(currentScore) || 0)
+                    .toLocaleString();
         }
 
-        const clueHoldingImage = document.getElementById("clueHoldingImage");
-
-        if (!clueHoldingImage) {
-            console.error("clueHoldingImage element not found.");
-        } else if (character) {
-            const characterFiles = {
-                "The Boss": "thebossclueholding.png",
-                "Janice Mowes": "janicemowesclueholding.png",
-                "Tricerex": "tricerexclueholding.png",
-                "Fancy Dancer": "fancydancerclueholding.png",
-                "Deerhead": "deerheadclueholding.png",
-                "Caity Satyr": "caitysatyrclueholding.png",
-                "The Holy Spirit": "theholyspiritclueholding.png",
-                "The Newlyweds": "thenewlywedsclueholding.png",
-                "Lorenzo": "lorenzoclueholding.png",
-                "The Guitarist": "theguitaristclueholding.png"
-            };
-
-            const filename = characterFiles[character.name];
-
-            if (filename) {
-                clueHoldingImage.src = "/backgrounds/clueholding/" + filename;
-                clueHoldingImage.style.display = "block";
-                console.log("Clue holding image:", clueHoldingImage.src);
-            } else {
-                console.error("No clue holding image registered for:", character.name);
-            }
-        }
-        showPlayerScreen("clueHoldingScreen");
+        hideAllPlayerScreens();
+        showPlayerScreen(
+            "clueHoldingScreen"
+        );
     });
 
     // SELECT CLUE
@@ -2558,8 +2537,7 @@
     });
 
     socket.on("dailyDoubleWagerSubmitted", data => {
-        const storedHost = localStorage.getItem("isHost") === "true";
-        if (!isHost && !storedHost) return;
+        console.log("DAILY DOUBLE WAGER SUBMITTED RECEIVED BY HOST:", data);
 
         currentDailyDoubleWager = {
             playerId: data.playerId,
@@ -2567,22 +2545,33 @@
             wager: Number(data.wager) || 0
         };
 
-        console.log("DAILY DOUBLE WAGER SUBMITTED:", currentDailyDoubleWager);
-
         hideDailyDoublePlayerButtons();
 
-        const judgement = document.getElementById("hostJudgementArea");
-        const question = document.getElementById("hostJudgementQuestion");
-        const wagerNotice = document.getElementById("dailyDoubleWagerNotice");
-        const enableBtn = document.getElementById("enableBuzzerBtn");
+        const judgement =
+            document.getElementById("hostJudgementArea");
+
+        const question =
+            document.getElementById("hostJudgementQuestion");
+
+        const wagerNotice =
+            document.getElementById("dailyDoubleWagerNotice");
+
+        const enableBtn =
+            document.getElementById("enableBuzzerBtn");
+
+        const continueBtn =
+            document.getElementById("clueContinueBtn");
 
         if (wagerNotice) {
-            wagerNotice.textContent = `${currentDailyDoubleWager.playerName} WAGERED $${currentDailyDoubleWager.wager.toLocaleString()}`;
+            wagerNotice.textContent =
+                `${currentDailyDoubleWager.playerName} WAGERED $${currentDailyDoubleWager.wager.toLocaleString()}`;
+
             wagerNotice.classList.remove("hidden");
         }
 
         if (question) {
-            question.textContent = `Did ${currentDailyDoubleWager.playerName} answer correctly?`;
+            question.textContent =
+                `Did ${currentDailyDoubleWager.playerName} answer correctly?`;
         }
 
         if (enableBtn) {
@@ -2590,8 +2579,11 @@
             enableBtn.disabled = true;
         }
 
+        if (continueBtn) {
+            continueBtn.style.display = "block";
+        }
+
         if (judgement) {
-            judgement.classList.add("show");
             judgement.hidden = false;
             judgement.style.display = "flex";
             judgement.style.flexDirection = "column";
@@ -2599,6 +2591,10 @@
             judgement.style.opacity = "1";
             judgement.style.pointerEvents = "auto";
             judgement.style.zIndex = "10000";
+
+            judgement.classList.add("show");
+
+            console.log("DAILY DOUBLE JUDGEMENT AREA SHOWN");
         }
     });
 
@@ -4205,11 +4201,8 @@
                 submitBtn.textContent = "SUBMITTED";
             }
 
-            socket.emit("hostAction", {
-                type: "dailyDoubleWager",
-                payload: {
-                    wager: wager
-                }
+            socket.emit("dailyDoubleWagerSubmit", {
+                wager: wager
             });
         }
 

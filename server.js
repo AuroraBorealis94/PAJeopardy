@@ -11,6 +11,8 @@ app.use("/sprites", express.static("sprites"));
 app.use("/confetti", express.static("public/confetti"));
 app.use("/clueImages", express.static("clueImages"));
 app.use("/answerImages", express.static("answerImages"));
+app.use("/data/clueImages", express.static("clueImages"));
+app.use("/data/answerImages", express.static("answerImages"));
 
 // HOST CONNECTION
 let hostConnected = false;
@@ -685,92 +687,6 @@ io.on("connection", (socket) => {
 
         let existingPlayer = game.players.find(p => p.playerId === playerId);
 
-        // PLAYER RECONNECT
-        /*
-        if (existingPlayer && existingPlayer.disconnected) {
-            console.log(
-                "PLAYER RECONNECT:",
-                existingPlayer.name
-            );
-
-            existingPlayer.socketId = socket.id;
-            existingPlayer.disconnected = false;
-            existingPlayer.disconnectTime = null;
-
-            socket.data.joined = true;
-
-            io.emit(
-                "playerList",
-                game.players.map(p => ({
-                    playerId: p.playerId,
-                    name: p.name,
-                    character: p.character,
-                    disconnected: p.disconnected
-                }))
-            );
-
-            io.emit(
-                "lockedCharacters",
-                Array.from(lockedCharacters)
-            );
-
-            socket.emit("joinSuccess");
-            socket.emit("gameStateSync", {
-                state: game.state,
-                round: game.round,
-                players: game.players,
-                board: convertBoardForUnity(game.board),
-                lockedCharacters: Array.from(lockedCharacters),
-                currentClueId: game.currentClueId,
-                currentClueValue: game.currentClueValue,
-                currentClueIsDailyDouble: game.currentClueIsDailyDouble,
-                hostScreen: game.hostScreen || "hostJoinPg"
-            });
-
-            broadcastToUnity({
-                type: "playerList",
-                players: game.players.map(p => ({
-                    playerId: p.playerId,
-                    name: p.name,
-                    characterId: p.characterKey
-                }))
-            });
-
-            return;
-        }
-
-        // PLAYER WITH SAME ID ALREADY CONNECTED
-        if (existingPlayer) {
-            console.log(
-                "Player ID already connected:",
-                playerId
-            );
-
-            socket.emit("joinError", {
-                message: "Player is already connected."
-            });
-
-            return;
-        }
-        */
-        /*
-        if (existingPlayer) {
-            existingPlayer.socketId = socket.id;
-            existingPlayer.disconnected = false;
-            existingPlayer.disconnectTime = null;
-
-            socket.data.joined = true;
-            socket.data.playerId = existingPlayer.playerId;
-
-            socket.emit("joinSuccess", {
-                reconnect: true
-            });
-
-            sendPlayerState(socket, existingPlayer);
-
-            return;
-        }*/
-
         // CHARACTER TAKEN
         const characterOwnedBySomeoneElse =
             game.players.find(
@@ -1274,27 +1190,28 @@ io.on("connection", (socket) => {
 
                 break;
 
-            case "roundComplete":
+            case "roundComplete": {
                 console.log("ROUND", game.round, "COMPLETE");
 
                 game.state = "roundComplete";
-                game.hostScreen = "hostScoreReviewPg";
 
-                setAllPlayerScreens("scorePage");
+                const scorePlayers = getScorePlayers();
 
-                io.emit(
-                    "roundComplete",
-                    {
-                        round: game.round
-                    }
-                );
+                io.emit("roundComplete", {
+                    round: game.round,
+                    players: scorePlayers
+                });
 
                 broadcastToUnity({
                     type: "roundComplete",
-                    round: game.round
+                    round: game.round,
+                    players: scorePlayers
                 });
 
+                console.log("ROUND COMPLETE SCORES SENT TO UNITY:", scorePlayers);
+
                 break;
+            }
 
             // DAILY DOUBLE SELECT PLAYER
             case "dailyDoubleSelectPlayer": {
@@ -1345,62 +1262,6 @@ io.on("connection", (socket) => {
                         playerId: player.playerId,
                         playerName: player.name
                     });
-                });
-
-                break;
-            }
-
-            case "dailyDoubleWager": {
-                console.log("HOST ACTION: dailyDoubleWager");
-
-                if (!game.currentClueIsDailyDouble) {
-                    console.warn("Wager received but current clue is not a Daily Double.");
-                    return;
-                }
-
-                if (!currentDailyDoublePlayer) {
-                    console.warn("No Daily Double player selected.");
-                    return;
-                }
-
-                const requestedWager = Math.max(0, parseInt(data.payload?.wager) || 0);
-                const maxWager = Math.max(game.currentClueValue || 0, currentDailyDoublePlayer.score || 0);
-
-                currentDailyDoubleWager = Math.min(requestedWager, maxWager);
-                currentDailyDoublePlayer.dailyDoubleWager = currentDailyDoubleWager;
-                currentDailyDoubleWagerSubmitted = true;
-                currentBuzzPlayer = currentDailyDoublePlayer;
-
-                setPlayerScreen(currentDailyDoublePlayer, "dailyDoubleSubmittedScreen");
-
-                console.log("================================");
-                console.log("DAILY DOUBLE WAGER SUBMITTED");
-                console.log("PLAYER:", currentDailyDoublePlayer.name);
-                console.log("WAGER:", currentDailyDoubleWager);
-                console.log("================================");
-
-                // SELECTED PLAYER
-                io.to(currentDailyDoublePlayer.socketId).emit("dailyDoubleWagerAccepted", {
-                    playerId: currentDailyDoublePlayer.playerId,
-                    playerName: currentDailyDoublePlayer.name,
-                    wager: currentDailyDoubleWager
-                });
-
-                // HOST ONLY
-                if (hostSocketId) {
-                    io.to(hostSocketId).emit("dailyDoubleWagerSubmitted", {
-                        playerId: currentDailyDoublePlayer.playerId,
-                        playerName: currentDailyDoublePlayer.name,
-                        wager: currentDailyDoubleWager
-                    });
-                }
-
-                // UNITY
-                broadcastToUnity({
-                    type: "dailyDoubleWager",
-                    playerId: currentDailyDoublePlayer.playerId,
-                    playerName: currentDailyDoublePlayer.name,
-                    wager: currentDailyDoubleWager
                 });
 
                 break;
@@ -1541,6 +1402,7 @@ io.on("connection", (socket) => {
 
                 buzzAccepted = false;
                 currentBuzzPlayer = null;
+                buzzedPlayerIds.clear();
 
                 currentDailyDoubleWager = 0;
                 currentDailyDoublePlayer = null;
@@ -1553,30 +1415,136 @@ io.on("connection", (socket) => {
 
                 console.log("================================");
                 console.log("ROUND 2 BOARD DATA");
-                console.log("CATEGORIES:", Object.keys(game.board));
-
-                for (const categoryName in game.board) {
-                    console.log(
-                        categoryName,
-                        "VALUES:",
-                        Object.keys(game.board[categoryName])
-                    );
-                }
-
+                console.log(
+                    "CATEGORIES:",
+                    Object.keys(game.board)
+                );
                 console.log("================================");
 
-                broadcastToUnity({
-                    type: "showRound2BoardIntro",
-                    ...round2BoardData
+                // All phones return to their normal holding screen.
+                setAllPlayerScreens("clueHoldingScreen");
+
+                game.players.forEach(player => {
+                    io.to(player.socketId).emit(
+                        "showClueHolding",
+                        {
+                            round: 2,
+                            score: player.score || 0
+                        }
+                    );
                 });
 
-                io.emit("showRound2Board", round2BoardData);
-                io.emit("boardData", round2BoardData);
+                // Unity leaves ScoresUI and returns to BoardIntroUI.
+                // The complete Round 2 board is included so Unity can rebuild it.
+                broadcastToUnity({
+                    type: "showRound2BoardIntro",
+                    round: 2,
+                    board: round2BoardData.board
+                });
+
+                // Browser host gets its Round 2 board.
+                io.emit(
+                    "showRound2Board",
+                    round2BoardData
+                );
+
+                io.emit(
+                    "boardData",
+                    round2BoardData
+                );
 
                 console.log("ROUND 2 BOARD SENT");
+
                 break;
             }
         }
+
+        // PLAYER DAILY DOUBLE WAGER
+        socket.on("dailyDoubleWagerSubmit", data => {
+            console.log("DAILY DOUBLE WAGER SUBMIT RECEIVED:", data);
+
+            if (!game.currentClueIsDailyDouble) {
+                console.warn("Wager received but current clue is not a Daily Double.");
+                return;
+            }
+
+            if (!currentDailyDoublePlayer) {
+                console.warn("No Daily Double player selected.");
+                return;
+            }
+
+            // Only the selected player may submit the wager.
+            if (socket.id !== currentDailyDoublePlayer.socketId) {
+                console.warn(
+                    "DAILY DOUBLE WAGER REJECTED - WRONG PLAYER:",
+                    socket.id
+                );
+                return;
+            }
+
+            if (currentDailyDoubleWagerSubmitted) {
+                console.warn("Daily Double wager already submitted.");
+                return;
+            }
+
+            const requestedWager =
+                Math.max(0, parseInt(data?.wager) || 0);
+
+            const maxWager = Math.max(
+                game.currentClueValue || 0,
+                currentDailyDoublePlayer.score || 0
+            );
+
+            currentDailyDoubleWager =
+                Math.min(requestedWager, maxWager);
+
+            currentDailyDoublePlayer.dailyDoubleWager =
+                currentDailyDoubleWager;
+
+            currentDailyDoubleWagerSubmitted = true;
+            currentBuzzPlayer = currentDailyDoublePlayer;
+
+            setPlayerScreen(
+                currentDailyDoublePlayer,
+                "dailyDoubleSubmittedScreen"
+            );
+
+            console.log("================================");
+            console.log("DAILY DOUBLE WAGER SUBMITTED");
+            console.log("PLAYER:", currentDailyDoublePlayer.name);
+            console.log("WAGER:", currentDailyDoubleWager);
+            console.log("================================");
+
+            // Selected player's phone
+            io.to(currentDailyDoublePlayer.socketId).emit(
+                "dailyDoubleWagerAccepted",
+                {
+                    playerId: currentDailyDoublePlayer.playerId,
+                    playerName: currentDailyDoublePlayer.name,
+                    wager: currentDailyDoubleWager
+                }
+            );
+
+            // Host browser
+            if (hostSocketId) {
+                io.to(hostSocketId).emit(
+                    "dailyDoubleWagerSubmitted",
+                    {
+                        playerId: currentDailyDoublePlayer.playerId,
+                        playerName: currentDailyDoublePlayer.name,
+                        wager: currentDailyDoubleWager
+                    }
+                );
+            }
+
+            // Reveal the actual Daily Double clue in Unity now.
+            broadcastToUnity({
+                type: "revealDailyDoubleClue",
+                playerId: currentDailyDoublePlayer.playerId,
+                playerName: currentDailyDoublePlayer.name,
+                wager: currentDailyDoubleWager
+            });
+        });
     });
 
     // BUZZER SCREEN
