@@ -1656,16 +1656,24 @@
                 localStorage.setItem("gameSession", currentSession);
             }
 
-            const pageToRestore =
-                data.hostScreen ||
-                "hostJoinPg";
+            currentRound = Number(data.round) || 1;
+
+            // Rebuild the board from authoritative server state.
+            if (data.board && Array.isArray(data.board.categories)) {
+                console.log("REBUILDING HOST BOARD AFTER SYNC");
+                console.log("ROUND:", currentRound);
+                console.log("CATEGORIES:", data.board.categories.length);
+
+                buildHostBoard(data.board);
+            } else {
+                console.warn("HOST SYNC DID NOT CONTAIN VALID BOARD DATA:", data.board);
+            }
+
+            const pageToRestore = data.hostScreen || "hostJoinPg";
 
             console.log("RESTORING HOST PAGE:", pageToRestore);
 
-            localStorage.setItem(
-                "lastHostPage",
-                pageToRestore
-            );
+            localStorage.setItem("lastHostPage", pageToRestore);
 
             showHostControls();
             restoreHostPage(pageToRestore);
@@ -3024,14 +3032,17 @@
                 tile.className = "hostTile";
 
                 if (!clue) {
-                    console.warn("Missing clue:", category.categoryName, sourceValue);
                     tile.classList.add("empty");
                     hostBoard.appendChild(tile);
                     return;
                 }
 
-                tile.innerText = "$" + displayValue;
+                tile.innerText = "$" + value;
                 tile.dataset.clueId = clue.clueData.id;
+
+                if (clue.clueData.used === true) {
+                    tile.classList.add("used");
+                }
 
                 tile.onclick = () => {
                     if (tile.classList.contains("used")) {

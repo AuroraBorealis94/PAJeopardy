@@ -1001,6 +1001,19 @@ io.on("connection", (socket) => {
                 }
 
                 game.usedClueIds.add(clueId);
+
+                for (const categoryName in game.board) {
+                    for (const value in game.board[categoryName]) {
+                        const boardClue = game.board[categoryName][value];
+
+                        if (boardClue.id === clueId) {
+                            boardClue.used = true;
+                            console.log("BOARD CLUE MARKED USED:", clueId);
+                            break;
+                        }
+                    }
+                }
+
                 game.currentClueId = clueId;
                 game.currentClueValue = parseInt(data.payload.value) || 0;
                 game.currentClueIsDailyDouble = !!clue.dailyDouble;
