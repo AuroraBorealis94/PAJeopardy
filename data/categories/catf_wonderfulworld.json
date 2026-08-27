@@ -49,7 +49,8 @@
       {
         "id": "F_800_1",
         "clue": "Joe felt like an idiot in a situation involving the operation of a rental car in Canada when he had to do this. ",
-        "answer": "What is convert metric to American units?"
+        "answer": "What is convert metric to American units?",
+	"answerImage": "/answerImages/Metric_Joe.jpg"
       }
     ],
 

@@ -60,7 +60,8 @@
       {
         "id": "K_800_2",
         "clue": "This family member showed up to a graduation party in a white tutu and tiara, a lei around his neck, holding a \"Suns Out Guns Out\" sign and a poop emoji.",
-        "answer": "Who is Mike?"
+        "answer": "Who is Mike?",
+	"answerImage": "/answerImages/Grad_Mike.jpg"
       }
     ],
 

@@ -50,7 +50,8 @@
       {
         "id": "L_600_2",
         "clue": "This person's life-improving purchase under $20 was a mug, though they insist you'd have to see it to appreciate it.",
-        "answer": "Who is Gary?"
+        "answer": "Who is Gary?",
+	"answerImage": "/answerImages/Mug_Gary.jpg"
       },
       {
         "id": "L_600_3",
