@@ -927,11 +927,13 @@ io.on("connection", (socket) => {
         }
 
         if (data.type === "startRound2") {
-            console.log("STARTING ROUND 2 TRANSITION");
+            console.log("================================");
+            console.log("STARTING ROUND 2");
+            console.log("================================");
 
             game.round = 2;
-            game.state = "midCutscene";
-            game.hostScreen = "hostMidCutscenePg";
+            game.state = "playing";
+            game.hostScreen = "hostBoard";
 
             game.currentClueId = null;
             game.currentClueValue = 0;
@@ -939,25 +941,60 @@ io.on("connection", (socket) => {
 
             buzzAccepted = false;
             currentBuzzPlayer = null;
+            buzzedPlayerIds.clear();
 
             currentDailyDoubleWager = 0;
             currentDailyDoublePlayer = null;
             currentDailyDoubleWagerSubmitted = false;
 
+            // Generate Round 2 immediately.
             generateBoard(2);
 
-            // HOST
-            io.emit("round2Transition", {
-                round: 2
+            const round2BoardData = {
+                round: 2,
+                board: convertBoardForUnity(game.board)
+            };
+
+            // Phones return to their holding/score page.
+            setAllPlayerScreens("scorePage");
+
+            game.players.forEach(player => {
+                io.to(player.socketId).emit(
+                    "showScoreScreen",
+                    {
+                        players: getScorePlayers()
+                    }
+                );
             });
 
-            // UNITY
+            // Unity immediately gets the new board.
             broadcastToUnity({
-                type: "midCutscene",
-                round: 2
+                type: "showRound2BoardIntro",
+                round: 2,
+                board: round2BoardData.board
             });
 
-            console.log("ROUND 2 MID-CUTSCENE STARTED");
+            // Host immediately gets the Round 2 board.
+            io.emit(
+                "showRound2Board",
+                round2BoardData
+            );
+
+            io.emit(
+                "boardData",
+                round2BoardData
+            );
+
+            io.emit(
+                "roundStarted",
+                {
+                    round: 2
+                }
+            );
+
+            console.log(
+                "ROUND 2 STARTED WITHOUT CUTSCENE"
+            );
 
             return;
         }
@@ -1707,14 +1744,6 @@ io.on("connection", (socket) => {
                 if (!player)
                     return;
 
-                if (
-                    game.finalJeopardy.judged[
-                        player.playerId
-                    ]
-                ) {
-                    return;
-                }
-
                 const wager =
                     Number(
                         game.finalJeopardy.wagers[
@@ -1771,7 +1800,16 @@ io.on("connection", (socket) => {
                             );
 
                     game.state =
-                        "finalComplete";
+                        "finalScoreReview";
+
+                    game.hostScreen =
+                        "hostFinalScoreReviewPg";
+
+                    // Keep every player's reconnect state
+                    // on their final score page.
+                    setAllPlayerScreens(
+                        "scorePage"
+                    );
 
                     io.emit(
                         "finalJeopardyComplete",
@@ -1787,12 +1825,155 @@ io.on("connection", (socket) => {
                         players:
                             finalScores
                     });
+
+                    console.log(
+                        "FINAL JEOPARDY COMPLETE - FINAL SCORES:",
+                        finalScores
+                    );
                 }
 
                 break;
             }
 
+            case "showWinner": {
+                console.log("HOST ACTION: showWinner");
 
+                const sortedPlayers =
+                    getScorePlayers()
+                        .sort(
+                            (a, b) =>
+                                b.score - a.score
+                        );
+
+                if (sortedPlayers.length === 0) {
+                    console.warn(
+                        "Cannot show winner: no players."
+                    );
+
+                    break;
+                }
+
+                const winningScore =
+                    sortedPlayers[0].score;
+
+                // Supports ties properly.
+                const winners =
+                    sortedPlayers.filter(
+                        player =>
+                            player.score ===
+                            winningScore
+                    );
+
+                game.state =
+                    "winner";
+
+                game.hostScreen =
+                    "hostWinnerPg";
+
+                setAllPlayerScreens(
+                    "winnerPage"
+                );
+
+                io.emit(
+                    "showWinner",
+                    {
+                        winners,
+                        players:
+                            sortedPlayers
+                    }
+                );
+
+                broadcastToUnity({
+                    type: "showWinner",
+                    winners,
+                    players:
+                        sortedPlayers
+                });
+
+                console.log(
+                    "WINNER(S):",
+                    winners.map(
+                        winner =>
+                            winner.name
+                    )
+                );
+
+                break;
+            }
+
+            case "rollCredits": {
+                console.log(
+                    "================================"
+                );
+
+                console.log(
+                    "HOST ACTION: ROLL CREDITS"
+                );
+
+                console.log(
+                    "================================"
+                );
+
+                game.state =
+                    "credits";
+
+                game.hostScreen =
+                    "hostCreditsPg";
+
+                // Save reconnect state for every player.
+                setAllPlayerScreens(
+                    "thanksPage"
+                );
+
+                // Tell Unity to enable CreditsUI.
+                broadcastToUnity({
+                    type:
+                        "rollCredits"
+                });
+
+                // Give each player their own final
+                // information for the thanks screen.
+                game.players.forEach(
+                    player => {
+                        io.to(
+                            player.socketId
+                        ).emit(
+                            "thanksForPlaying",
+                            {
+                                playerId:
+                                    player.playerId,
+
+                                name:
+                                    player.name,
+
+                                character:
+                                    player.character,
+
+                                score:
+                                    Number(
+                                        player.score
+                                    ) || 0
+                            }
+                        );
+                    }
+                );
+
+                // Tell host browser to switch
+                // to its credits control page.
+                if (hostSocketId) {
+                    io.to(
+                        hostSocketId
+                    ).emit(
+                        "creditsStarted"
+                    );
+                }
+
+                console.log(
+                    "CREDITS STARTED"
+                );
+
+                break;
+            }
         }
     });
 
