@@ -12,29 +12,24 @@
         "id": "K_200_2",
         "clue": "The most interesting rabbit hole this family member fell down online was about military procedures and customs.",
         "answer": "Who is Oliver?"
-      },
-      {
-        "id": "K_200_3",
-        "clue": "The most interesting rabbit hole this family member fell down online was about military procedures and customs.",
-        "answer": "Who is Oliver?"
       }
     ],
 
     "400": [
       {
         "id": "K_400_1",
-        "clue": "Gary saddled Carver with this nickname, which he can't stand.",
-        "answer": "What is \"Car-man\"?"
-      },
-      {
-        "id": "K_400_2",
         "clue": "This person likes to think they'd only be arrested for criminal mischief, though a family member insists it would be peeing in public, an accusation they don't deny.",
         "answer": "Who is Gary?"
       },
       {
-        "id": "K_400_3",
+        "id": "K_400_2",
         "clue": "If this family member were ever arrested, stealing would be the reason.",
         "answer": "Who is Sammy?"
+      },
+      {
+        "id": "K_400_3",
+        "clue": "Annmarie once sprayed this chatterbox in the face with a garden hose.",
+        "answer": "Who is Caity?"
       }
     ],
 
@@ -48,6 +43,11 @@
         "id": "K_600_2",
         "clue": "The first time Aurora drove, Gary instigated her to do this while driving down Amity road.",
         "answer": "What is Floor It?"
+      },
+      {
+        "id": "K_600_3",
+        "clue": "Gary saddled Carver with this nickname, which he can't stand.",
+        "answer": "What is \"Car-man\"?"
       }
     ],
 

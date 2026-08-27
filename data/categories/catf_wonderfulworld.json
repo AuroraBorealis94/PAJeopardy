@@ -23,6 +23,12 @@
         "clue": "Sammy's greatest day was a 2020 outing to this place with Gary and Amber, followed by pizza.",
         "answer": "What is Brownstone?",
 	"answerImage": "/answerImages/Pizza_Sammy.jpg"
+      },
+      {
+        "id": "F_400_2",
+        "clue": "This person would spend a year living in Italy, where their family comes from and where some still live today.",
+	"clueImage": "/clueImages/Italy_Ross.jpg",
+        "answer": "Who is Ross?"
       }
     ],
 

@@ -7,6 +7,12 @@
         "id": "J_200_1",
         "clue": "This person's younger self would be most surprised by their appearance, since when you're young you think you'll never get old.",
         "answer": "Who is Alissia?"
+      },
+      {
+        "id": "J_200_2",
+        "clue": "Annmarie would settle in Munchkinland, part of this fictional world, for the sake of its songs.",
+	"clueImage": "/clueImages/Munchkin_Ann.jpg",
+        "answer": "What is The Wizard of Oz?"
       }
     ],
 

@@ -35,13 +35,18 @@
         "id": "C_400_2",
         "clue": "Garrett would spend a daily bonus hour doing this activity.",
         "answer": "What is sleep?"
+      },
+      {
+        "id": "C_400_3",
+        "clue": "This person can't stand the texture of cotton balls or anything cotton against their fingertips.",
+        "answer": "Who is Ross?"
       }
     ],
 
     "600": [
       {
         "id": "C_600_1",
-        "clue": "This person's favorite word is \"goob,\" simply because it's funny.",
+        "clue": "This family's favorite word is \"goob,\" simply because it's funny.",
         "answer": "Who is Derek?"
       },
       {
@@ -66,6 +71,11 @@
         "id": "C_800_2",
         "clue": "This family member chose \"The Corny Yet Kind\" as their personal epithet.",
         "answer": "Who is Kevin?"
+      },
+      {
+        "id": "C_800_3",
+        "clue": "This person carries a scar between their thumn and forefinger from pinching their skin while loading a pellet gun.",
+        "answer": "Who is Annmarie?"
       }
     ],
 

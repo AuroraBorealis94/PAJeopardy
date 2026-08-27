@@ -94,6 +94,12 @@
         "clue": "Given one month to apprentice under anyone, this person chose Carl Jung and Bruce Lee.",
         "answer": "Who is Uncle Ricky?",
 	"answerImage": "/answerImages/Bruce_Ricky.jpg"
+      },
+      {
+        "id": "B_1000_4",
+        "clue": "Ross would have this versatile American actor play him in a biopic, praising his humor, heart, and shared looks.",
+        "answer": "Who is Glen Powell?",
+	"answerImage": "/answerImages/Glen_Ross.jpg"
       }
     ]
   }

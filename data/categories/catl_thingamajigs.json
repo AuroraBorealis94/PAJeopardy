@@ -32,14 +32,20 @@
         "clue": "If Kevin were an inanimate object, he'd be this piece of furniture, describing it as sturdy, dependable, and something that brings people together.",
         "answer": "What is a park bench?",
 	"answerImage": "/answerImages/Bench_Kevin.jpg"
+      },
+      {
+        "id": "L_400_3",
+        "clue": "If they were an inanimate object, this family member would be a car, because it'd be fun.",
+        "answer": "Who is Derek?"
       }
     ],
 
     "600": [
       {
         "id": "L_600_1",
-        "clue": "If they were an inanimate object, this family member would be a car, because it'd be fun.",
-        "answer": "Who is Derek?"
+        "clue": "If they were an inanimate object, this person would be the sun, so they could shine warmth down on the Earth and its people.",
+	"clueImage": "/clueImages/Sun_Ann.jpg",
+        "answer": "Who is Annmarie?"
       },
       {
         "id": "L_600_2",
