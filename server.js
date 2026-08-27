@@ -1695,6 +1695,104 @@ io.on("connection", (socket) => {
 
                 break;
             }
+
+            case "judgeFinalJeopardyAnswer": {
+                const player =
+                    game.players.find(
+                        p =>
+                            p.playerId ===
+                            data.playerId
+                    );
+
+                if (!player)
+                    return;
+
+                if (
+                    game.finalJeopardy.judged[
+                        player.playerId
+                    ]
+                ) {
+                    return;
+                }
+
+                const wager =
+                    Number(
+                        game.finalJeopardy.wagers[
+                            player.playerId
+                        ]
+                    ) || 0;
+
+                const correct =
+                    data.correct === true;
+
+                const oldScore =
+                    Number(player.score) || 0;
+
+                player.score =
+                    correct
+                        ? oldScore + wager
+                        : oldScore - wager;
+
+                game.finalJeopardy.judged[
+                    player.playerId
+                ] = true;
+
+                if (correct && wager > 0) {
+                    broadcastToUnity({
+                        type: "showScoreScreen",
+                        playerId:
+                            player.playerId,
+                        character:
+                            player.character,
+                        score:
+                            player.score,
+                        earned:
+                            wager
+                    });
+                }
+
+                const judgedCount =
+                    game.players.filter(
+                        p =>
+                            game.finalJeopardy.judged[
+                                p.playerId
+                            ]
+                    ).length;
+
+                if (
+                    judgedCount ===
+                    game.players.length
+                ) {
+                    const finalScores =
+                        getScorePlayers()
+                            .sort(
+                                (a, b) =>
+                                    b.score - a.score
+                            );
+
+                    game.state =
+                        "finalComplete";
+
+                    io.emit(
+                        "finalJeopardyComplete",
+                        {
+                            players:
+                                finalScores
+                        }
+                    );
+
+                    broadcastToUnity({
+                        type:
+                            "finalJeopardyComplete",
+                        players:
+                            finalScores
+                    });
+                }
+
+                break;
+            }
+
+
         }
     });
 
@@ -1848,6 +1946,125 @@ io.on("connection", (socket) => {
             broadcastToUnity({
                 type: "finalJeopardyAllWagers"
             });
+        }
+    });
+
+    socket.on("finalJeopardyAnswerSubmit", data => {
+        if (
+            game.state !==
+            "finalAnswering"
+        ) {
+            return;
+        }
+
+        const player =
+            game.players.find(
+                p =>
+                    p.socketId ===
+                    socket.id
+            );
+
+        if (!player)
+            return;
+
+        if (
+            game.finalJeopardy
+                .answerSubmitted[
+                    player.playerId
+                ]
+        ) {
+            return;
+        }
+
+        const answer =
+            String(
+                data?.answer || ""
+            )
+                .trim()
+                .slice(0, 200);
+
+        if (!answer)
+            return;
+
+        game.finalJeopardy.answers[
+            player.playerId
+        ] = answer;
+
+        game.finalJeopardy
+            .answerSubmitted[
+                player.playerId
+            ] = true;
+
+        const submitted =
+            game.players.filter(
+                p =>
+                    game.finalJeopardy
+                        .answerSubmitted[
+                            p.playerId
+                        ]
+            ).length;
+
+        const total =
+            game.players.length;
+
+        if (hostSocketId) {
+            io.to(hostSocketId).emit(
+                "finalJeopardyAnswerStatus",
+                {
+                    submitted,
+                    total
+                }
+            );
+        }
+
+        if (
+            total > 0 &&
+            submitted === total
+        ) {
+            const responses =
+                game.players.map(
+                    p => ({
+                        playerId:
+                            p.playerId,
+
+                        playerName:
+                            p.name,
+
+                        character:
+                            p.character,
+
+                        answer:
+                            game.finalJeopardy
+                                .answers[
+                                    p.playerId
+                                ] || "",
+
+                        wager:
+                            Number(
+                                game.finalJeopardy
+                                    .wagers[
+                                        p.playerId
+                                    ]
+                            ) || 0,
+
+                        score:
+                            Number(
+                                p.score
+                            ) || 0
+                    })
+                );
+
+            if (hostSocketId) {
+                io.to(hostSocketId).emit(
+                    "finalJeopardyResponses",
+                    {
+                        responses,
+                        correctAnswer:
+                            game.finalJeopardy
+                                .answer
+                    }
+                );
+            }
         }
     });
 

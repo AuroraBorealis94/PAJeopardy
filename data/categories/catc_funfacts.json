@@ -28,16 +28,11 @@
     "400": [
       {
         "id": "C_400_1",
-        "clue": "Lorenzo is the name of the creepy blow-up man doll found in Aunt Shari's bed, but this is his nickname.",
-        "answer": "What is Chester Molester?"
-      },
-      {
-        "id": "C_400_2",
         "clue": "For this person, the best and worst thing about their town is the exact same fact: everybody knows the Russells.",
         "answer": "Who is Sarah?"
       },
       {
-        "id": "C_400_3",
+        "id": "C_400_2",
         "clue": "Garrett would spend a daily bonus hour doing this activity.",
         "answer": "What is sleep?"
       }

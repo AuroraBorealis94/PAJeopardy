@@ -1413,6 +1413,74 @@
             font-size: clamp(22px, 5vw, 34px);
             line-height: 1.25;
         }
+
+        #finalJeopardyAnswerScreen {
+            position: fixed;
+            inset: 0;
+
+            background:
+                url('/backgrounds/WHostBG.jpg')
+                center / cover no-repeat;
+
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+
+            gap: 22px;
+            padding: 7vh 7vw;
+            box-sizing: border-box;
+
+            text-align: center;
+            z-index: 6000;
+        }
+
+        .finalAnswerTitle {
+            color: gold;
+            font-size: clamp(36px, 9vw, 68px);
+            font-weight: bold;
+        }
+
+        #finalAnswerCategory {
+            color: orange;
+            font-size: clamp(24px, 6vw, 40px);
+            font-weight: bold;
+        }
+
+        #finalAnswerClue {
+            width: min(88vw, 600px);
+            font-size: clamp(20px, 5vw, 32px);
+            line-height: 1.2;
+        }
+
+        .finalAnswerPrompt {
+            font-size: clamp(18px, 5vw, 28px);
+        }
+
+        #finalJeopardyAnswerInput {
+            width: min(82vw, 480px);
+            min-height: 110px;
+
+            padding: 14px;
+
+            box-sizing: border-box;
+
+            font-family: 'Korinna';
+            font-size: clamp(20px, 5vw, 30px);
+
+            text-align: center;
+            resize: none;
+        }
+
+        #finalJeopardyAnswerSubmit {
+            padding: 14px 28px;
+            font-size: clamp(20px, 5vw, 30px);
+        }
+
+        #finalAnswerStatus {
+            color: gold;
+            font-size: clamp(18px, 4vw, 26px);
+        }
     /* #endregion */
 </style>
 
@@ -1566,6 +1634,33 @@
         onclick="submitFinalJeopardyWager()">
         SUBMIT WAGER
     </button>
+</div>
+
+<div id="finalJeopardyAnswerScreen" class="playerScreen hidden">
+    <div class="finalAnswerTitle">
+        FINAL JEOPARDY
+    </div>
+
+    <div id="finalAnswerCategory"></div>
+
+    <div id="finalAnswerClue"></div>
+
+    <div class="finalAnswerPrompt">
+        Type your response:
+    </div>
+
+    <textarea
+        id="finalJeopardyAnswerInput"
+        maxlength="200"
+        placeholder="What is..."></textarea>
+
+    <button
+        id="finalJeopardyAnswerSubmit"
+        onclick="submitFinalJeopardyAnswer()">
+        LOCK IN ANSWER
+    </button>
+
+    <div id="finalAnswerStatus"></div>
 </div>
 
 <!-- HOST CONTROLS -->
@@ -1740,6 +1835,16 @@
             style="display:none;">
             SHOW FINAL CLUE
         </button>
+
+        <div
+            id="hostFinalAnswerStatus"
+            class="hidden">
+        </div>
+
+        <div
+            id="hostFinalResponses"
+            class="hidden">
+        </div>
     </div>
 </div>
 
@@ -3225,6 +3330,170 @@
         );
     });
 
+    socket.on("finalJeopardyClue", data => {
+        if (isHost) return;
+
+        const category =
+            document.getElementById(
+                "finalAnswerCategory"
+            );
+
+        const clue =
+            document.getElementById(
+                "finalAnswerClue"
+            );
+
+        const input =
+            document.getElementById(
+                "finalJeopardyAnswerInput"
+            );
+
+        const button =
+            document.getElementById(
+                "finalJeopardyAnswerSubmit"
+            );
+
+        const status =
+            document.getElementById(
+                "finalAnswerStatus"
+            );
+
+        if (category)
+            category.textContent =
+                data.category || "";
+
+        if (clue)
+            clue.textContent =
+                data.clue || "";
+
+        if (input) {
+            input.value = "";
+            input.disabled = false;
+        }
+
+        if (button) {
+            button.disabled = false;
+            button.textContent =
+                "LOCK IN ANSWER";
+        }
+
+        if (status)
+            status.textContent = "";
+
+        showPlayerScreen(
+            "finalJeopardyAnswerScreen"
+        );
+    });
+
+    socket.on("finalJeopardyAnswerStatus", data => {
+        if (!isHost) return;
+
+        const status =
+            document.getElementById(
+                "hostFinalWagerStatus"
+            );
+
+        if (status) {
+            status.textContent =
+                `${data.submitted} OF ${data.total} ANSWERS SUBMITTED`;
+        }
+    });
+
+    socket.on("finalJeopardyResponses", data => {
+        if (!isHost) return;
+
+        const container =
+            document.getElementById(
+                "hostFinalResponses"
+            );
+
+        const notice =
+            document.getElementById(
+                "hostFinalWagerNotice"
+            );
+
+        if (!container)
+            return;
+
+        container.innerHTML = "";
+
+        if (notice) {
+            notice.textContent =
+                `CORRECT RESPONSE: ${data.correctAnswer}`;
+
+            notice.classList.remove(
+                "hidden"
+            );
+        }
+
+        data.responses.forEach(
+            response => {
+                const card =
+                    document.createElement(
+                        "div"
+                    );
+
+                card.className = "finalResponseCard";
+
+                card.innerHTML = `
+                    <div class="finalResponseName">
+                        ${response.playerName}
+                    </div>
+
+                    <div class="finalResponseAnswer">
+                        ${escapeHtml(response.answer)}
+                    </div>
+
+                    <div class="finalResponseWager">
+                        WAGER: $${Number(response.wager).toLocaleString()}
+                    </div>
+
+                    <div class="finalResponseButtons">
+                        <button class="correctBtn">
+                            CORRECT
+                        </button>
+
+                        <button class="wrongBtn">
+                            INCORRECT
+                        </button>
+                    </div>
+                `;
+
+                card
+                    .querySelector(
+                        ".correctBtn"
+                    )
+                    .onclick = () => {
+                        judgeFinalAnswer(
+                            response.playerId,
+                            true,
+                            card
+                        );
+                    };
+
+                card
+                    .querySelector(
+                        ".wrongBtn"
+                    )
+                    .onclick = () => {
+                        judgeFinalAnswer(
+                            response.playerId,
+                            false,
+                            card
+                        );
+                    };
+
+                container.appendChild(
+                    card
+                );
+            }
+        );
+
+        container.classList.remove(
+            "hidden"
+        );
+    });
+
     document.addEventListener("click", e => {
         const overlay = document.getElementById("hostClueOverlay");
 
@@ -4370,7 +4639,8 @@
                 "answeringPage",
                 "scorePage",
                 "finalJeopardyWagerWaitingScreen",
-                "finalJeopardyWagerScreen"
+                "finalJeopardyWagerScreen",
+                "finalJeopardyAnswerScreen"
             ];
 
             screens.forEach(id => {
@@ -4631,66 +4901,6 @@
                 value.textContent = "$" + score;
             }, 30);
         }
-
-        /*
-        function setMyScoreCharacter() {
-            let characterName = state.character?.name;
-
-            if (!characterName) {
-                const savedCharacter = localStorage.getItem("character");
-
-                if (savedCharacter) {
-                    try {
-                        characterName = JSON.parse(savedCharacter)?.name;
-                    } catch (error) {
-                        console.error("Could not parse saved character:", error);
-                    }
-                }
-            }
-
-            if (!characterName) {
-                console.warn("No character name available for score animation.");
-                return;
-            }
-
-            const character = characters.find(c => c.name === characterName);
-
-            if (!character) {
-                console.warn("Character not found in character list:", characterName);
-                return;
-            }
-
-            if (!character.animations?.idle) {
-                console.warn("No idle animation found for:", characterName);
-                return;
-            }
-
-            console.log("SETTING MY SCORE CHARACTER:", characterName, character.animations.idle);
-            setScoreCharacter(character.animations.idle);
-        }
-        
-        function setScoreCharacter(animationData) {
-            const character = document.getElementById("scoreCharacter");
-
-            if (!character) {
-                console.error("scoreCharacter element not found");
-                return;
-            }
-
-            if (!animationData?.src) {
-                console.warn("No score character animation data:", animationData);
-                return;
-            }
-
-            character.classList.remove("animate");
-            character.style.backgroundImage = `url("${animationData.src}")`;
-            character.style.backgroundPosition = "0 0";
-            character.style.animationDuration = animationData.speed || "1.2s";
-
-            void character.offsetWidth;
-            character.classList.add("animate");
-        }
-        */
 
         function getPlayerCharacterName() {
             if (state.character?.name) {
@@ -5023,6 +5233,103 @@
             socket.emit("hostAction", {
                 type: "revealFinalJeopardyClue"
             });
+        }
+
+        function submitFinalJeopardyAnswer() {
+            const input =
+                document.getElementById(
+                    "finalJeopardyAnswerInput"
+                );
+
+            const button =
+                document.getElementById(
+                    "finalJeopardyAnswerSubmit"
+                );
+
+            const status =
+                document.getElementById(
+                    "finalAnswerStatus"
+                );
+
+            if (!input) return;
+
+            const answer =
+                input.value.trim();
+
+            if (!answer) {
+                alert(
+                    "Please enter an answer."
+                );
+                return;
+            }
+
+            input.disabled = true;
+
+            if (button) {
+                button.disabled = true;
+                button.textContent =
+                    "ANSWER LOCKED";
+            }
+
+            if (status) {
+                status.textContent =
+                    "ANSWER SUBMITTED";
+            }
+
+            socket.emit(
+                "finalJeopardyAnswerSubmit",
+                {
+                    answer
+                }
+            );
+        }
+
+        function hostRevealFinalClue() {
+            socket.emit("hostAction", {
+                type:
+                    "revealFinalJeopardyClue"
+            });
+
+            const button =
+                document.getElementById(
+                    "hostRevealFinalClueBtn"
+                );
+
+            const status =
+                document.getElementById(
+                    "hostFinalWagerStatus"
+                );
+
+            if (button)
+                button.style.display = "none";
+
+            if (status)
+                status.textContent =
+                    "WAITING FOR FINAL ANSWERS...";
+        }
+
+        function escapeHtml(value) {
+            const div = document.createElement("div");
+            div.textContent = String(value || "");
+
+            return div.innerHTML;
+        }
+
+        function judgeFinalAnswer(playerId, correct, card) {
+            socket.emit("hostAction", {
+                type: "judgeFinalJeopardyAnswer", playerId, correct
+            });
+
+            card.classList.add(
+                "judged"
+            );
+
+            card
+                .querySelectorAll("button")
+                .forEach(
+                    button =>
+                        button.disabled = true
+                );
         }
     /* #endregion */
 </script>
