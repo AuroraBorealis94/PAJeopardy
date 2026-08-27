@@ -1372,6 +1372,47 @@
 
             padding: 12px 28px;
         }
+
+        #finalJeopardyWagerWaitingScreen {
+            position: fixed;
+            inset: 0;
+            width: 100vw;
+            height: 100vh;
+
+            background:
+                url('/backgrounds/WHostBG.jpg')
+                center / cover no-repeat;
+
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+
+            gap: 28px;
+            padding: 30px;
+            box-sizing: border-box;
+
+            text-align: center;
+            z-index: 6000;
+        }
+
+        .finalLockedTitle {
+            color: gold;
+            font-size: clamp(40px, 10vw, 70px);
+            font-weight: bold;
+        }
+
+        #finalLockedAmount {
+            color: orange;
+            font-size: clamp(28px, 7vw, 44px);
+            font-weight: bold;
+        }
+
+        .finalLockedText {
+            width: min(80vw, 420px);
+            font-size: clamp(22px, 5vw, 34px);
+            line-height: 1.25;
+        }
     /* #endregion */
 </style>
 
@@ -1734,8 +1775,15 @@
 </div>
 
 <div id="finalJeopardyWagerWaitingScreen" class="playerScreen hidden">
-    <h1>WAGER LOCKED IN</h1>
-    <p>Wait for the Final Jeopardy clue.</p>
+    <div class="finalLockedTitle">
+        WAGER LOCKED IN!
+    </div>
+
+    <div id="finalLockedAmount"></div>
+
+    <div class="finalLockedText">
+        Get ready for the Final Jeopardy clue.
+    </div>
 </div>
 
 <script src="/socket.io/socket.io.js"></script>
@@ -3160,10 +3208,21 @@
     socket.on("finalJeopardyWagerAccepted", data => {
         if (isHost) return;
 
-        console.log("FINAL WAGER ACCEPTED:", data);
-        hideAllPlayerScreens();
+        const amount =
+            document.getElementById(
+                "finalLockedAmount"
+            );
 
-        showPlayerScreen("finalJeopardyWagerWaitingScreen");
+        if (amount) {
+            amount.textContent =
+                "$" +
+                (Number(data.wager) || 0)
+                    .toLocaleString();
+        }
+
+        showPlayerScreen(
+            "finalJeopardyWagerWaitingScreen"
+        );
     });
 
     document.addEventListener("click", e => {
@@ -4878,8 +4937,17 @@
 
                 // Standard Final Jeopardy:
                 // cannot wager more than current score.
-                input.max =
-                    Math.max(0, currentPlayerScore);
+                const maximum =
+                    currentPlayerScore > 0
+                        ? currentPlayerScore
+                        : 500;
+
+                input.max = maximum;
+                input.step = 10;
+
+                max.textContent =
+                    "MAXIMUM WAGER: $" +
+                    maximum.toLocaleString();
             }
 
             if (max) {

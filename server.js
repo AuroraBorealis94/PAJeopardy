@@ -1794,7 +1794,13 @@ io.on("connection", (socket) => {
             return;
         }
 
-        const maxWager = Math.max(0, player.score || 0);
+        const playerScore =
+            Number(player.score) || 0;
+
+        const maxWager =
+            playerScore > 0
+                ? playerScore
+                : 500;
         const requested = Math.max(0, parseInt(data?.wager) || 0);
         const wager = Math.min(requested, maxWager);
 
