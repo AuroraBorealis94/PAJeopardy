@@ -912,7 +912,6 @@ io.on("connection", (socket) => {
 
             broadcastToUnity({ type: "enableLobby", round: game.round });
             io.emit("roundStarted", { round: game.round });
-            //io.emit("showInstructionsHolding");
 
             setTimeout(() => {
                 const boardData = {
@@ -1010,7 +1009,7 @@ io.on("connection", (socket) => {
                 io.emit("showInstructionsHolding");
                 broadcastToUnity({ type: "showInstructions" });
                 break;
-
+            /*
             case "showInstrucCutscene":
                 console.log("HOST ACTION: showInstrucCutscene");
 
@@ -1021,7 +1020,7 @@ io.on("connection", (socket) => {
                 });
 
                 break;
-
+            */
             case "revealCategory": {
                 const index = Number(data.payload?.index);
 
@@ -1788,48 +1787,72 @@ io.on("connection", (socket) => {
                             ]
                     ).length;
 
-                if (
-                    judgedCount ===
-                    game.players.length
-                ) {
-                    const finalScores =
-                        getScorePlayers()
-                            .sort(
-                                (a, b) =>
-                                    b.score - a.score
-                            );
+                if (judgedCount === game.players.length) {
+                    console.log(
+                        "================================"
+                    );
+
+                    console.log(
+                        "ALL FINAL JEOPARDY RESPONSES JUDGED"
+                    );
+
+                    console.log(
+                        "REVEALING FINAL ANSWER"
+                    );
+
+                    console.log(
+                        "================================"
+                    );
 
                     game.state =
-                        "finalScoreReview";
+                        "finalAnswerReveal";
 
                     game.hostScreen =
-                        "hostFinalScoreReviewPg";
+                        "hostFinalJeopardyPg";
 
-                    // Keep every player's reconnect state
-                    // on their final score page.
-                    setAllPlayerScreens(
-                        "scorePage"
-                    );
 
-                    io.emit(
-                        "finalJeopardyComplete",
-                        {
-                            players:
-                                finalScores
-                        }
-                    );
+                    // -----------------------------------------
+                    // UNITY - REVEAL FINAL ANSWER
+                    // -----------------------------------------
 
                     broadcastToUnity({
                         type:
-                            "finalJeopardyComplete",
-                        players:
-                            finalScores
+                            "revealFinalJeopardyAnswer"
                     });
 
-                    console.log(
-                        "FINAL JEOPARDY COMPLETE - FINAL SCORES:",
-                        finalScores
+
+                    // -----------------------------------------
+                    // PLAYER PHONES - HOLDING SCREEN
+                    // -----------------------------------------
+
+                    game.players.forEach(
+                        player => {
+
+                            setPlayerScreen(
+                                player,
+                                "instructionsHoldingScreen"
+                            );
+
+                            io.to(
+                                player.socketId
+                            ).emit(
+                                "showInstructionsHolding"
+                            );
+                        }
                     );
+
+
+                    // -----------------------------------------
+                    // HOST - ALLOW FINAL SCORE REVIEW
+                    // -----------------------------------------
+
+                    if (hostSocketId) {
+                        io.to(
+                            hostSocketId
+                        ).emit(
+                            "finalJeopardyJudgingComplete"
+                        );
+                    }
                 }
 
                 break;
@@ -1897,6 +1920,47 @@ io.on("connection", (socket) => {
                             winner.name
                     )
                 );
+
+                break;
+            }
+
+            case "showFinalScoreReview": {
+                console.log(
+                    "HOST ACTION: showFinalScoreReview"
+                );
+
+                const finalScores =
+                    getScorePlayers()
+                        .sort(
+                            (a, b) =>
+                                b.score - a.score
+                        );
+
+                game.state =
+                    "finalScoreReview";
+
+                game.hostScreen =
+                    "hostFinalScoreReviewPg";
+
+                setAllPlayerScreens(
+                    "scorePage"
+                );
+
+                io.emit(
+                    "finalJeopardyComplete",
+                    {
+                        players:
+                            finalScores
+                    }
+                );
+
+                broadcastToUnity({
+                    type:
+                        "finalJeopardyComplete",
+
+                    players:
+                        finalScores
+                });
 
                 break;
             }

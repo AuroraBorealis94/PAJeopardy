@@ -1473,8 +1473,60 @@
         }
 
         #finalJeopardyAnswerSubmit {
-            padding: 14px 28px;
+            font-family: 'Korinna';
             font-size: clamp(20px, 5vw, 30px);
+            text-transform: uppercase;
+
+            padding: 14px 28px;
+
+            background: linear-gradient(
+                135deg,
+                #ffcc00,
+                #ff6600
+            );
+
+            color: black;
+
+            border: 1px solid white;
+            border-radius: 12px;
+
+            box-shadow:
+                0 0 15px rgba(
+                    255,
+                    140,
+                    0,
+                    0.6
+                );
+
+            cursor: pointer;
+
+            transition:
+                transform 0.2s ease,
+                box-shadow 0.2s ease;
+        }
+
+        #finalJeopardyAnswerSubmit:hover {
+            transform: scale(1.04);
+
+            box-shadow:
+                0 0 24px rgba(
+                    255,
+                    140,
+                    0,
+                    0.9
+                );
+        }
+
+        #finalJeopardyAnswerSubmit:active {
+            transform: scale(0.98);
+        }
+
+        #finalJeopardyAnswerSubmit:disabled {
+            background: gray;
+            box-shadow: none;
+            opacity: 0.65;
+            cursor: default;
+            transform: none;
         }
 
         #finalAnswerStatus {
@@ -1526,6 +1578,109 @@
                 clamp(18px, 4vw, 30px);
 
             text-align: left;
+        }
+
+        #hostFinalResponses {
+            width: min(94vw, 760px);
+            max-height: 55vh;
+
+            overflow-y: auto;
+
+            display: grid;
+            grid-template-columns:
+                repeat(2, minmax(0, 1fr));
+
+            gap: 8px;
+
+            box-sizing: border-box;
+        }
+
+        .finalResponseCard {
+            min-width: 0;
+
+            padding: 10px;
+
+            box-sizing: border-box;
+
+            background:
+                rgba(0, 0, 0, 0.42);
+
+            border:
+                1px solid rgba(
+                    255,
+                    215,
+                    0,
+                    0.65
+                );
+
+            border-radius: 9px;
+        }
+
+        .finalResponseName {
+            color: orange;
+
+            font-size:
+                clamp(14px, 2.4vw, 20px);
+
+            font-weight: bold;
+
+            margin-bottom: 5px;
+        }
+
+        .finalResponseAnswer {
+            font-size:
+                clamp(13px, 2.2vw, 18px);
+
+            line-height: 1.15;
+
+            overflow-wrap: anywhere;
+
+            margin-bottom: 6px;
+        }
+
+        .finalResponseWager {
+            font-size:
+                clamp(11px, 1.8vw, 15px);
+
+            margin-bottom: 7px;
+
+            opacity: 0.9;
+        }
+
+        .finalResponseButtons {
+            display: flex;
+
+            justify-content: center;
+
+            gap: 6px;
+        }
+
+        .finalResponseButtons button {
+            font-family: 'Korinna';
+
+            font-size:
+                clamp(10px, 1.6vw, 14px) !important;
+
+            padding:
+                6px 9px !important;
+
+            min-width: 0;
+
+            border-radius: 7px;
+        }
+
+        .finalResponseButtons .correctBtn {
+            background:
+                linear-gradient(
+                    135deg,
+                    #ffcc00,
+                    #ff8a00
+                );
+        }
+
+        .finalResponseButtons .wrongBtn {
+            background:
+                rgba(210, 210, 210, 0.95);
         }
     /* #endregion */
 
@@ -1633,7 +1788,7 @@
     .thanks-title {
         font-size: clamp(42px, 11vw, 80px);
         font-weight: 900;
-
+        color: orange;
         line-height: 0.95;
 
         text-transform: uppercase;
@@ -1891,11 +2046,11 @@
     <div id="hostInstructionsPg" class="hostPage hidden">
         <div>Explain gameplay instructions to contestants</div>
         <br>
-        <button id="showInstrucCutBtn" onclick="hostShowInstrucCutscene()" style="display:none;">
-            Play Cutscene
+        <button id="showInstrucCutBtn" onclick="hostShowBoardIntro()" style="display:none;">
+            Show Game Board
         </button>
     </div>
-
+    <!--
     <div id="hostInstrucCutscenePg" class="hostPage hidden">
         <div>When cutscene completes</div>
         <br>
@@ -1903,7 +2058,7 @@
             Show Game Board
         </button>
     </div>
-
+    -->
     <div id="hostCategoryRevealControls" style="display:none;">
         <div id="hostCategoryRevealLabel">
             Waiting for board...
@@ -2008,10 +2163,6 @@
     <div id="hostFinalJeopardyPg" class="hostPage hidden">
         <h1>FINAL JEOPARDY</h1>
 
-        <div class="hostFinalTitle">
-            FINAL JEOPARDY
-        </div>
-
         <div id="hostFinalCategory"></div>
 
         <div id="hostFinalWagerStatus">
@@ -2040,6 +2191,13 @@
             id="hostFinalResponses"
             class="hidden">
         </div>
+
+        <button
+            id="reviewFinalScoresBtn"
+            onclick="hostReviewFinalScores()"
+            style="display:none;">
+            REVIEW FINAL SCORES
+        </button>
     </div>
 
     <div id="hostFinalScoreReviewPg" class="hostPage hidden">
@@ -4020,6 +4178,46 @@
         }
     );
 
+    socket.on("finalJeopardyJudgingComplete", () => {
+        if (!isHost)
+            return;
+
+        console.log(
+            "FINAL JEOPARDY JUDGING COMPLETE"
+        );
+
+        const responses =
+            document.getElementById(
+                "hostFinalResponses"
+            );
+
+        const status =
+            document.getElementById(
+                "hostFinalWagerStatus"
+            );
+
+        const button =
+            document.getElementById(
+                "reviewFinalScoresBtn"
+            );
+
+        if (responses) {
+            responses.classList.add(
+                "hidden"
+            );
+        }
+
+        if (status) {
+            status.textContent =
+                "ALL RESPONSES JUDGED — REVIEW THE CORRECT ANSWER ON THE MAIN SCREEN";
+        }
+
+        if (button) {
+            button.style.display =
+                "block";
+        }
+    });
+
     document.addEventListener("click", e => {
         const overlay = document.getElementById("hostClueOverlay");
 
@@ -4102,7 +4300,7 @@
             "hostJoinPg",
             "hostLobbyPg",
             "hostInstructionsPg",
-            "hostInstrucCutscenePg",
+            //"hostInstrucCutscenePg",
             "hostBoard",
             "hostScoreReviewPg",
             "hostFinalJeopardyPg",
@@ -4163,13 +4361,13 @@
                     showInstrucCutBtn.style.display = "block";
                 }
                 break;
-
+            /*
             case "hostInstrucCutscenePg":
                 if (showBoardIntroBtn) {
                     showBoardIntroBtn.style.display = "block";
                 }
                 break;
-
+            */
             case "hostScoreReviewPg":
                 if (hostScoreReviewPg) {
                     hostScoreReviewPg.classList.remove("hidden");
@@ -4240,7 +4438,7 @@
         restoreHostPage("hostInstructionsPg");
         socket.emit("hostAction",{type:"showInstructions"});
     }
-
+    /*
     //HOST SHOW INSTRUCTION CUTSCENE
     function hostShowInstrucCutscene() {
         console.log("HOST SHOW INSTRUCTION CUTSCENE");
@@ -4258,7 +4456,7 @@
             type: "showInstrucCutscene"
         });
     }
-
+    */
     function hostRevealNextCategory() {
         currentCategoryRevealIndex++;
 
@@ -5963,6 +6161,20 @@
 
             thanksPage.style.display = "flex";
             thanksPage.classList.add("active");
+        }
+
+        function hostReviewFinalScores() {
+            console.log(
+                "HOST REVIEW FINAL SCORES"
+            );
+
+            socket.emit(
+                "hostAction",
+                {
+                    type:
+                        "showFinalScoreReview"
+                }
+            );
         }
     /* #endregion */
 </script>
